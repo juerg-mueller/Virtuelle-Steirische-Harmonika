@@ -27,4 +27,4 @@ Die Tastatur-Spalten werden je einem eigenen Midi-Kanal zugewiesen.
 
   ..
   
-  95 nn xx  Für die äusserste Bass-Spalte
+  95 nn xx  für die äusserste Bass-Spalte
