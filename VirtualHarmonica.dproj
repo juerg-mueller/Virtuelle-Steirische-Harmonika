@@ -110,11 +110,7 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="UInstrument.pas"/>
-        <DCCReference Include="UEventArray.pas"/>
-        <DCCReference Include="UGriffArray.pas"/>
         <DCCReference Include="UGriffEvent.pas"/>
-        <DCCReference Include="UMyMemoryStream.pas"/>
-        <DCCReference Include="UMyMidiStream.pas"/>
         <DCCReference Include="UVirtual.pas"/>
         <DCCReference Include="teVirtual\teVirtualMIDIdll.pas"/>
         <DCCReference Include="Midi.pas"/>
@@ -122,8 +118,8 @@
             <Form>frmAmpel</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="UMidiDataStream.pas"/>
         <DCCReference Include="UFormHelper.pas"/>
+        <DCCReference Include="UMidiEvent.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

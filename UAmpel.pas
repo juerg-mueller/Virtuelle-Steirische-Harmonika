@@ -18,21 +18,24 @@
 // ==========================================================================
 //
 // Midi-Balg-Information, wird bei jedem Wechsel ausgegeben:
-//   B6 1f 00/01    01 für Push; 00 für Pull
+//   B7 1f 00/01    01 für Push; 00 für Pull
 //
 // Die Tastatur-Spalten werden je einem eigenen Midi-Kanal zugewiesen.
-//   90 nn xx  für die äusserste Diskant-Spalte
+//   91 nn xx  für die äusserste Diskant-Spalte
 //   ..
-//   95 nn xx  Für die äusserste Bass-Spalte
+//   96 nn xx  Für die äusserste Bass-Spalte
 //
 //
-// Tastaturbelegung
-// ================
+// Tastatureingabe
+// ===============
 //
-// F5 bis F12 ist die Bassbelegung
+// Mit der Tastatur (Buchstaben, Zahlen und Sonderzeichen) wird die Diskantseite
+// der Steirischen Harmonika abgebildet. Der Gleichton (mit Kreuz markiert) ist die H-Taste.
+//
+// F5 bis F12 wird für die Bässe verwendet.
 // Mit Ctrl schaltet man von der äusseren Bassreihe auf die innere.
 //
-// Der Gleichton (mit Kreuz markiert) ist die H-Taste.
+// Mit der Shift-Taste ändert man die Balgbewegung.
 //
 unit UAmpel;
 
@@ -135,6 +138,7 @@ type
     procedure PaintAmpel(Row: byte {1..6}; index: integer {0..10}; Push, On_: boolean);
     function GetKeyIndex(var Event: TMouseEvent; Key: word): boolean;
     procedure InitLastPush;
+    procedure KeyMessageEvent(var Msg: TMsg; var Handled: Boolean);
     procedure OnMidiInData(aDeviceIndex: integer; aStatus, aData1, aData2: byte; Timestamp: integer);
   end;
 
@@ -160,14 +164,14 @@ uses
 {$ifndef __VIRTUAL__}
   UfrmGriff,
 {$endif}
-  Midi, UFormHelper, UMyMidiStream;
+  Midi, UFormHelper, UMidiEvent;
 
 procedure TMouseEvent.Clear;
 begin
   P.X := -1;
   P.Y := -1;
   Row_ := 0;
-  Index_ := 0;
+  Index_ := -1;
   Key := 0;
   Pitch := 0;
 end;
@@ -212,7 +216,7 @@ begin
       LastPush := LastPull_;
 
     if (MicrosoftIndex >= 0) then
-      MidiOutput.Send(MicrosoftIndex, $B6, ControlSustain, ord(Push));
+      MidiOutput.Send(MicrosoftIndex, $B7, ControlSustain, ord(Push));
   end;
 end;
 
@@ -390,9 +394,9 @@ begin
         d := $5f;
         if Row_ >= 5 then
           d := $6F;
-        MidiOutput.Send(MicrosoftIndex, $90 + Row_ - 1, Event.SoundPitch, d)
+        MidiOutput.Send(MicrosoftIndex, $90 + Row_ , Event.SoundPitch, d)
       end else begin
-        MidiOutput.Send(MicrosoftIndex, $80 + Row_ - 1, Event.SoundPitch, $40);
+        MidiOutput.Send(MicrosoftIndex, $80 + Row_, Event.SoundPitch, $40);
       end;
     end;
     UseVirtualMidi(MouseEvents[Index], On_);
@@ -1083,21 +1087,48 @@ var
   Event: TMouseEvent;
   Key: word;
   GriffEvent: TGriffEvent;
+
+  function GetInstr(var Event: TMouseEvent): boolean;
+  var
+    Vocal: TVocalArray;
+    Bass: TBassArray;
+  begin
+    if Event.Row_ in [1..4] then
+    begin
+      if Event.Push_ then
+        Vocal := Instrument.Push
+      else
+        Vocal := Instrument.Pull;
+      Event.Index_ := GetIndexToPitchInArray(Event.Pitch, Vocal.Col[Event.Row_]);
+    end else
+    if Event.Row_ in [5..6] then
+    begin
+      if not Event.Push_ and Instrument.BassDiatonic then
+        Bass := Instrument.PullBass
+      else
+        Bass := Instrument.Bass;
+      Event.Index_ := GetBassIndex(Bass[Event.Row_ = 6], Event.Pitch);
+    end;
+    result := Event.Index_ >= 0;
+  end;
+
 begin
   Event.Clear;
   Event.Pitch := aData1;
   Event.Row_ := 1;
   Event.Index_ := -1;
   Event.Push_ := ShiftUsed;
-  if (aStatus = $b0) and (aData1 = 64) then
+
+  if ((aStatus = $b0) and (aData1 = 64)) or
+     ((aStatus = $b7) and (aData1 = ControlSustain)) then
   begin
     Sustain_ := aData2 > 0;
     Key := 0;
     frmAmpel.FormKeyDown(self, Key, []);
-  end else
+  end;
   if aStatus = $80 then
   begin
-    frmAmpel.AmpelEvents.EventOff(Event);
+    AmpelEvents.EventOff(Event);
   end else
   if aStatus = $90 then
   begin
@@ -1117,6 +1148,64 @@ begin
           frmGriff.GenerateNewNote(Event);
 {$endif}
       end;
+    end;
+  end else
+  if ((aStatus and $f) in [1..6]) and
+     ((aStatus shr 4) in [8, 9]) then
+  begin
+    Event.Row_ := (aStatus and $f);
+    if GetInstr(Event) then
+    begin
+      if (aStatus shr 4) = 9 then
+        AmpelEvents.NewEvent(Event)
+      else
+        AmpelEvents.EventOff(Event);
+    end;
+  end;
+end;
+
+procedure TfrmAmpel.KeyMessageEvent(var Msg: TMsg; var Handled: Boolean);
+begin
+  if ((Msg.message = WM_KEYDOWN) or (Msg.message = WM_KEYUP)) then
+  begin
+    //writeln(Msg.wParam, '  ', IntToHex(Msg.lParam));
+    if IsActive then
+    begin
+      if (Msg.lParam and $fff0000) = $0150000 then    // Z
+        Msg.wParam := 90;
+      if (Msg.lParam and $fff0000) = $02c0000 then    // Y
+        Msg.wParam := 89;
+      // 4. Reihe ' ^
+      if (Msg.lParam and $fff0000) = $00c0000 then
+        Msg.wParam := 219;
+      if (Msg.lParam and $fff0000) = $00d0000 then
+        Msg.wParam := 221;
+      // 3. Reihe ü ¨
+      if RunningWine then
+      begin
+        if (Msg.lParam and $fff0000) = $0600000 then
+          Msg.wParam := 186;
+      end else
+      if (Msg.lParam and $fff0000) = $01a0000 then
+        Msg.wParam := 186;
+      if (Msg.lParam and $fff0000) = $01b0000 then
+        Msg.wParam := 192;
+      // 2. Reihe ö ä $
+      if (Msg.lParam and $fff0000) = $0270000 then
+        Msg.wParam := 222;
+      if (Msg.lParam and $fff0000) = $0280000 then
+        Msg.wParam := 220;
+      if (Msg.lParam and $fff0000) = $02b0000 then
+        Msg.wParam := 223;
+      // 1. Reihe , . -
+      if (Msg.lParam and $fff0000) = $0330000 then
+        Msg.wParam := 188;
+      if (Msg.lParam and $fff0000) = $0340000 then
+        Msg.wParam := 190;
+      if (Msg.lParam and $fff0000) = $0350000 then
+        Msg.wParam := 189;
+      if (Msg.lParam and $fff0000) = $0560000 then
+        Msg.wParam := 226;
     end;
   end;
 end;

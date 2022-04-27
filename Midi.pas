@@ -522,6 +522,7 @@ begin
       MidiOutput.Send(MicrosoftIndex, $c3, MidiInstr, $00);
       MidiOutput.Send(MicrosoftIndex, $c4, MidiInstr, $00);
       MidiOutput.Send(MicrosoftIndex, $c5, MidiInstr, $00);
+      MidiOutput.Send(MicrosoftIndex, $c6, MidiInstr, $00);
     finally
     end;
   {$if defined(CONSOLE)}
@@ -537,6 +538,5 @@ initialization
 finalization
   FreeAndNil(gMidiInput);
   FreeAndNil(gMidiOutput);
-
 
 end.

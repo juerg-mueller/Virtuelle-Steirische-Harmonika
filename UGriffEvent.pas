@@ -19,7 +19,7 @@ interface
 
 uses
   SysUtils, Types,
-  UMyMidiStream, UInstrument;
+  UMidiEvent,  UInstrument;
 
 type
 

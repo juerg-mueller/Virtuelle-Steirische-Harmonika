@@ -54,10 +54,9 @@ begin
     write(' $', IntToHex(b));
   end;
   writeln;
-{$endif}
-
   if (MidiDataBytes^ and $f0) = $80 then
     writeln;
+{$endif}
 
   if not virtualMIDISendData( midiport, mididatabytes, datalength ) then
     begin

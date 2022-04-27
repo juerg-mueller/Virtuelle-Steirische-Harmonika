@@ -2,7 +2,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   Left = 0
   Top = 0
   ActiveControl = cbxTransInstrument
-  Caption = 'Virtuelle Steirische Harmonica'
+  Caption = 'Virtuelle Steirische Harmonika'
   ClientHeight = 360
   ClientWidth = 440
   Color = clBtnFace

@@ -43,7 +43,6 @@ type
     procedure cbTransInstrumentKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
   private
-    procedure MessageEvent(var Msg: TMsg; var Handled: Boolean);
     procedure RegenerateMidi;
   public
     Instrument: TInstrument;
@@ -57,53 +56,7 @@ implementation
 {$R *.dfm}
 
 uses
-  UAmpel, Midi, UVirtual, UMidiDataStream, UFormHelper, UGriffEvent;
-
-procedure TfrmVirtualHarmonica.MessageEvent(var Msg: TMsg; var Handled: Boolean);
-begin
-  if ((Msg.message = WM_KEYDOWN) or (Msg.message = WM_KEYUP)) then
-  begin
-    //writeln(Msg.wParam, '  ', IntToHex(Msg.lParam));
-    if frmAmpel.IsActive then
-    begin
-      if (Msg.lParam and $fff0000) = $0150000 then    // Z
-        Msg.wParam := 90;
-      if (Msg.lParam and $fff0000) = $02c0000 then    // Y
-        Msg.wParam := 89;
-      // 4. Reihe ' ^
-      if (Msg.lParam and $fff0000) = $00c0000 then
-        Msg.wParam := 219;
-      if (Msg.lParam and $fff0000) = $00d0000 then
-        Msg.wParam := 221;
-      // 3. Reihe ü ¨
-      if RunningWine then
-      begin
-        if (Msg.lParam and $fff0000) = $0600000 then
-          Msg.wParam := 186;
-      end else
-      if (Msg.lParam and $fff0000) = $01a0000 then
-        Msg.wParam := 186;
-      if (Msg.lParam and $fff0000) = $01b0000 then
-        Msg.wParam := 192;
-      // 2. Reihe ö ä $
-      if (Msg.lParam and $fff0000) = $0270000 then
-        Msg.wParam := 222;
-      if (Msg.lParam and $fff0000) = $0280000 then
-        Msg.wParam := 220;
-      if (Msg.lParam and $fff0000) = $02b0000 then
-        Msg.wParam := 223;
-      // 1. Reihe , . -
-      if (Msg.lParam and $fff0000) = $0330000 then
-        Msg.wParam := 188;
-      if (Msg.lParam and $fff0000) = $0340000 then
-        Msg.wParam := 190;
-      if (Msg.lParam and $fff0000) = $0350000 then
-        Msg.wParam := 189;
-      if (Msg.lParam and $fff0000) = $0560000 then
-        Msg.wParam := 226;
-    end;
-  end;
-end;
+  UAmpel, Midi, UVirtual, UFormHelper, UGriffEvent;
 
 procedure TfrmVirtualHarmonica.btnResetMidiClick(Sender: TObject);
 begin
@@ -238,7 +191,7 @@ begin
     ShowWindow(GetConsoleWindow, SW_SHOWMINIMIZED);
   SetConsoleTitle('VirtualHarmonica - Trace Window');
 {$endif}
-  Application.OnMessage := MessageEvent;
+  Application.OnMessage := frmAmpel.KeyMessageEvent;
 
   UVirtual.LoopbackName := 'VirtualHarmonica loopback';
   InstallLoopback;

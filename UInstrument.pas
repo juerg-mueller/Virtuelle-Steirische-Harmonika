@@ -329,13 +329,13 @@ const
 function InstrumentIndex(const Name: AnsiString): integer;
 function GetBassIndex(const Bass: TBassArr; Pitch: byte): integer;
 function SoundToGriff_(Pitch: byte; const Bass: TBassArray; var Sixth: boolean): integer;
+function GetIndexToPitchInArray(pitch: byte; const arr: TPitchArray): integer;
 
 implementation
 
-uses
-  UMyMemoryStream, UMyMidiStream;
+//uses
+//  UMyMemoryStream, UMyMidiStream;
 
-function GetIndexToPitchInArray(pitch: byte; const arr: TPitchArray): integer; forward;
 
 function TInstrument.GetAccordion: string;
 begin
