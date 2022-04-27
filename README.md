@@ -20,14 +20,14 @@ Zusatzinformationen, welche im Synthesizer-Midi-Kanal mitgeliefert werden.
 
 Midi-Balg-Information, wird bei jedem Wechsel ausgegeben:
 
-  B6 1f 00/01    01 für Push; 00 für Pull
+  B7 1f 00/01   ; 01 für Push; 00 für Pull
   
 Die Tastatur-Spalten werden je einem eigenen Midi-Kanal zugewiesen.
 
-  90 nn xx  für die äusserste Diskant-Spalte
+  91 nn xx  für die äusserste Diskant-Spalte
 
   ..
   
-  95 nn xx  für die äusserste Bass-Spalte
+  96 nn xx  für die äusserste Bass-Spalte
 
 Diese Midi-Sequenzen lassen sich eindeutig in Griffschrift umwandeln. Für das Notenblatt-Korsett braucht es aber noch eine Quantisierung. 
