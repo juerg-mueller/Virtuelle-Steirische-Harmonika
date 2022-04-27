@@ -1169,7 +1169,7 @@ begin
   if ((Msg.message = WM_KEYDOWN) or (Msg.message = WM_KEYUP)) then
   begin
     //writeln(Msg.wParam, '  ', IntToHex(Msg.lParam));
-    if (Self <> nil) and IsActive then
+    if frmAmpel.IsActive then
     begin
       if (Msg.lParam and $fff0000) = $0150000 then    // Z
         Msg.wParam := 90;
