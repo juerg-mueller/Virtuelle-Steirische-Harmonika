@@ -1144,7 +1144,7 @@ begin
       begin
         AmpelEvents.NewEvent(Event);
 {$ifndef __VIRTUAL__}
-        if (GetKeyState(vk_scroll) = 1) then //   numlock pause scroll
+        if (GetKeyState(vk_scroll) = 1) then // numlock pause scroll
           frmGriff.GenerateNewNote(Event);
 {$endif}
       end;
@@ -1168,7 +1168,9 @@ procedure TfrmAmpel.KeyMessageEvent(var Msg: TMsg; var Handled: Boolean);
 begin
   if ((Msg.message = WM_KEYDOWN) or (Msg.message = WM_KEYUP)) then
   begin
-    //writeln(Msg.wParam, '  ', IntToHex(Msg.lParam));
+{$ifdef CONSOLE}
+    writeln(Msg.wParam, '  ', IntToHex(Msg.lParam));
+{$endif}
     if frmAmpel.IsActive then
     begin
       if (Msg.lParam and $fff0000) = $0150000 then    // Z
@@ -1183,14 +1185,29 @@ begin
       // 3. Reihe ü ¨
       if RunningWine then
       begin
+        if (Msg.lParam and $fff0000) = $01b0000 then
+          Msg.wParam := 192;
         if (Msg.lParam and $fff0000) = $0600000 then
           Msg.wParam := 186;
-      end else
-      if (Msg.lParam and $fff0000) = $01a0000 then
-        Msg.wParam := 186;
-      if (Msg.lParam and $fff0000) = $01b0000 then
-        Msg.wParam := 192;
-      // 2. Reihe ö ä $
+        // 2. Reihe ö ä $
+        if (Msg.lParam and $fff0000) = $0610000 then
+          Msg.wParam := 222;
+        if (Msg.lParam and $fff0000) = $0620000 then
+          Msg.wParam := 220;
+        if (Msg.lParam and $fff0000) = $0630000 then
+          Msg.wParam := $29;
+      end else begin
+        if (Msg.lParam and $fff0000) = $01a0000 then
+          Msg.wParam := 186;
+        // 2. Reihe ö ä
+ //       if (Msg.lParam and $fff0000) = $0270000 then
+ //         Msg.wParam := 222;
+        if (Msg.lParam and $fff0000) = $0280000 then
+          Msg.wParam := 126;
+        if (Msg.lParam and $fff0000) = $01b0000 then
+          Msg.wParam := 192;
+      end;
+      // 2. Reihe  $
       if (Msg.lParam and $fff0000) = $0270000 then
         Msg.wParam := 222;
       if (Msg.lParam and $fff0000) = $0280000 then

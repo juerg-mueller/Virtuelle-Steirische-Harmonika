@@ -35,9 +35,11 @@ begin
 end;
 
 procedure teVMCallback( MidiPort: LPVM_MIDI_PORT; MidiDataBytes: PBYTE; DataLength: cardinal; dwCallbackInstance: Pointer ); stdcall;
+{$if defined(CONSOLE)}
 var
   i: integer;
   b: byte;
+{$endif}
 begin
   if ( mididatabytes = nil ) or ( datalength = 0 ) then
     begin

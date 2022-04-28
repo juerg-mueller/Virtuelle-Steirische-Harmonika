@@ -3,14 +3,14 @@
 uses
   Vcl.Forms,
   UVirtualHarmonica in 'UVirtualHarmonica.pas' {frmVirtualHarmonica},
-  UInstrument in 'UInstrument.pas',
   UGriffEvent in 'UGriffEvent.pas',
   UVirtual in 'UVirtual.pas',
   teVirtualMIDIdll in 'teVirtual\teVirtualMIDIdll.pas',
   Midi in 'Midi.pas',
   UAmpel in 'UAmpel.pas' {frmAmpel},
   UFormHelper in 'UFormHelper.pas',
-  UMidiEvent in 'UMidiEvent.pas';
+  UMidiEvent in 'UMidiEvent.pas',
+  UInstrument in 'UInstrument.pas';
 
 {$R *.res}
 

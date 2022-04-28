@@ -200,8 +200,6 @@ begin
 end;
 
 procedure TfrmVirtualHarmonica.FormShow(Sender: TObject);
-var
-  i: integer;
 begin
   cbTransInstrument.ItemIndex := 2;
   cbTransInstrumentChange(nil);
