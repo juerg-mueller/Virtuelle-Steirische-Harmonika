@@ -75,6 +75,7 @@ uses
 procedure TfrmVirtualHarmonica.SendMidiOut(const aStatus, aData1, aData2: byte);
 var
   Event: TMidiTimeEvent;
+  Last: double;
 begin
   CriticalSendOut.Acquire;
   try
@@ -82,9 +83,13 @@ begin
     if TimeEventCount >= Length(TimeEventArray) then
       SetLength(TimeEventArray, TimeEventCount+1);
 
+    Last := time;
+    if TimeEventCount > 1 then
+      TimeEventArray[TimeEventCount-2].TimeStamp := Last;
+
     with TimeEventArray[TimeEventCount-1] do
     begin
-      TimeStamp := time;
+      TimeStamp := Last;
       MidiEvent.Clear;
       MidiEvent.command := aStatus;
       MidiEvent.d1 := aData1;
