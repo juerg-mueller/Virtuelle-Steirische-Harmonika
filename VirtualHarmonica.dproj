@@ -113,7 +113,6 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Icon_MainIcon>VirtualHarmonica_Icon.ico</Icon_MainIcon>
-        <DCC_ConsoleTarget>true</DCC_ConsoleTarget>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
@@ -155,6 +154,9 @@
         <DCCReference Include="UFormHelper.pas"/>
         <DCCReference Include="UMidiEvent.pas"/>
         <DCCReference Include="UInstrument.pas"/>
+        <DCCReference Include="UMyMemoryStream.pas"/>
+        <DCCReference Include="UMidiSaveStream.pas"/>
+        <DCCReference Include="UMyMidiStream.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

@@ -44,10 +44,12 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Touch.GestureMgr, SyncObjs, UITypes,
-  UInstrument, UGriffEvent, Menus;
+  UInstrument, UGriffEvent, Menus, Midi;
 
 type
   TSoundGriff = procedure (Row: byte; index: byte; Push: boolean; On_:boolean) of object;
+  TSendMidiOut = procedure (const aStatus, aData1, aData2: byte) of object;
+
 
   TMouseEvent = record
     P: TPoint;
@@ -74,6 +76,8 @@ type
     procedure DoAmpel(Index: integer; On_: boolean);
     procedure SendPush(Push: boolean);
   public
+    PSendMidiOut: TSendMidiOut;
+
     constructor Create(Ampel: TfrmAmpel);
     destructor Destroy; override;
     procedure NewPush(Push, Ctrl: boolean);
@@ -82,6 +86,8 @@ type
     procedure GetKeyEvent(Key: integer; var Event: TMouseEvent);
     procedure CheckMovePoint(const P: TPoint; Down: boolean);
     procedure InitLastPush;
+    procedure SendMidiOut(const aStatus, aData1, aData2: byte);
+
     property UsedEvents : integer read FUsedEvents;
   end;
 
@@ -119,6 +125,7 @@ type
     procedure cbxLinkshaenderClick(Sender: TObject);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
   private
+    CriticalMidiIn: TCriticalSection;
     function MakeMouseDown(const P: TPoint; Push: boolean): TMouseEvent;
     function FlippedHorz: boolean;
   public
@@ -133,6 +140,7 @@ type
     PlayControl: PPlayControl;
     KeyDown: PKeyDown;
     IsActive: boolean;
+
     procedure ChangeInstrument(Instrument_: PInstrument);
     function KnopfRect(Row: byte {1..6}; index: byte {0..10}): TRect;
     procedure PaintAmpel(Row: byte {1..6}; index: integer {0..10}; Push, On_: boolean);
@@ -164,7 +172,7 @@ uses
 {$ifndef __VIRTUAL__}
   UfrmGriff,
 {$endif}
-  Midi, UFormHelper, UMidiEvent;
+  UFormHelper, UMidiEvent;
 
 procedure TMouseEvent.Clear;
 begin
@@ -206,6 +214,15 @@ begin
   AmpelEvents.InitLastPush;
 end;
 
+procedure TAmpelEvents.SendMidiOut(const aStatus, aData1, aData2: byte);
+begin
+  if (MicrosoftIndex >= 0) then
+    MidiOutput.Send(MicrosoftIndex, aStatus, aData1, aData2);
+  if @PSendMidiOut <> nil then
+    PSendMidiOut(aStatus, aData1, aData2);
+end;
+
+
 procedure TAmpelEvents.SendPush(Push: boolean);
 begin
   if (LastPush = LastPull_) = Push then
@@ -215,8 +232,7 @@ begin
     else
       LastPush := LastPull_;
 
-    if (MicrosoftIndex >= 0) then
-      MidiOutput.Send(MicrosoftIndex, $B7, ControlSustain, ord(Push));
+    SendMidiOut($B0, ControlSustain, ord(Push));
   end;
 end;
 
@@ -337,7 +353,7 @@ begin
 
       DoAmpel(UsedEvents-1, true);
   finally
-    CriticalAmpel.Leave;
+    CriticalAmpel.Release;
   end;
 end;
 
@@ -387,16 +403,16 @@ begin
   begin
     frmAmpel.PaintAmpel(Row_, Index_, Push_, On_);
     Event.SetEvent(Row_, Index_, Push_, frmAmpel.Instrument^);
-    if (MicrosoftIndex >= 0) and (Row_ in [1..6]) then
+    if Row_ in [1..6] then
     begin
       if On_ then
       begin
         d := $5f;
         if Row_ >= 5 then
           d := $6F;
-        MidiOutput.Send(MicrosoftIndex, $90 + Row_ , Event.SoundPitch, d)
+        SendMidiOut($90 + Row_ , Event.SoundPitch, d)
       end else begin
-        MidiOutput.Send(MicrosoftIndex, $80 + Row_, Event.SoundPitch, $40);
+        SendMidiOut($80 + Row_, Event.SoundPitch, $40);
       end;
     end;
     UseVirtualMidi(MouseEvents[Index], On_);
@@ -430,7 +446,7 @@ begin
         break;
       end;
   finally
-    CriticalAmpel.Leave;
+    CriticalAmpel.Release;
   end;
 end;
 
@@ -448,7 +464,7 @@ begin
         break;
       end;
   finally
-    CriticalAmpel.Leave;
+    CriticalAmpel.Release;
   end;
 end;
 
@@ -483,7 +499,7 @@ begin
       cont := rect.Contains(P);
     end;
   finally
-    CriticalAmpel.Leave;
+    CriticalAmpel.Release;
   end;
 
   if (Index >= 0) then
@@ -601,6 +617,7 @@ end;
 
 procedure TfrmAmpel.FormCreate(Sender: TObject);
 begin
+  CriticalMidiIn := TCriticalSection.Create;
   AmpelEvents := TAmpelEvents.Create(self);
   KnopfGroesse := 52;
   FlippedHorz_ := true;
@@ -616,6 +633,7 @@ end;
 procedure TfrmAmpel.FormDestroy(Sender: TObject);
 begin
   AmpelEvents.Free;
+  CriticalMidiIn.Free;
 end;
 
 function TfrmAmpel.GetKeyIndex(var Event: TMouseEvent; Key: word): boolean;
@@ -1119,48 +1137,53 @@ begin
   Event.Index_ := -1;
   Event.Push_ := ShiftUsed;
 
-  if ((aStatus = $b0) and (aData1 = 64)) or
-     ((aStatus = $b7) and (aData1 = ControlSustain)) then
-  begin
-    Sustain_ := aData2 > 0;
-    Key := 0;
-    frmAmpel.FormKeyDown(self, Key, []);
-  end;
-  if aStatus = $80 then
-  begin
-    AmpelEvents.EventOff(Event);
-  end else
-  if aStatus = $90 then
-  begin
-    GriffEvent.Clear;
-    GriffEvent.InPush := Event.Push_;
-    GriffEvent.SoundPitch := aData1;
-    if GriffEvent.SoundToGriff(Instrument^) and
-       (GriffEvent.InPush = Event.Push_) then
+  CriticalMidiIn.Acquire;
+  try
+    if ((aStatus = $b0) and (aData1 = 64)) or
+       ((aStatus = $b7) and (aData1 = ControlSustain)) then
     begin
-      Event.Row_ := GriffEvent.GetRow;
-      Event.Index_ := GriffEvent.GetIndex;
-      if (Event.Row_ > 0) and (Event.Index_ >= 0) then
+      Sustain_ := aData2 > 0;
+      Key := 0;
+      frmAmpel.FormKeyDown(self, Key, []);
+    end;
+    if aStatus = $80 then
+    begin
+      AmpelEvents.EventOff(Event);
+    end else
+    if aStatus = $90 then
+    begin
+      GriffEvent.Clear;
+      GriffEvent.InPush := Event.Push_;
+      GriffEvent.SoundPitch := aData1;
+      if GriffEvent.SoundToGriff(Instrument^) and
+         (GriffEvent.InPush = Event.Push_) then
       begin
-        AmpelEvents.NewEvent(Event);
-{$ifndef __VIRTUAL__}
-        if (GetKeyState(vk_scroll) = 1) then // numlock pause scroll
-          frmGriff.GenerateNewNote(Event);
-{$endif}
+        Event.Row_ := GriffEvent.GetRow;
+        Event.Index_ := GriffEvent.GetIndex;
+        if (Event.Row_ > 0) and (Event.Index_ >= 0) then
+        begin
+          AmpelEvents.NewEvent(Event);
+  {$ifndef __VIRTUAL__}
+          if (GetKeyState(vk_scroll) = 1) then // numlock pause scroll
+            frmGriff.GenerateNewNote(Event);
+  {$endif}
+        end;
+      end;
+    end else
+    if ((aStatus and $f) in [1..6]) and
+       ((aStatus shr 4) in [8, 9]) then
+    begin
+      Event.Row_ := (aStatus and $f);
+      if GetInstr(Event) then
+      begin
+        if (aStatus shr 4) = 9 then
+          AmpelEvents.NewEvent(Event)
+        else
+          AmpelEvents.EventOff(Event);
       end;
     end;
-  end else
-  if ((aStatus and $f) in [1..6]) and
-     ((aStatus shr 4) in [8, 9]) then
-  begin
-    Event.Row_ := (aStatus and $f);
-    if GetInstr(Event) then
-    begin
-      if (aStatus shr 4) = 9 then
-        AmpelEvents.NewEvent(Event)
-      else
-        AmpelEvents.EventOff(Event);
-    end;
+  finally
+    CriticalMidiIn.Release;
   end;
 end;
 
@@ -1169,7 +1192,7 @@ begin
   if ((Msg.message = WM_KEYDOWN) or (Msg.message = WM_KEYUP)) then
   begin
 {$ifdef CONSOLE}
-    writeln(Msg.wParam, '  ', IntToHex(Msg.lParam));
+//    writeln(Msg.wParam, '  ', IntToHex(Msg.lParam));
 {$endif}
     if frmAmpel.IsActive then
     begin

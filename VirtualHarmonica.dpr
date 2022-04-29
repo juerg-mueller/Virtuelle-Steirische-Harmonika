@@ -10,7 +10,10 @@ uses
   UAmpel in 'UAmpel.pas' {frmAmpel},
   UFormHelper in 'UFormHelper.pas',
   UMidiEvent in 'UMidiEvent.pas',
-  UInstrument in 'UInstrument.pas';
+  UInstrument in 'UInstrument.pas',
+  UMyMemoryStream in 'UMyMemoryStream.pas',
+  UMidiSaveStream in 'UMidiSaveStream.pas',
+  UMyMidiStream in 'UMyMidiStream.pas';
 
 {$R *.res}
 

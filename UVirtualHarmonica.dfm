@@ -3,7 +3,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   Top = 0
   ActiveControl = cbxTransInstrument
   Caption = 'Virtuelle Steirische Harmonika'
-  ClientHeight = 360
+  ClientHeight = 445
   ClientWidth = 440
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -14,6 +14,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   OldCreateOrder = False
   Position = poMainFormCenter
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -350,5 +351,32 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
     end
+  end
+  object GroupBox1: TGroupBox
+    Left = 0
+    Top = 357
+    Width = 440
+    Height = 84
+    Align = alTop
+    Caption = 'Record'
+    TabOrder = 3
+    object btnRecord: TButton
+      Left = 122
+      Top = 32
+      Width = 156
+      Height = 25
+      Caption = 'Record'
+      TabOrder = 0
+      OnClick = btnRecordClick
+      OnKeyDown = cbTransInstrumentKeyDown
+      OnKeyPress = cbTransInstrumentKeyPress
+      OnKeyUp = cbTransInstrumentKeyUp
+    end
+  end
+  object SaveDialog1: TSaveDialog
+    FileName = 'Recorded.mid'
+    Filter = 'MIDI|*.mid'
+    Left = 368
+    Top = 56
   end
 end

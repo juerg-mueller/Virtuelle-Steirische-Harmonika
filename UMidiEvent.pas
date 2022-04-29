@@ -107,7 +107,7 @@ type
     function GetSmallestTicks: integer;
     function MsDelayToTicks(MsDelay: integer): integer;
     function TicksPerMeasure: integer;
-    function TicksToSec(Ticks: integer): integer;
+    function TicksToMs(Ticks: integer): double;
     function TicksToString(Ticks: integer): string;
     function SetTimeSignature(const Event: TMidiEvent; const Bytes: array of byte): boolean;
     function SetBeatsPerMin(const Event: TMidiEvent; const Bytes: array of byte): boolean;
@@ -234,18 +234,18 @@ begin
   result := 4*DeltaTimeTicks*measureFact div measureDiv;
 end;
 
-function TDetailHeader.TicksToSec(Ticks: integer): integer;
+function TDetailHeader.TicksToMs(Ticks: integer): double;
 begin
   if DeltaTimeTicks = 0 then
     DeltaTimeTicks := 192;
-  result := round(Ticks*60.0 / (DeltaTimeTicks*beatsPerMin));
+  result := Ticks*60000.0 / (DeltaTimeTicks*beatsPerMin);
 end;
 
 function TDetailHeader.TicksToString(Ticks: integer): string;
 var
   len: integer;
 begin
-  len := TicksToSec(Ticks);
+  len := round(TicksToMs(Ticks)) div 1000;
   result := Format('%d:%2.2d', [len div 60, len mod 60]);
 end;
 

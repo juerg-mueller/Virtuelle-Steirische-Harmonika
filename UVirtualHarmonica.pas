@@ -4,10 +4,15 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  UInstrument;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, SyncObjs,
+  UInstrument, UMidiEvent;
 
 type
+  TMidiTimeEvent = record
+    TimeStamp: TDateTime;
+    MidiEvent: TMidiEvent;
+  end;
+
   TfrmVirtualHarmonica = class(TForm)
     gbMidi: TGroupBox;
     lblKeyboard: TLabel;
@@ -27,6 +32,9 @@ type
     Label2: TLabel;
     cbxMidiInstrument: TComboBox;
     Label3: TLabel;
+    GroupBox1: TGroupBox;
+    btnRecord: TButton;
+    SaveDialog1: TSaveDialog;
     procedure cbTransInstrumentChange(Sender: TObject);
     procedure cbxMidiInputChange(Sender: TObject);
     procedure cbxTransInstrumentChange(Sender: TObject);
@@ -42,8 +50,14 @@ type
       Shift: TShiftState);
     procedure cbTransInstrumentKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure btnRecordClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
+    CriticalSendOut: TCriticalSection;
+    TimeEventCount: cardinal;
+    TimeEventArray: array of TMidiTimeEvent;
     procedure RegenerateMidi;
+    procedure SendMidiOut(const aStatus, aData1, aData2: byte);
   public
     Instrument: TInstrument;
   end;
@@ -56,7 +70,113 @@ implementation
 {$R *.dfm}
 
 uses
-  UAmpel, Midi, UVirtual, UFormHelper, UGriffEvent;
+  UAmpel, Midi, UVirtual, UFormHelper, UGriffEvent, UMidiSaveStream;
+
+procedure TfrmVirtualHarmonica.SendMidiOut(const aStatus, aData1, aData2: byte);
+var
+  Event: TMidiTimeEvent;
+begin
+  CriticalSendOut.Acquire;
+  try
+    inc(TimeEventCount);
+    if TimeEventCount >= Length(TimeEventArray) then
+      SetLength(TimeEventArray, TimeEventCount+1);
+
+    with TimeEventArray[TimeEventCount-1] do
+    begin
+      TimeStamp := time;
+      MidiEvent.Clear;
+      MidiEvent.command := aStatus;
+      MidiEvent.d1 := aData1;
+      MidiEvent.d2 := aData2;
+    end;
+  finally
+    CriticalSendOut.Release;
+  end;
+end;
+
+procedure TfrmVirtualHarmonica.btnRecordClick(Sender: TObject);
+
+  procedure Deactivate(Ok: boolean);
+  begin
+    gbInstrument.Enabled := Ok;
+    gbMidi.Enabled := Ok;
+    gbBalg.Enabled := Ok;
+  end;
+
+const
+  MilliSekProTag = 3600.0*24*1000;
+var
+  i: integer;
+  Stream: TMidiSaveStream;
+  TimeOffset: double;
+  DetailHeader: TDetailHeader;
+  Event: TMidiEvent;
+  Saved: boolean;
+begin
+  if btnRecord.Caption = 'Record' then
+  begin
+    Deactivate(false);
+    TimeEventCount := 0;
+    SendMidiOut($B0, ControlSustain, ord(ShiftUsed));
+    frmAmpel.AmpelEvents.PSendMidiOut := SendMidiOut;
+    btnRecord.Caption := 'Stop';
+  end else begin
+    frmAmpel.AmpelEvents.PSendMidiOut := nil;
+    if TimeEventCount > 1 then
+    begin
+      Stream := TMidiSaveStream.Create;
+      DetailHeader.Clear;
+      Stream.SetHead(DetailHeader.DeltaTimeTicks);
+      Stream.AppendTrackHead;
+      Event.MakeMetaEvent(2, 'VirtualHarmonica');
+      Stream.AppendEvent(Event);
+      Event.MakeMetaEvent(4, Instrument.Name);
+      Stream.AppendEvent(Event);
+      Stream.AppendHeaderMetaEvents(DetailHeader);
+      Stream.AppendTrackEnd(false);
+      Stream.AppendTrackHead;
+      for i := 1 to 6 do
+      begin
+        Stream.AppendEvent($C0 + i, MidiInstr, 0); // Instrument
+        Stream.WriteByte(0); // var_len = 0
+      end;
+
+      i := 0;
+      repeat
+        Stream.AppendEvent(TimeEventArray[i].MidiEvent);
+        inc(i);
+      until (i >= TimeEventCount) or (TimeEventArray[i].MidiEvent.Event = 9);
+      if i < TimeEventCount then
+        TimeOffset := TimeEventArray[i].TimeStamp;
+      while i < TimeEventCount do
+      begin
+        with TimeEventArray[i] do begin
+          TimeEventArray[i].MidiEvent.var_len :=
+            DetailHeader.MsDelayToTicks(round(MilliSekProTag*(TimeStamp - TimeOffset)));
+          TimeOffset :=
+            TimeOffset + DetailHeader.TicksToMs(MidiEvent.var_len) / MilliSekProTag;
+          Stream.AppendEvent(MidiEvent);
+        end;
+        inc(i);
+      end;
+      Stream.AppendTrackEnd(true);
+      Saved := false;
+      while not Saved and SaveDialog1.Execute do
+      begin
+        if not FileExists(SaveDialog1.FileName) or
+          (Warning('File exists! Overwrite?') = IDYES) then
+        begin
+          Stream.SaveToFile(SaveDialog1.FileName);
+          Saved := true;
+        end;
+      end;
+      Stream.Free;
+    end;
+    btnRecord.Caption := 'Record';
+    Deactivate(true);
+  end;
+end;
 
 procedure TfrmVirtualHarmonica.btnResetMidiClick(Sender: TObject);
 begin
@@ -183,6 +303,9 @@ begin
 {$else}
   Caption := Caption + ' (32)';
 {$endif}
+  SetLength(TimeEventArray, 100000);
+  TimeEventCount := 0;
+
   cbTransInstrument.Items.Clear;
   for i := 0 to High(InstrumentsList) do
     cbTransInstrument.Items.Add(string(InstrumentsList[i].Name));
@@ -197,6 +320,13 @@ begin
   InstallLoopback;
   Sleep(10);
   Application.ProcessMessages;
+  CriticalSendOut := TCriticalSection.Create;
+end;
+
+procedure TfrmVirtualHarmonica.FormDestroy(Sender: TObject);
+begin
+  SetLength(TimeEventArray, 0);
+  CriticalSendOut.Free;
 end;
 
 procedure TfrmVirtualHarmonica.FormShow(Sender: TObject);
