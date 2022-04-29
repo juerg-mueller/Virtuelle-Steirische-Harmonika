@@ -20,7 +20,7 @@ Zusatzinformationen, welche im Synthesizer-Midi-Kanal mitgeliefert werden.
 
 Midi-Balg-Information, wird bei jedem Wechsel ausgegeben:
 
-  B7 1f 00/01   ; 01 für Push; 00 für Pull
+  B1 1f 00/01   ; 01 für Push; 00 für Pull
   
 Die Tastatur-Spalten werden je einem eigenen Midi-Kanal zugewiesen.
 
