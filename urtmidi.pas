@@ -184,13 +184,17 @@ RTMIDIAPI RtMidiOutPtr rtmidi_out_create_default ();
 
 var
   MicrosoftIndex: integer = 0;
+  TrueMicrosoftIndex: integer = -1;
+  MidiInstrDiskant: byte = $15; // Akkordeon
+  MidiInstrBass: byte = $15; // Akkordeon
+  MidiBankDiskant: byte = 0;
+  MidiBankBass: byte = 0;
+
   MidiOutput: TMidiOutput;
   MidiVirtual: TMidiOutput;
-  MidiInstr: byte = $15; // Akkordeon
   MidiInput: TMidiInput;
 
 procedure OpenMidiMicrosoft;
-procedure SetSynthDevice;
 
 implementation
 
@@ -281,28 +285,30 @@ begin
   Sleep(5);
 end;
 
-procedure SetSynthDevice;
+procedure ChangeBank(Index, Channel, Bank, Instr: byte);
 begin
-  MidiOutput.Send(MicrosoftIndex, $c0, MidiInstr, $00);
-  MidiOutput.Send(MicrosoftIndex, $c1, MidiInstr, $00);
-  MidiOutput.Send(MicrosoftIndex, $c2, MidiInstr, $00);
-  MidiOutput.Send(MicrosoftIndex, $c3, MidiInstr, $00);
-  MidiOutput.Send(MicrosoftIndex, $c4, MidiInstr, $00);
-  MidiOutput.Send(MicrosoftIndex, $c5, MidiInstr, $00);
-  MidiOutput.Send(MicrosoftIndex, $c6, MidiInstr, $00);
+
+  MidiOutput.Send(Index, $b0 + Channel, 0, Bank);
+  MidiOutput.Send(Index, $c0 + Channel, Instr, 0);
 end;
 
 procedure OpenMidiMicrosoft;
 begin
-  MidiOutput.Open(MicrosoftIndex);
-  try
-    MidiOutput.Reset;
-    SetSynthDevice;
-  finally
+  if MicrosoftIndex >= 0 then
+  begin
+    MidiOutput.Open(MicrosoftIndex);
+    try
+//      ResetMidi;
+      ChangeBank(MicrosoftIndex, 0, MidiBankDiskant, MidiInstrDiskant);
+      ChangeBank(MicrosoftIndex, 1, MidiBankDiskant, MidiInstrDiskant);
+      ChangeBank(MicrosoftIndex, 2, MidiBankDiskant, MidiInstrDiskant);
+      ChangeBank(MicrosoftIndex, 3, MidiBankDiskant, MidiInstrDiskant);
+      ChangeBank(MicrosoftIndex, 4, MidiBankDiskant, MidiInstrDiskant);
+      ChangeBank(MicrosoftIndex, 5, MidiBankBass, MidiInstrBass);
+      ChangeBank(MicrosoftIndex, 6, MidiBankBass, MidiInstrBass);
+    finally
+    end;
   end;
-{$if defined(CONSOLE)}
-  writeln('Midi Port-', MicrosoftIndex, ' opend');
-{$endif}
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
