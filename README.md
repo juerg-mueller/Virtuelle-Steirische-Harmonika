@@ -31,3 +31,8 @@ Die Tastatur-Spalten werden je einem eigenen Midi-Kanal zugewiesen.
   96 nn xx  für die äusserste Bass-Spalte
 
 Diese Midi-Sequenzen lassen sich eindeutig in Griffschrift umwandeln. Für das Notenblatt-Korsett braucht es aber noch eine Quantisierung. 
+
+MIDI Banks
+----------
+
+MIDI Banks for "Accordion Master XXL" by V3 Sound!
