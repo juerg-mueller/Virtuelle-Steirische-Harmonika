@@ -39,12 +39,27 @@
 //
 unit UAmpel;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}
+
 interface
 
+{$ifdef FPC}
+  {$R *.lfm}
+{$else}
+  {$R *.dfm}
+{$endif}
+
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Touch.GestureMgr, SyncObjs, UITypes,
-  UInstrument, UGriffEvent, Menus, Midi;
+{$ifdef FPC}
+  urtmidi, lcltype, LCLIntf, lcl,
+{$else}
+  Messages, Windows, Midi,
+{$endif}
+  Forms, SyncObjs, Graphics, Types, StdCtrls, Dialogs, Controls, SysUtils,
+  Classes,
+  UInstrument, UGriffEvent, Menus;
 
 type
   TSoundGriff = procedure (Row: byte; index: byte; Push: boolean; On_:boolean) of object;
@@ -63,12 +78,13 @@ type
   end;
 
   TfrmAmpel = class;
-
+{$ifdef FPC}
+  TWMKey = integer;
+{$endif}
   TLastPush = (unknown, LastPush_, LastPull_);
   TAmpelEvents = class
   private
     frmAmpel: TfrmAmpel;
-    CriticalAmpel: TCriticalSection;
     MouseEvents: array [0..10] of TMouseEvent;
     FUsedEvents: integer;
     LastPush: TLastPush;
@@ -76,6 +92,7 @@ type
     procedure DoAmpel(Index: integer; On_: boolean);
     procedure SendPush(Push: boolean);
   public
+    CriticalAmpel: syncobjs.TCriticalSection;
     PSendMidiOut: TSendMidiOut;
 
     constructor Create(Ampel: TfrmAmpel);
@@ -87,6 +104,7 @@ type
     procedure CheckMovePoint(const P: TPoint; Down: boolean);
     procedure InitLastPush;
     procedure SendMidiOut(const aStatus, aData1, aData2: byte);
+    function  Paint(Row, Index: integer): boolean;
 
     property UsedEvents : integer read FUsedEvents;
   end;
@@ -125,9 +143,9 @@ type
     procedure cbxLinkshaenderClick(Sender: TObject);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
   private
-    CriticalMidiIn: TCriticalSection;
     function MakeMouseDown(const P: TPoint; Push: boolean): TMouseEvent;
     function FlippedHorz: boolean;
+    procedure Invalidate_;
   public
     Instrument: PInstrument;
     AmpelEvents: TAmpelEvents;
@@ -140,13 +158,16 @@ type
     PlayControl: PPlayControl;
     KeyDown: PKeyDown;
     IsActive: boolean;
+    CriticalMidiIn: syncobjs.TCriticalSection;
 
     procedure ChangeInstrument(Instrument_: PInstrument);
     function KnopfRect(Row: byte {1..6}; index: byte {0..10}): TRect;
     procedure PaintAmpel(Row: byte {1..6}; index: integer {0..10}; Push, On_: boolean);
     function GetKeyIndex(var Event: TMouseEvent; Key: word): boolean;
     procedure InitLastPush;
+{$ifdef dcc}
     procedure KeyMessageEvent(var Msg: TMsg; var Handled: Boolean);
+{$endif}
     procedure OnMidiInData(aDeviceIndex: integer; aStatus, aData1, aData2: byte; Timestamp: integer);
   end;
 
@@ -166,10 +187,14 @@ var
 
 implementation
 
-{$R *.dfm}
+{$ifdef FPC}
+  {$R *.lfm}
+{$else}
+  {$R *.dfm}
+{$endif}
 
 uses
-{$ifndef __VIRTUAL__}
+{$if not defined(__VIRTUAL__) and defined(dcc)}
   UfrmGriff,
 {$endif}
   UFormHelper, UMidiEvent;
@@ -416,7 +441,6 @@ begin
       end;
     end;
     UseVirtualMidi(MouseEvents[Index], On_);
-    frmAmpel.PaintAmpel(Row_, Index_, Push_, On_);
 
     if assigned(frmAmpel.SelectedChanges) then
     begin
@@ -513,7 +537,33 @@ begin
     frmAmpel.MakeMouseDown(P, ShiftUsed);
 end;
 
+function TAmpelEvents.Paint(Row, Index: integer): boolean;
+var
+  i: integer;
+begin
+  result := false;
+  i := 0;
+  while i < UsedEvents do
+  begin
+    if (MouseEvents[i].Row_ = Row) and (MouseEvents[i].Index_ = Index) then
+    begin
+      result := true;
+      break;
+    end;
+    inc(i);
+  end;
+  if result then
+    frmAmpel.PaintAmpel(Row, Index, MouseEvents[i].Push_, true)
+  else
+    frmAmpel.PaintAmpel(Row, Index, false, false);
+end;
+
 ////////////////////////////////////////////////////////////////////////////////
+
+procedure TfrmAmpel.Invalidate_;
+begin
+  invalidate;
+end;
 
 procedure TfrmAmpel.ChangeInstrument(Instrument_: PInstrument);
 var
@@ -529,21 +579,21 @@ begin
     Caption := '';
   FormShow(nil);
   FormResize(nil);
-  invalidate;
+  Invalidate_;
 end;
 
 procedure TfrmAmpel.btnFlipClick(Sender: TObject);
 begin
   FlippedVert := not FlippedVert;
   cbSizeChange(nil);
-  invalidate;
+  Invalidate_;
 end;
 
 procedure TfrmAmpel.btnFlipHorzClick(Sender: TObject);
 begin
   FlippedHorz_ := not FlippedHorz_;
   cbSizeChange(nil);
-  invalidate;
+  Invalidate_;
 end;
 
 procedure TfrmAmpel.cbSizeChange(Sender: TObject);
@@ -595,13 +645,13 @@ begin
   lbTastatur.Top := lbTastatur.Top + d;
   cbxLinkshaender.Top := cbxLinkshaender.Top + d;
   cbxVerkehrt.Top := cbxVerkehrt.Top + d;
-  Invalidate;
+  Invalidate_;
 end;
 
 procedure TfrmAmpel.cbxLinkshaenderClick(Sender: TObject);
 begin
   cbSizeChange(nil);
-  invalidate;
+  Invalidate_;
 end;
 
 procedure TfrmAmpel.FormActivate(Sender: TObject);
@@ -763,7 +813,7 @@ begin
   P.Y := Y;
   Event := MakeMouseDown(P, ShiftUsed);
 
-{$ifndef __VIRTUAL__}
+{$if not defined(__VIRTUAL__) and defined(dcc)}
   if (@KeyDown <> nil) and
      ((GetKeyState(vk_scroll) = 1) or //   numlock pause scroll
       (GetKeyState(vk_RMenu) < 0)) then // AltGr
@@ -951,13 +1001,13 @@ begin
   for i := 1 to Instrument.Columns do
     for k := 0 to 12 do
       if Instrument^.Push.Col[i, k] > 0 then
-        PaintAmpel(i, k, false, false);
+        AmpelEvents.Paint(i, k);
   for k := 1 to 9 do
     if Instrument.Bass[false, k] > 0 then
-      PaintAmpel(5, k, false, false);
+      AmpelEvents.Paint(5, k);
   for k := 1 to 9 do
     if Instrument.Bass[true, k] > 0 then
-      PaintAmpel(6, k, false, false);
+      AmpelEvents.Paint(6, k);
 end;
 
 procedure TfrmAmpel.FormResize(Sender: TObject);
@@ -1002,6 +1052,7 @@ procedure TfrmAmpel.FormShortCut(var Msg: TWMKey; var Handled: Boolean);
 var
   KeyCode: word;
 begin
+{$ifdef dcc}
   if (Msg.KeyData and $40000000) <> 0 then // auto repeat
   begin
     Handled := true;
@@ -1015,6 +1066,7 @@ begin
     FormKeyDown(self, KeyCode, []);
     Handled := true;
   end;
+{$endif}
 end;
 
 procedure TfrmAmpel.FormShow(Sender: TObject);
@@ -1047,9 +1099,9 @@ begin
     canvas.Brush.Color := $7f0000
   else
   if Push then
-    canvas.Brush.Color := TColors.Magenta
+    canvas.Brush.Color := $ff00ff
   else
-    canvas.Brush.Color := TColors.Cyan;
+    canvas.Brush.Color := $ffff00;
   canvas.Ellipse(rect);
 
   if (index = 5) and
@@ -1163,7 +1215,7 @@ begin
         if (Event.Row_ > 0) and (Event.Index_ >= 0) then
         begin
           AmpelEvents.NewEvent(Event);
-  {$ifndef __VIRTUAL__}
+  {$if not defined(__VIRTUAL__) and defined(dcc)}
           if (GetKeyState(vk_scroll) = 1) then // numlock pause scroll
             frmGriff.GenerateNewNote(Event);
   {$endif}
@@ -1187,6 +1239,7 @@ begin
   end;
 end;
 
+{$ifdef dcc}
 procedure TfrmAmpel.KeyMessageEvent(var Msg: TMsg; var Handled: Boolean);
 begin
   if ((Msg.message = WM_KEYDOWN) or (Msg.message = WM_KEYUP)) then
@@ -1249,5 +1302,6 @@ begin
     end;
   end;
 end;
+{$endif}
 
 end.

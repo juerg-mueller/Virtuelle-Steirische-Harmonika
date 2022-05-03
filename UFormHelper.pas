@@ -1,9 +1,18 @@
 ﻿unit UFormHelper;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}
+
 interface
 
 uses
-  Forms, Windows;
+{$ifdef FPC}
+  LCLIntf, LCLType, LMessages,
+{$else}
+  Types, Windows,
+{$endif}
+  Forms;
 
 var
   Sustain_: boolean = false; // midi keyboard flag
@@ -45,6 +54,8 @@ begin
   result := result = shiftIsPush;
 end;
 
+{$ifdef dcc}
+
 function IsRunningInWine: boolean;
 type
   TWineVers = function: PAnsiChar; cdecl;
@@ -68,5 +79,7 @@ initialization
   IsRunningInWine;
 
 finalization
+
+{$endif}
 
 end.

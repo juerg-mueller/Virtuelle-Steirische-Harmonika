@@ -15,6 +15,10 @@
 //
 unit UGriffEvent;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}
+
 interface
 
 uses
@@ -87,7 +91,6 @@ type
     procedure SetBass(NewBass: boolean);
     function GetSteiBass: string;
     function IsAppoggiatura(const GriffHeader: TGriffHeader): boolean;
-  {$if defined(__INSTRUMENTS__)}
     function IsDiatonic(const Instrument: TInstrument): boolean;
     function GriffToSound(const Instrument: TInstrument; diff: integer = 0): boolean;
     function InSet(const Instrument: TInstrument): TPushPullSet;
@@ -98,7 +101,6 @@ type
     function SoundToGriffBass(const Instrument: TInstrument; UsePush: boolean): integer; overload;
     function SoundToGriffBass(const Instrument: TInstrument): integer; overload;
     function SetEvent(Row, Index: integer; Push: boolean; const Instrument: TInstrument): boolean;
-  {$endif}
   end;
   PGriffEvent = ^TGriffEvent;
 

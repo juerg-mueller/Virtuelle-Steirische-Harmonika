@@ -21,9 +21,9 @@ interface
 {$define _InstrumentsList}
 {$define GenerateA_Oergeli}
 
-{$if not defined(DCC)}
-  {$mode Delphi}
-{$endif}
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}
 
 uses
   SysUtils;
@@ -333,8 +333,8 @@ function GetIndexToPitchInArray(pitch: byte; const arr: TPitchArray): integer;
 
 implementation
 
-//uses
-//  UMyMemoryStream, UMyMidiStream;
+uses
+  UMyMemoryStream, UMyMidiStream;
 
 
 function TInstrument.GetAccordion: string;
@@ -761,10 +761,21 @@ end;
 
 {$if defined(InstrumentsList)}
 
+const
+  FlatNotes  : array [0..11] of string = ('C', 'Des', 'D', 'Es', 'E', 'F', 'Ges', 'G', 'As', 'A', 'B', 'H');
+  SharpNotes : array [0..11] of string = ('C', 'Cis', 'D', 'Dis', 'E', 'F', 'Fis', 'G', 'Gis', 'A', 'B', 'H');
+
+function MidiOnlyNote(Pitch: byte; Sharp: boolean): string;
+begin
+  if Sharp then
+    result := Format('%s%d', [SharpNotes[Pitch mod 12], Pitch div 12])
+  else
+    result := Format('%s%d', [FlatNotes[Pitch mod 12], Pitch div 12])
+end;
+
 procedure PrintInstrument(var stream: TMyMemoryStream; Instrument: TInstrument);
 var
   j: integer;
-  sSharp: string;
 
   procedure PrintPitchArr(const Arr: TPitchArray; const gap: string);
   var
@@ -835,24 +846,30 @@ var
     stream.WritelnString('           );');
     stream.WritelnString('          );');  
   end;
+
+  function Bool(b: boolean): string;
+  begin
+    if b then
+      result := 'true'
+    else
+      result := 'false';
+  end;
   
 begin
-  if Instrument.Sharp then
-    sSharp := 'true'
-  else
-    sSharp := 'false';
   stream.Writeln;
   stream.WritelnString(Format('  %s : TInstrument = (', [Instrument.Name]));
   stream.WritelnString(Format('    Name: (''%s'');', [Instrument.Name]));
-  stream.WritelnString('    Sharp: (' + sSharp + ');');
+  stream.WritelnString('    Sharp: (' + Bool(Instrument.Sharp) + ');');
+  stream.WritelnString('    BassDiatonic: (' + Bool(Instrument.BassDiatonic) + ');');
+  stream.WritelnString('    Accordion: (' + Bool(Instrument.Accordion) + ');');
   stream.WritelnString('    Columns: (' + IntToStr(Instrument.Columns) + ');');
   stream.WritelnString('    Push: ('); PrintVocal(Instrument.Push);
   stream.WritelnString('    Pull: ('); PrintVocal(Instrument.Pull);
   stream.WriteString('    Bass:');    PrintBassArr(Instrument.Bass);
   stream.WriteString('    PullBass:'); PrintBassArr(Instrument.PullBass);
   stream.WritelnString('           );');
-  stream.WritelnString('    BassDiatonic: (' + 'true' + ')');
-  stream.Writeln;
+//  stream.WritelnString('    BassDiatonic: (' + 'true' + ')');
+//  stream.Writeln;
   stream.WritelnString('  );');
 end;
 

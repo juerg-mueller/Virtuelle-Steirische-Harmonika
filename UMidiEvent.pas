@@ -16,15 +16,14 @@
 
 unit UMidiEvent;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}
+
 interface
 
-//{$if not defined(DCC)}
-  //{$mode Delphi}
-//{$endif}
-
 uses
-  SysUtils, Classes, Types;//,
-//  UMyMemoryStream;
+  SysUtils, Classes, Types, UMyMemoryStream;
 
 Const
   cSimpleHeader = AnsiString('Header');
@@ -184,8 +183,11 @@ begin
       Insert('&gt;', s, p);
     end;
   until p = 0;
-
+{$ifdef FPC}
+  result := '';
+{$else}
   result := UTF8ToString(AnsiString(s));
+{$endif}
 end;
 
 function TMidiEvent.GetInt: cardinal;

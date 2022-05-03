@@ -16,6 +16,10 @@
 
 unit UMyMidiStream;
 
+{$ifdef FPC}
+  {$MODE Delphi}
+{$endif}
+
 interface
 
 uses

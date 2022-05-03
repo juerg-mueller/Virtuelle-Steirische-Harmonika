@@ -1,11 +1,20 @@
 ﻿unit UVirtualHarmonica;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}
+
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, SyncObjs,
-  UInstrument, UMidiEvent;
+{$ifndef FPC}
+  Winapi.Windows, Winapi.Messages,
+  Midi,
+{$else}
+  Urtmidi,
+{$endif}
+  Forms, SyncObjs, SysUtils, Graphics, Controls, Dialogs,
+  UInstrument, UMidiEvent, StdCtrls, UAmpel, Classes;
 
 type
   TMidiTimeEvent = record
@@ -30,11 +39,21 @@ type
     gbBalg: TGroupBox;
     cbxShiftIsPush: TCheckBox;
     Label2: TLabel;
-    cbxMidiInstrument: TComboBox;
-    Label3: TLabel;
     GroupBox1: TGroupBox;
     btnRecord: TButton;
     SaveDialog1: TSaveDialog;
+    gbMidiInstrument: TGroupBox;
+    Label3: TLabel;
+    cbxMidiDiskant: TComboBox;
+    Label4: TLabel;
+    gbMidiBass: TGroupBox;
+    Label5: TLabel;
+    Label6: TLabel;
+    cbxInstrBass: TComboBox;
+    cbxBassDifferent: TCheckBox;
+    Label7: TLabel;
+    cbxBankBass: TComboBox;
+    cbxDiskantBank: TComboBox;
     procedure cbTransInstrumentChange(Sender: TObject);
     procedure cbxMidiInputChange(Sender: TObject);
     procedure cbxTransInstrumentChange(Sender: TObject);
@@ -44,7 +63,7 @@ type
     procedure btnResetMidiClick(Sender: TObject);
     procedure cbxVirtualChange(Sender: TObject);
     procedure cbxShiftIsPushClick(Sender: TObject);
-    procedure cbxMidiInstrumentChange(Sender: TObject);
+    procedure cbxMidiDiskantChange(Sender: TObject);
     procedure cbTransInstrumentKeyPress(Sender: TObject; var Key: Char);
     procedure cbTransInstrumentKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -52,6 +71,8 @@ type
       Shift: TShiftState);
     procedure btnRecordClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure cbxBassDifferentClick(Sender: TObject);
+    procedure cbxDiskantBankChange(Sender: TObject);
   private
     CriticalSendOut: TCriticalSection;
     TimeEventCount: cardinal;
@@ -67,14 +88,25 @@ var
 
 implementation
 
-{$R *.dfm}
+{$ifdef FPC}
+  {$R *.lfm}
+{$else}
+  {$R *.dfm}
+{$endif}
 
 uses
-  UAmpel, Midi, UVirtual, UFormHelper, UGriffEvent, UMidiSaveStream;
+{$ifndef FPC}
+  UVirtual,
+{$endif}
+  UFormHelper, UGriffEvent, UMidiSaveStream, UBanks;
+
+{$ifdef FPC}
+const
+  IDYES = 1;
+{$endif}
 
 procedure TfrmVirtualHarmonica.SendMidiOut(const aStatus, aData1, aData2: byte);
 var
-  Event: TMidiTimeEvent;
   Last: double;
 begin
   CriticalSendOut.Acquire;
@@ -107,6 +139,8 @@ procedure TfrmVirtualHarmonica.btnRecordClick(Sender: TObject);
     gbInstrument.Enabled := Ok;
     gbMidi.Enabled := Ok;
     gbBalg.Enabled := Ok;
+    gbMidiInstrument.Enabled := Ok;
+    gbMidiBass.Enabled := Ok;
   end;
 
 const
@@ -143,7 +177,7 @@ begin
       Stream.AppendTrackHead;
       for i := 1 to 6 do
       begin
-        Stream.AppendEvent($C0 + i, MidiInstr, 0); // Instrument
+        Stream.AppendEvent($C0 + i, MidiInstrDiskant, 0); // Instrument
         Stream.WriteByte(0); // var_len = 0
       end;
 
@@ -207,7 +241,7 @@ begin
 
   frmAmpel.ChangeInstrument(@Instrument);
   if Sender <> nil then
-    Midi.OpenMidiMicrosoft;
+    OpenMidiMicrosoft;
 end;
 
 procedure TfrmVirtualHarmonica.cbTransInstrumentKeyDown(Sender: TObject;
@@ -241,9 +275,73 @@ begin
     MidiInput.Open(cbxMidiInput.ItemIndex - 1);
 end;
 
-procedure TfrmVirtualHarmonica.cbxMidiInstrumentChange(Sender: TObject);
+procedure TfrmVirtualHarmonica.cbxBassDifferentClick(Sender: TObject);
 begin
-  MidiInstr := cbxMidiInstrument.ItemIndex;
+  cbxBankBass.Enabled := cbxBassDifferent.Checked;
+  cbxInstrBass.Enabled := cbxBassDifferent.Checked;
+
+  cbxMidiDiskantChange(Sender);
+end;
+
+procedure TfrmVirtualHarmonica.cbxDiskantBankChange(Sender: TObject);
+var
+  Bank: TStringArray;
+
+  procedure FillItems(cbx: TComboBox);
+  var
+    i: integer;
+  begin
+    cbx.Items.Clear;
+    for i := 0 to 127 do
+      if Bank[i] <> '' then
+        cbx.Items.Add(Bank[i]);
+    cbx.ItemIndex := 0;
+  end;
+begin
+  with Sender as TComboBox do
+  begin
+    if ItemIndex < 0 then
+      ItemIndex := 0;
+    GetBank(Bank, ItemIndex);
+  end;
+  if Sender = cbxDiskantBank then
+  begin
+    if MidiBankDiskant <> cbxDiskantBank.ItemIndex then
+      FillItems(cbxMidiDiskant)
+  end else
+    if MidiBankBass <> cbxBankBass.ItemIndex then
+      FillItems(cbxInstrBass);
+  cbxMidiDiskantChange(Sender);
+end;
+
+procedure TfrmVirtualHarmonica.cbxMidiDiskantChange(Sender: TObject);
+
+  function GetIndex(cbxMidi: TComboBox): integer;
+  var
+    s: string;
+  begin
+    if cbxMidi.ItemIndex < 0 then
+      cbxMidi.ItemIndex := 0;
+    s := cbxMidi.Text;
+    if Pos(' ', s) > 0 then
+      s := Copy(s, 1,Pos(' ', s));
+    result := StrToIntDef(s, 0);
+  end;
+begin
+  if cbxDiskantBank.ItemIndex < 0 then
+    cbxDiskantBank.ItemIndex := MidiBankDiskant;
+  MidiInstrDiskant := GetIndex(cbxMidiDiskant);
+  MidiBankDiskant := cbxDiskantBank.ItemIndex;
+  if not cbxBassDifferent.Checked then
+  begin
+    MidiInstrBass := MidiInstrDiskant;
+    MidiBankBass := MidiBankDiskant;
+  end else begin
+    if cbxBankBass.ItemIndex < 0 then
+      cbxBankBass.ItemIndex := MidiBankBass;
+    MidiInstrBass := GetIndex(cbxInstrBass);
+    MidiBankBass := cbxBankBass.ItemIndex;
+  end;
   OpenMidiMicrosoft;
 end;
 
@@ -281,7 +379,11 @@ end;
 procedure TfrmVirtualHarmonica.cbxVirtualChange(Sender: TObject);
 begin
   if iVirtualMidi >= 0 then
+{$ifdef FPC}
+    MidiVirtual.Close(iVirtualMidi);
+{$else}
     MidiOutput.Close(iVirtualMidi);
+{$endif}
   iVirtualMidi := CbxVirtual.ItemIndex - 1;
   if cbxMidiOut.ItemIndex = iVirtualMidi then
   begin
@@ -289,9 +391,11 @@ begin
     CbxVirtual.ItemIndex := 0;
   end;
   if iVirtualMidi >= 0 then
-  begin
+{$ifdef FPC}
+    MidiVirtual.Open(iVirtualMidi);
+{$else}
     MidiOutput.Open(iVirtualMidi);
-  end;
+{$endif}
 end;
 
 procedure TfrmVirtualHarmonica.cbxShiftIsPushClick(Sender: TObject);
@@ -303,7 +407,7 @@ procedure TfrmVirtualHarmonica.FormCreate(Sender: TObject);
 var
   i: integer;
 begin
-{$ifdef WIN64}
+{$if defined(CPUX86_64) or defined(WIN64)}
   Caption := Caption + ' (64)';
 {$else}
   Caption := Caption + ' (32)';
@@ -314,6 +418,7 @@ begin
   cbTransInstrument.Items.Clear;
   for i := 0 to High(InstrumentsList) do
     cbTransInstrument.Items.Add(string(InstrumentsList[i].Name));
+{$ifndef FPC}
 {$if defined(CONSOLE)}
   if not RunningWine then
     ShowWindow(GetConsoleWindow, SW_SHOWMINIMIZED);
@@ -325,6 +430,7 @@ begin
   InstallLoopback;
   Sleep(10);
   Application.ProcessMessages;
+{$endif}
   CriticalSendOut := TCriticalSection.Create;
 end;
 
@@ -335,6 +441,10 @@ begin
 end;
 
 procedure TfrmVirtualHarmonica.FormShow(Sender: TObject);
+var
+  f: TextFile;
+  s: string;
+  i, p: integer;
 begin
   cbTransInstrument.ItemIndex := 2;
   cbTransInstrumentChange(nil);
@@ -347,28 +457,49 @@ begin
   frmAmpel.SetFocus;
 end;
 
+{$ifdef FPC}
+procedure InsertList(Combo: TComboBox; const arr: array of string);
+var
+  i: integer;
+begin
+  for i := 0 to Length(arr)-1 do
+    Combo.AddItem(arr[i], nil);
+end;
+{$else}
+procedure InsertList(Combo: TComboBox; arr: TStringList);
+var
+  i: integer;
+begin
+  for i := 0 to arr.Count-1 do
+    Combo.AddItem(arr[i], nil);
+end;
+{$endif}
+
 procedure TfrmVirtualHarmonica.RegenerateMidi;
 begin
   MidiOutput.GenerateList;
   MidiInput.GenerateList;
 
-  cbxMidiOut.Items.Assign(MidiOutput.DeviceNames);
+  InsertList(cbxMidiOut, MidiOutput.DeviceNames);
   cbxMidiOut.Items.Insert(0, '');
-  Midi.OpenMidiMicrosoft;
+  OpenMidiMicrosoft;
   cbxMidiOut.ItemIndex := MicrosoftIndex + 1;
-
+{$ifdef FPC}
+  cbxMidiInput.Visible := Length(MidiInput.DeviceNames) > 0;
+{$else}
   cbxMidiInput.Visible := MidiInput.DeviceNames.Count > 0;
+{$endif}
   lblKeyboard.Visible := cbxMidiInput.Visible;
   if cbxMidiInput.Visible then
   begin
-    cbxMidiInput.Items.Assign(MidiInput.DeviceNames);
+    InsertList(cbxMidiInput, MidiInput.DeviceNames);
     cbxMidiInput.Items.Insert(0, '');
     cbxMidiInput.ItemIndex := 0;
     cbxMidiInputChange(nil);
   end;
 
   cbxVirtual.Items.Clear;
-  cbxVirtual.Items.Assign(MidiOutput.DeviceNames);
+  InsertList(cbxVirtual, MidiOutput.DeviceNames);
   cbxVirtual.Items.Insert(0, '');
   cbxVirtual.ItemIndex := 0;
 end;

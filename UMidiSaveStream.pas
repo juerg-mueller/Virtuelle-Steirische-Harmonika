@@ -16,10 +16,17 @@
 
 unit UMidiSaveStream;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}
+
 interface
 
 uses
-  Classes, SysUtils, windows,
+{$ifdef FPC}
+  LCLIntf, LCLType, LMessages,
+{$endif}
+  Classes, SysUtils,
   UMyMidiStream, UMidiEvent;
 
 type

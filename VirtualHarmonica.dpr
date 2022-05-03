@@ -13,7 +13,8 @@ uses
   UInstrument in 'UInstrument.pas',
   UMyMemoryStream in 'UMyMemoryStream.pas',
   UMidiSaveStream in 'UMidiSaveStream.pas',
-  UMyMidiStream in 'UMyMidiStream.pas';
+  UMyMidiStream in 'UMyMidiStream.pas',
+  UBanks in 'UBanks.pas';
 
 {$R *.res}
 
