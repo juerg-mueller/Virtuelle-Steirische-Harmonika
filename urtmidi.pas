@@ -106,7 +106,7 @@ RTMIDIAPI RtMidiInPtr rtmidi_in_create_default ();
   rtmidi_in_set_callback = procedure(device: RtMidiInPtr; callback: RtMidiCCallback; userData: pointer); cdecl;
 
 //! Cancel use of the current callback function (if one exists).
-//RTMIDIAPI void rtmidi_in_cancel_callback (RtMidiInPtr device);
+  rtmidi_in_cancel_callback = procedure (device: RtMidiInPtr); cdecl;
 
 {//! Specify whether certain MIDI message types should be queued or ignored during input.
 RTMIDIAPI void rtmidi_in_ignore_types (RtMidiInPtr device, bool midiSysex, bool midiTime, bool midiSense);
@@ -203,6 +203,7 @@ var
   prtmidi_in_create: rtmidi_in_create = nil;
   prtmidi_in_free: rtmidi_in_free = nil;
   prtmidi_in_set_callback: rtmidi_in_set_callback = nil;
+  prtmidi_in_cancel_callback: rtmidi_in_cancel_callback = nil;
 
   prtmidi_out_create: rtmidi_out_create = nil;
   prtmidi_out_free: rtmidi_out_free = nil;
@@ -324,13 +325,26 @@ begin
   prtmidi_in_free(MidiIn);
 end;
 
+procedure Callback(TimeStamp: double; const message: PChar; userData: pointer); cdecl;
+begin
+  with TMidiInput(userData)  do
+  begin
+    if @OnMidiData <> nil then
+    begin
+      OnMidiData(0, Byte(message[0]), Byte(message[1]), Byte(message[2]), 0);
+    end;
+  end;
+end;
+
 procedure TMidiInput.Open(Index: integer);
 begin
   prtmidi_open_port(MidiIn, Index, '');
+  prtmidi_in_set_callback(MidiIn, @Callback, self);
 end;
 
 procedure TMidiInput.Close(Index: integer);
 begin
+  prtmidi_in_cancel_callback(MidiIn);
   prtmidi_close_port(MidiIn);
 end;
 
@@ -369,6 +383,7 @@ initialization
     prtmidi_in_create :=  GetProcedureAddress(hndLib, 'rtmidi_in_create');
     prtmidi_in_free :=  GetProcedureAddress(hndLib, 'rtmidi_in_free');
     prtmidi_in_set_callback :=  GetProcedureAddress(hndLib, 'rtmidi_in_set_callback');
+    prtmidi_in_cancel_callback :=  GetProcedureAddress(hndLib, 'rtmidi_in_cancel_callback');
 
     prtmidi_out_create :=  GetProcedureAddress(hndLib, 'rtmidi_out_create');
     prtmidi_out_free :=  GetProcedureAddress(hndLib, 'rtmidi_out_free');
