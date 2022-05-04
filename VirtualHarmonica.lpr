@@ -11,8 +11,8 @@ uses
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, UInstrument, Urtmidi, UMyMidiStream, UMyMemoryStream,
-  UMidiSaveStream, UMidiEvent, UGriffEvent, UFormHelper, UVirtualHarmonica,
-  UBanks, UAmpel
+  UMidiSaveStream, UMidiEvent, UGriffEvent, UFormHelper,
+  UBanks, UVirtualHarmonica, UAmpel
   { you can add units after this };
 
 {$R *.res}

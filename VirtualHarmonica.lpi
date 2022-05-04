@@ -70,11 +70,8 @@
         <Filename Value="UVirtualHarmonica.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmVirtualHarmonica"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit>
-      <Unit>
-        <Filename Value="UVirtualHarmonica.lfm"/>
-        <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="UBanks.pas"/>
@@ -84,11 +81,8 @@
         <Filename Value="UAmpel.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmAmpel"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit>
-      <Unit>
-        <Filename Value="UAmpel.lfm"/>
-        <IsPartOfProject Value="True"/>
       </Unit>
     </Units>
   </ProjectOptions>
@@ -109,6 +103,11 @@
         </Win32>
       </Options>
     </Linking>
+    <Other>
+      <Verbosity>
+        <ShowDebugInfo Value="True"/>
+      </Verbosity>
+    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions>

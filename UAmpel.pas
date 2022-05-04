@@ -188,7 +188,7 @@ var
 implementation
 
 {$ifdef FPC}
-  {$R *.lfm}
+//  {$R *.lfm}
 {$else}
   {$R *.dfm}
 {$endif}

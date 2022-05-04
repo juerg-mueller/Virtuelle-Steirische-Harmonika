@@ -1,57 +1,56 @@
 object frmVirtualHarmonica: TfrmVirtualHarmonica
-  Left = 751
-  Height = 473
-  Top = 395
-  Width = 506
-  Caption = 'Virtual Steirische Harmonica '
-  ClientHeight = 473
-  ClientWidth = 506
+  Left = 927
+  Height = 611
+  Top = 626
+  Width = 532
+  ActiveControl = cbxTransInstrument
+  Caption = 'Virtuelle Steirische Harmonika'
+  ClientHeight = 611
+  ClientWidth = 532
+  Color = clBtnFace
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
+  Position = poMainFormCenter
   LCLVersion = '2.2.0.4'
   object gbMidi: TGroupBox
     Left = 0
-    Height = 188
-    Top = 128
-    Width = 506
+    Height = 136
+    Top = 105
+    Width = 532
     Align = alTop
-    Caption = 'MIDI'
-    ClientHeight = 168
-    ClientWidth = 504
+    Caption = 'MIDI I/O'
+    ClientHeight = 121
+    ClientWidth = 530
     TabOrder = 1
     object lblKeyboard: TLabel
-      Left = 25
-      Height = 19
-      Top = 10
-      Width = 112
+      Left = 23
+      Height = 14
+      Top = 20
+      Width = 98
       Caption = 'Sustain Pedal (in)'
     end
     object Label17: TLabel
-      Left = 27
-      Height = 19
-      Top = 48
-      Width = 109
+      Left = 23
+      Height = 14
+      Top = 53
+      Width = 96
       Caption = 'Synthesizer (out)'
     end
     object lbVirtual: TLabel
-      Left = 27
-      Height = 19
-      Top = 88
-      Width = 124
+      Left = 23
+      Height = 14
+      Top = 87
+      Width = 109
       Caption = 'Virtual Device (out)'
     end
-    object Label3: TLabel
-      Left = 25
-      Height = 19
-      Top = 120
-      Width = 107
-      Caption = 'MIDI Instrument'
-    end
     object cbxMidiOut: TComboBox
-      Left = 168
-      Height = 35
-      Top = 40
+      Left = 152
+      Height = 30
+      Top = 50
       Width = 156
       ItemHeight = 0
       OnChange = cbxMidiOutChange
@@ -62,9 +61,9 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       TabOrder = 1
     end
     object cbxMidiInput: TComboBox
-      Left = 168
-      Height = 35
-      Top = 0
+      Left = 152
+      Height = 30
+      Top = 17
       Width = 156
       ItemHeight = 0
       OnChange = cbxMidiInputChange
@@ -75,7 +74,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       TabOrder = 0
     end
     object btnResetMidi: TButton
-      Left = 344
+      Left = 340
       Height = 25
       Top = 48
       Width = 100
@@ -87,9 +86,9 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       TabOrder = 2
     end
     object cbxVirtual: TComboBox
-      Left = 168
-      Height = 35
-      Top = 80
+      Left = 152
+      Height = 30
+      Top = 84
       Width = 156
       ItemHeight = 0
       OnChange = cbxVirtualChange
@@ -99,10 +98,173 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Style = csDropDownList
       TabOrder = 3
     end
-    object cbxMidiInstrument: TComboBox
-      Left = 168
-      Height = 36
-      Top = 120
+  end
+  object gbInstrument: TGroupBox
+    Left = 0
+    Height = 105
+    Top = 0
+    Width = 532
+    Align = alTop
+    Caption = 'Steirische Harmonika / Schwyzerörgeli'
+    ClientHeight = 90
+    ClientWidth = 530
+    TabOrder = 0
+    object Label13: TLabel
+      Left = 22
+      Height = 14
+      Top = 50
+      Width = 108
+      Caption = 'Transpose (Primes)'
+    end
+    object Label1: TLabel
+      Left = 23
+      Height = 14
+      Top = 19
+      Width = 61
+      Caption = 'Instrument'
+    end
+    object cbxTransInstrument: TComboBox
+      Left = 152
+      Height = 27
+      Top = 47
+      Width = 46
+      ItemHeight = 0
+      ItemIndex = 11
+      Items.Strings = (
+        '-11'
+        '-10'
+        '-9'
+        '-8'
+        '-7'
+        '-6'
+        '-5'
+        '-4'
+        '-3'
+        '-2'
+        '-1'
+        '0'
+        '1'
+        '2'
+        '3'
+        '4'
+        '5'
+        '6'
+        '7'
+        '8'
+        '9'
+        '10'
+        '11'
+      )
+      OnChange = cbxTransInstrumentChange
+      OnKeyDown = cbTransInstrumentKeyDown
+      OnKeyPress = cbTransInstrumentKeyPress
+      OnKeyUp = cbTransInstrumentKeyUp
+      Style = csDropDownList
+      TabOrder = 0
+      Text = '0'
+    end
+    object cbTransInstrument: TComboBox
+      Left = 152
+      Height = 27
+      Top = 16
+      Width = 156
+      ItemHeight = 0
+      ItemIndex = 0
+      Items.Strings = (
+        'B-Örgeli'
+        'A-Örgeli'
+      )
+      OnChange = cbTransInstrumentChange
+      OnKeyDown = cbTransInstrumentKeyDown
+      OnKeyPress = cbTransInstrumentKeyPress
+      OnKeyUp = cbTransInstrumentKeyUp
+      Style = csDropDownList
+      TabOrder = 1
+      Text = 'B-Örgeli'
+    end
+  end
+  object gbBalg: TGroupBox
+    Left = 0
+    Height = 64
+    Top = 457
+    Width = 532
+    Align = alTop
+    Caption = 'Shift Button for Push/Pull'
+    ClientHeight = 49
+    ClientWidth = 530
+    TabOrder = 2
+    object Label2: TLabel
+      Left = 23
+      Height = 14
+      Top = 12
+      Width = 69
+      Caption = 'Shift is Push'
+    end
+    object cbxShiftIsPush: TCheckBox
+      Left = 120
+      Height = 23
+      Top = 11
+      Width = 23
+      Checked = True
+      OnClick = cbxShiftIsPushClick
+      OnKeyPress = cbTransInstrumentKeyPress
+      OnKeyDown = cbTransInstrumentKeyDown
+      OnKeyUp = cbTransInstrumentKeyUp
+      State = cbChecked
+      TabOrder = 0
+    end
+  end
+  object GroupBox1: TGroupBox
+    Left = 0
+    Height = 84
+    Top = 521
+    Width = 532
+    Align = alTop
+    Caption = 'Record'
+    ClientHeight = 69
+    ClientWidth = 530
+    TabOrder = 3
+    object btnRecord: TButton
+      Left = 152
+      Height = 25
+      Top = 18
+      Width = 156
+      Caption = 'Record'
+      OnClick = btnRecordClick
+      OnKeyDown = cbTransInstrumentKeyDown
+      OnKeyPress = cbTransInstrumentKeyPress
+      OnKeyUp = cbTransInstrumentKeyUp
+      TabOrder = 0
+    end
+  end
+  object gbMidiInstrument: TGroupBox
+    Left = 0
+    Height = 96
+    Top = 241
+    Width = 532
+    Align = alTop
+    Caption = 'MIDI Instrument'
+    ClientHeight = 81
+    ClientWidth = 530
+    TabOrder = 4
+    object Label3: TLabel
+      Left = 23
+      Height = 14
+      Top = 44
+      Width = 88
+      Caption = 'MIDI Instrument'
+    end
+    object Label4: TLabel
+      Left = 22
+      Height = 14
+      Top = 15
+      Width = 28
+      Caption = 'Bank'
+    end
+    object cbxMidiDiskant: TComboBox
+      Left = 152
+      Height = 27
+      Top = 41
       Width = 303
       ItemHeight = 0
       ItemIndex = 21
@@ -236,156 +398,385 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         '127 Applause'
         '128 Gun Shot (Gewehrschuss)'
       )
-      OnChange = cbxMidiInstrumentChange
-      OnKeyDown = cbTransInstrumentKeyDown
-      OnKeyPress = cbTransInstrumentKeyPress
-      OnKeyUp = cbTransInstrumentKeyUp
-      TabOrder = 4
-      Text = '22 Accordion'
-    end
-  end
-  object gbInstrument: TGroupBox
-    Left = 0
-    Height = 128
-    Top = 0
-    Width = 506
-    Align = alTop
-    Caption = 'Steirische Harmonika / Schwyzerörgeli'
-    ClientHeight = 108
-    ClientWidth = 504
-    TabOrder = 0
-    object Label13: TLabel
-      Left = 24
-      Height = 19
-      Top = 64
-      Width = 127
-      Caption = 'Transpose (Primes)'
-    end
-    object Label1: TLabel
-      Left = 25
-      Height = 19
-      Top = 19
-      Width = 72
-      Caption = 'Instrument'
-    end
-    object cbxTransInstrument: TComboBox
-      Left = 168
-      Height = 31
-      Top = 56
-      Width = 46
-      ItemHeight = 0
-      ItemIndex = 11
-      Items.Strings = (
-        '-11'
-        '-10'
-        '-9'
-        '-8'
-        '-7'
-        '-6'
-        '-5'
-        '-4'
-        '-3'
-        '-2'
-        '-1'
-        '0'
-        '1'
-        '2'
-        '3'
-        '4'
-        '5'
-        '6'
-        '7'
-        '8'
-        '9'
-        '10'
-        '11'
-      )
-      OnChange = cbxTransInstrumentChange
+      OnChange = cbxMidiDiskantChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
       Style = csDropDownList
       TabOrder = 0
-      Text = '0'
+      Text = '22 Accordion'
     end
-    object cbTransInstrument: TComboBox
-      Left = 168
-      Height = 31
-      Top = 16
-      Width = 156
+    object cbxDiskantBank: TComboBox
+      Left = 152
+      Height = 27
+      Top = 14
+      Width = 303
       ItemHeight = 0
       ItemIndex = 0
       Items.Strings = (
-        'B-Örgeli'
-        'A-Örgeli'
+        '00 - General Midi'
+        '01 - Piano'
+        '02 - E-Piano'
+        '03 - Organ'
+        '04 - Organ - Drawbar Registrations'
+        '05 - Perc. Tuned Instr.'
+        '06 - String Instr.'
+        '07 - Guitar'
+        '08 - Harmonica and more'
+        '09 - Full Strings & Disco Strings'
+        '10 - Solo Strings'
+        '11 - Synth Strings'
+        '12 - Brass Solo'
+        '13 - Brass Section'
+        '14 - Classic Brass'
+        '15 - Saxophon'
+        '16 - Winds'
+        '17 - Classic Winds'
+        '18 - Choir'
+        '19 - Bass'
+        '20 - Synthesizer'
+        '21 - FX und Percussion'
+        '22'
+        '23'
+        '24'
+        '25'
+        '26'
+        '27'
+        '28'
+        '29'
+        '30'
+        '31'
+        '32'
+        '33'
+        '34'
+        '35'
+        '36'
+        '37'
+        '38'
+        '39'
+        '40 - Accordion French, German, Slvenia and others'
+        '41 - Bass and Chord Melo.'
+        '42 - Cordovox'
+        '43'
+        '44'
+        '45'
+        '46'
+        '47'
+        '48'
+        '49'
+        '50'
+        '51'
+        '52'
+        '53'
+        '54'
+        '55'
+        '56'
+        '57'
+        '58'
+        '59'
+        '60'
+        '61'
+        '62'
+        '63'
+        '64'
+        '65'
+        '66'
+        '67'
+        '68'
+        '69'
+        '70'
       )
-      OnChange = cbTransInstrumentChange
+      OnChange = cbxDiskantBankChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
       Style = csDropDownList
       TabOrder = 1
-      Text = 'B-Örgeli'
+      Text = '00 - General Midi'
     end
   end
-  object gbBalg: TGroupBox
+  object gbMidiBass: TGroupBox
     Left = 0
-    Height = 64
-    Top = 316
-    Width = 506
+    Height = 120
+    Top = 337
+    Width = 532
     Align = alTop
-    Caption = 'Shift Button for Push/Pull'
-    ClientHeight = 44
-    ClientWidth = 504
-    TabOrder = 2
-    object Label2: TLabel
-      Left = 25
-      Height = 19
-      Top = 8
-      Width = 80
-      Caption = 'Shift is Push'
+    Caption = 'MIDI Bass'
+    ClientHeight = 105
+    ClientWidth = 530
+    TabOrder = 5
+    object Label5: TLabel
+      Left = 23
+      Height = 14
+      Top = 68
+      Width = 88
+      Caption = 'MIDI Instrument'
     end
-    object cbxShiftIsPush: TCheckBox
-      Left = 168
+    object Label6: TLabel
+      Left = 22
+      Height = 14
+      Top = 39
+      Width = 28
+      Caption = 'Bank'
+    end
+    object Label7: TLabel
+      Left = 22
+      Height = 14
+      Top = 18
+      Width = 92
+      Caption = 'Bass is different'
+    end
+    object cbxInstrBass: TComboBox
+      Left = 152
+      Height = 27
+      Top = 65
+      Width = 303
+      Enabled = False
+      ItemHeight = 0
+      ItemIndex = 21
+      Items.Strings = (
+        '1 Acoustic Grand Piano (Flügel)'
+        '2 Bright Acoustic Piano (Klavier)'
+        '3 Electric Grand Piano'
+        '4 Honky-tonk'
+        '5 Electric Piano 1 (Rhodes)'
+        '6 Electric Piano 2 (Chorus)'
+        '7 Harpsichord (Cembalo)'
+        '8 Clavi (Clavinet)'
+        '9 Celesta'
+        '10 Glockenspiel'
+        '11 Music Box (Spieluhr)'
+        '12 Vibraphone'
+        '13 Marimba'
+        '14 Xylophone'
+        '15 Tubular Bells (Röhrenglocken)'
+        '16 Dulcimer (Hackbrett)'
+        '17 Drawbar Organ (Hammond)'
+        '18 Percussive Organ'
+        '19 Rock Organ'
+        '20 Church Organ (Kirchenorgel)'
+        '21 Reed Organ (Drehorgel)'
+        '22 Accordion'
+        '23 Harmonica'
+        '24 Tango Accordion (Bandeon)'
+        '25 Acoustic Guitar (Nylon)'
+        '26 Acoustic Guitar (Steel - Stahl)'
+        '27 Electric Guitar (Jazz)'
+        '28 Electric Guitar (clean - sauber)'
+        '29 Electric Guitar (muted - gedämpft)'
+        '30 Overdriven Guitar (übersteuert)'
+        '31 Distortion Guitar (verzerrt)'
+        '32 Guitar harmonics (Harmonien)'
+        '33 Acoustic Bass'
+        '34 Electric Bass (finger)'
+        '35 Electric Bass (pick - gezupft)'
+        '36 Fretless Bass (bundloser Bass)'
+        '37 Slap Bass 1'
+        '38 Slap Bass 2'
+        '39 Synth Bass 1'
+        '40 Synth Bass 2'
+        '41 Violin (Violine - Geige)'
+        '42 Viola (Viola - Bratsche)'
+        '43 Cello (Violoncello - Cello)'
+        '44 Contrabass (Violone - Kontrabass)'
+        '45 Tremolo Strings'
+        '46 Pizzicato Strings'
+        '47 Orchestral Harp (Harfe)'
+        '48 Timpani (Pauke)'
+        '49 String Ensemble 1'
+        '50 String Ensemble 2'
+        '51 SynthString 1'
+        '52 SynthString 2'
+        '53 Choir Aahs'
+        '54 Voice Oohs'
+        '55 Synth Voice'
+        '56 Orchestra Hit'
+        '57 Trumpet (Trompete)'
+        '58 Trombone (Posaune)'
+        '59 Tuba'
+        '60 Muted Trumpet (gedämpfe Trompete)'
+        '61 French Horn (französisches Horn)'
+        '62 Brass Section (Bläsersatz)'
+        '63 SynthBrass 1'
+        '64 SynthBrass 2'
+        '65 Soprano Sax'
+        '66 Alto Sax'
+        '67 Tenor Sax'
+        '68 Baritone Sax'
+        '69 Oboe'
+        '70 English Horn'
+        '71 Bassoon (Fagott)'
+        '72 Clarinet'
+        '73 Piccolo'
+        '74 Flute (Flöte)'
+        '75 Recorder (Blockflöte)'
+        '76 Pan Flute'
+        '77 Blown Bottle'
+        '78 Shakuhachi'
+        '79 Whistle (Pfeifen)'
+        '80 Ocarina'
+        '81 Square (Rechteck)'
+        '82 Sawtooth (Sägezahn)'
+        '83 Calliop'
+        '84 Chiff'
+        '85 Charang'
+        '86 Voice'
+        '87 Fifths'
+        '88 Bass + Lead'
+        '89 New Age'
+        '90 Warm'
+        '91 Polysynth'
+        '92 Choir'
+        '93 Bowed (Streicher)'
+        '94 Metallic'
+        '95 Halo'
+        '96 Sweep'
+        '97 Rain (Regen)'
+        '98 Soundtrack'
+        '99 Crystal'
+        '100 Atmosphere'
+        '101 Brightness'
+        '102 Goblins'
+        '103 Echoes'
+        '104 Sci-Fi (Science Fiction)'
+        '105 Sitar Ethnik'
+        '106 Banjo'
+        '107 Shamisen'
+        '108 Koto'
+        '109 Kalimba'
+        '110 Bag Pipe (Dudelsack)'
+        '111 Fiddle'
+        '112 Shanai'
+        '113 Tinkle Bell (Glocke)'
+        '114 Agogo'
+        '115 Steel Drums'
+        '116 Woodblock'
+        '117 Taiko Drum'
+        '118 Melodic Tom'
+        '119 Synth Drum'
+        '120 Reverse Cymbal (Becken rückwärts)'
+        '121 Guitar Fret. Noise (Gitarrensaitenquitschen)'
+        '122 Breath Noise (Atem)'
+        '123 Seashore (Meeresbrandung)'
+        '124 Bird Tweet (Vogelgezwitscher)'
+        '125 Telephone Ring'
+        '126 Helicopter'
+        '127 Applause'
+        '128 Gun Shot (Gewehrschuss)'
+      )
+      OnChange = cbxMidiDiskantChange
+      OnKeyDown = cbTransInstrumentKeyDown
+      OnKeyPress = cbTransInstrumentKeyPress
+      OnKeyUp = cbTransInstrumentKeyUp
+      Style = csDropDownList
+      TabOrder = 0
+      Text = '22 Accordion'
+    end
+    object cbxBankBass: TComboBox
+      Left = 152
+      Height = 27
+      Top = 38
+      Width = 303
+      Enabled = False
+      ItemHeight = 0
+      ItemIndex = 0
+      Items.Strings = (
+        '00 - General Midi'
+        '01 - Piano'
+        '02 - E-Piano'
+        '03 - Organ'
+        '04 - Organ - Drawbar Registrations'
+        '05 - Perc. Tuned Instr.'
+        '06 - String Instr.'
+        '07 - Guitar'
+        '08 - Harmonica and more'
+        '09 - Full Strings & Disco Strings'
+        '10 - Solo Strings'
+        '11 - Synth Strings'
+        '12 - Brass Solo'
+        '13 - Brass Section'
+        '14 - Classic Brass'
+        '15 - Saxophon'
+        '16 - Winds'
+        '17 - Classic Winds'
+        '18 - Choir'
+        '19 - Bass'
+        '20 - Synthesizer'
+        '21 - FX und Percussion'
+        '22'
+        '23'
+        '24'
+        '25'
+        '26'
+        '27'
+        '28'
+        '29'
+        '30'
+        '31'
+        '32'
+        '33'
+        '34'
+        '35'
+        '36'
+        '37'
+        '38'
+        '39'
+        '40 - Accordion French, German, Slvenia and others'
+        '41 - Bass and Chord Melo.'
+        '42 - Cordovox'
+        '43'
+        '44'
+        '45'
+        '46'
+        '47'
+        '48'
+        '49'
+        '50'
+        '51'
+        '52'
+        '53'
+        '54'
+        '55'
+        '56'
+        '57'
+        '58'
+        '59'
+        '60'
+        '61'
+        '62'
+        '63'
+        '64'
+        '65'
+        '66'
+        '67'
+        '68'
+        '69'
+        '70'
+      )
+      OnChange = cbxDiskantBankChange
+      OnKeyDown = cbTransInstrumentKeyDown
+      OnKeyPress = cbTransInstrumentKeyPress
+      OnKeyUp = cbTransInstrumentKeyUp
+      Style = csDropDownList
+      TabOrder = 1
+      Text = '00 - General Midi'
+    end
+    object cbxBassDifferent: TCheckBox
+      Left = 152
       Height = 23
-      Top = 8
+      Top = 15
       Width = 23
-      Checked = True
-      OnClick = cbxShiftIsPushClick
+      OnClick = cbxBassDifferentClick
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyUp = cbTransInstrumentKeyUp
-      State = cbChecked
-      TabOrder = 0
-    end
-  end
-  object GroupBox1: TGroupBox
-    Left = 0
-    Height = 84
-    Top = 380
-    Width = 506
-    Align = alTop
-    Caption = 'Record'
-    ClientHeight = 64
-    ClientWidth = 504
-    TabOrder = 3
-    object btnRecord: TButton
-      Left = 168
-      Height = 25
-      Top = 16
-      Width = 156
-      Caption = 'Record'
-      OnClick = btnRecordClick
-      OnKeyDown = cbTransInstrumentKeyDown
-      OnKeyPress = cbTransInstrumentKeyPress
-      OnKeyUp = cbTransInstrumentKeyUp
-      TabOrder = 0
+      TabOrder = 2
     end
   end
   object SaveDialog1: TSaveDialog
     FileName = 'Recorded.mid'
     Filter = 'MIDI|*.mid'
-    Left = 368
-    Top = 56
+    Left = 416
+    Top = 40
   end
 end
