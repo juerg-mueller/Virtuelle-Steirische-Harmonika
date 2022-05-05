@@ -236,7 +236,7 @@ begin
   index := InstrumentIndex(AnsiString(s));
   if index < 0 then
      index := 0;
-  Instrument := InstrumentsList[index]^;
+  Instrument := InstrumentsList_[index];
   cbxTransInstrumentChange(nil);
 
   frmAmpel.ChangeInstrument(@Instrument);
@@ -325,7 +325,7 @@ procedure TfrmVirtualHarmonica.cbxMidiDiskantChange(Sender: TObject);
     s := cbxMidi.Text;
     if Pos(' ', s) > 0 then
       s := Copy(s, 1,Pos(' ', s));
-    result := StrToIntDef(s, 0);
+    result := StrToIntDef(trim(s), 0);
   end;
 begin
   if cbxDiskantBank.ItemIndex < 0 then
@@ -416,8 +416,8 @@ begin
   TimeEventCount := 0;
 
   cbTransInstrument.Items.Clear;
-  for i := 0 to High(InstrumentsList) do
-    cbTransInstrument.Items.Add(string(InstrumentsList[i].Name));
+  for i := 0 to High(InstrumentsList_) do
+    cbTransInstrument.Items.Add(string(InstrumentsList_[i].Name));
 {$ifndef FPC}
 {$if defined(CONSOLE)}
   if not RunningWine then

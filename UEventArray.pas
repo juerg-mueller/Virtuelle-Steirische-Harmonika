@@ -123,7 +123,7 @@ type
 implementation
 
 uses
-{$ifdef LINUX}
+{$ifdef FPC}
   Urtmidi;
 {$else}
   AnsiStrings,

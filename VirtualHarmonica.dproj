@@ -5,7 +5,7 @@
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <MainSource>VirtualHarmonica.dpr</MainSource>
@@ -159,6 +159,9 @@
         <DCCReference Include="UMidiSaveStream.pas"/>
         <DCCReference Include="UMyMidiStream.pas"/>
         <DCCReference Include="UBanks.pas"/>
+        <DCCReference Include="UXmlNode.pas"/>
+        <DCCReference Include="UXmlParser.pas"/>
+        <DCCReference Include="Ujson.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

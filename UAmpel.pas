@@ -412,7 +412,11 @@ begin
       d := $40;
       if Event.Push_ and On_ then
         inc(d, $10);
+{$ifdef FPC}
+      MidiVirtual.Send(iVirtualMidi, c, b, d);
+{$else}
       MidiOutput.Send(iVirtualMidi, c, b, d);
+{$endif}
 //      write(Format('$%2.2x $%2.2x $%2.2x', [c, b, d]));
 //      writeln(Format('  (%d  %d  %d)', [c, b, d]));
     end;
@@ -769,6 +773,11 @@ begin
       KeyDown(Sender, Key, Shift);
     exit;
   end;
+  if Key <= ord(' ') then
+  begin
+    Key := 0;
+    exit;
+  end;
 
   Push := ShiftUsed;
   Ctrl := GetKeyState(vk_Control) < 0;
@@ -785,7 +794,8 @@ end;
 
 procedure TfrmAmpel.FormKeyPress(Sender: TObject; var Key: Char);
 begin
-  //
+  if Key <= ' ' then
+    Key := #0;
 end;
 
 procedure TfrmAmpel.FormKeyUp(Sender: TObject; var Key: Word;
@@ -1191,8 +1201,8 @@ begin
 
   CriticalMidiIn.Acquire;
   try
-    if ((aStatus = $b0) and (aData1 = 64)) or
-       ((aStatus = $b7) and (aData1 = ControlSustain)) then
+    if ((aStatus shr 4) = 11) and
+       ((aData1 = 64) or (aData1 = ControlSustain)) then
     begin
       Sustain_ := aData2 > 0;
       Key := 0;

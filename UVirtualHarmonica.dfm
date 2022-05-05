@@ -182,8 +182,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Align = alTop
     Caption = 'Shift Button for Push/Pull'
     TabOrder = 2
-    ExplicitLeft = 25
-    ExplicitTop = 661
     object Label2: TLabel
       Left = 25
       Top = 26
@@ -213,7 +211,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Align = alTop
     Caption = 'Record'
     TabOrder = 3
-    ExplicitTop = 663
     object btnRecord: TButton
       Left = 122
       Top = 32
@@ -235,7 +232,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Align = alTop
     Caption = 'MIDI Instrument'
     TabOrder = 4
-    ExplicitTop = 441
     object Label3: TLabel
       Left = 25
       Top = 58
@@ -488,7 +484,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Align = alTop
     Caption = 'MIDI Bass'
     TabOrder = 5
-    ExplicitTop = 537
     object Label5: TLabel
       Left = 25
       Top = 82

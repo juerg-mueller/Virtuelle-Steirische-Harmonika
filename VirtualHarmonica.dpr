@@ -14,7 +14,10 @@ uses
   UMyMemoryStream in 'UMyMemoryStream.pas',
   UMidiSaveStream in 'UMidiSaveStream.pas',
   UMyMidiStream in 'UMyMidiStream.pas',
-  UBanks in 'UBanks.pas';
+  UBanks in 'UBanks.pas',
+  UXmlNode in 'UXmlNode.pas',
+  UXmlParser in 'UXmlParser.pas',
+  Ujson in 'Ujson.pas';
 
 {$R *.res}
 
