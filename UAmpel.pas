@@ -773,11 +773,6 @@ begin
       KeyDown(Sender, Key, Shift);
     exit;
   end;
-  if Key <= ord(' ') then
-  begin
-    Key := 0;
-    exit;
-  end;
 
   Push := ShiftUsed;
   Ctrl := GetKeyState(vk_Control) < 0;
