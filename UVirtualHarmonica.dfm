@@ -78,6 +78,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Height = 25
       Caption = 'Reset Synth.'
       TabOrder = 2
+      Visible = False
       OnClick = btnResetMidiClick
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress

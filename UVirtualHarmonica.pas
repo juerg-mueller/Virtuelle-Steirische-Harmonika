@@ -220,7 +220,7 @@ end;
 procedure TfrmVirtualHarmonica.btnResetMidiClick(Sender: TObject);
 begin
 //  ResetMidi;
-  RegenerateMidi;
+//  RegenerateMidi;
 end;
 
 procedure TfrmVirtualHarmonica.cbTransInstrumentChange(Sender: TObject);
@@ -283,26 +283,39 @@ begin
   cbxMidiDiskantChange(Sender);
 end;
 
+  function GetIndex(cbxMidi: TComboBox): integer;
+  var
+    s: string;
+  begin
+    if cbxMidi.ItemIndex < 0 then
+      cbxMidi.ItemIndex := 0;
+    s := cbxMidi.Text;
+    if Pos(' ', s) > 0 then
+      s := Copy(s, 1,Pos(' ', s));
+    result := StrToIntDef(trim(s), 0);
+  end;
+
 procedure TfrmVirtualHarmonica.cbxDiskantBankChange(Sender: TObject);
 var
-  Bank: TStringArray;
+  Bank: TArrayOfString;
+  Index: integer;
 
   procedure FillItems(cbx: TComboBox);
   var
     i: integer;
   begin
     cbx.Items.Clear;
-    for i := 0 to 127 do
+    for i := low(Bank) to high(Bank) do
       if Bank[i] <> '' then
         cbx.Items.Add(Bank[i]);
     cbx.ItemIndex := 0;
   end;
+
 begin
   with Sender as TComboBox do
   begin
-    if ItemIndex < 0 then
-      ItemIndex := 0;
-    GetBank(Bank, ItemIndex);
+    Index := GetIndex(cbxDiskantBank);
+    GetBank(Bank, Index);
   end;
   if Sender = cbxDiskantBank then
   begin
@@ -315,32 +328,16 @@ begin
 end;
 
 procedure TfrmVirtualHarmonica.cbxMidiDiskantChange(Sender: TObject);
-
-  function GetIndex(cbxMidi: TComboBox): integer;
-  var
-    s: string;
-  begin
-    if cbxMidi.ItemIndex < 0 then
-      cbxMidi.ItemIndex := 0;
-    s := cbxMidi.Text;
-    if Pos(' ', s) > 0 then
-      s := Copy(s, 1,Pos(' ', s));
-    result := StrToIntDef(trim(s), 0);
-  end;
 begin
-  if cbxDiskantBank.ItemIndex < 0 then
-    cbxDiskantBank.ItemIndex := MidiBankDiskant;
+  MidiBankDiskant := GetIndex(cbxDiskantBank);
   MidiInstrDiskant := GetIndex(cbxMidiDiskant);
-  MidiBankDiskant := cbxDiskantBank.ItemIndex;
   if not cbxBassDifferent.Checked then
   begin
     MidiInstrBass := MidiInstrDiskant;
     MidiBankBass := MidiBankDiskant;
   end else begin
-    if cbxBankBass.ItemIndex < 0 then
-      cbxBankBass.ItemIndex := MidiBankBass;
+    MidiBankBass := GetIndex(cbxBankBass);
     MidiInstrBass := GetIndex(cbxInstrBass);
-    MidiBankBass := cbxBankBass.ItemIndex;
   end;
   OpenMidiMicrosoft;
 end;
@@ -406,6 +403,7 @@ end;
 procedure TfrmVirtualHarmonica.FormCreate(Sender: TObject);
 var
   i: integer;
+  Bank: TArrayOfString;
 begin
 {$if defined(CPUX86_64) or defined(WIN64)}
   Caption := Caption + ' (64)';
@@ -432,21 +430,31 @@ begin
   Application.ProcessMessages;
 {$endif}
   CriticalSendOut := TCriticalSection.Create;
+
+  CopyBank(Bank, @bank_list);
+  cbxDiskantBank.Items.Clear;
+  for i := low(Bank) to high(Bank) do
+    if Bank[i] <> '' then
+      cbxDiskantBank.Items.Add(Bank[i]);
+  cbxDiskantBank.ItemIndex := 0;
+  cbxBankBass.Items := cbxDiskantBank.Items;
+  cbxBankBass.ItemIndex := 0;
 end;
 
 procedure TfrmVirtualHarmonica.FormDestroy(Sender: TObject);
 begin
+  MidiInput.CloseAll;
   SetLength(TimeEventArray, 0);
   CriticalSendOut.Free;
 end;
 
 procedure TfrmVirtualHarmonica.FormShow(Sender: TObject);
 var
-  f: TextFile;
-  s: string;
   i, p: integer;
 begin
-  cbTransInstrument.ItemIndex := 2;
+  i := cbTransInstrument.Items.IndexOf('Steirische ADGC');
+  if i >= 0 then
+    cbTransInstrument.ItemIndex := i;
   cbTransInstrumentChange(nil);
 
   RegenerateMidi;

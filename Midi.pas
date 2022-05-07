@@ -460,7 +460,8 @@ procedure TMidiOutput.Send(const aDeviceIndex: TDeviceIndex; const aStatus, aDat
 var
   lMsg: cardinal;
 begin
-  if not assigned(fDeviceNames.Objects[ aDeviceIndex ]) then
+  if (aDeviceIndex < 0) or
+     not assigned(fDeviceNames.Objects[ aDeviceIndex ]) then
     exit;
 
   lMsg := aStatus + (aData1 * $100) + (aData2 * $10000);
@@ -514,9 +515,12 @@ end;
 
 procedure ChangeBank(Index, Channel, Bank, Instr: byte);
 begin
-  MidiOutput.Send(Index, $b0 + Channel, 0, Bank);
+  MidiOutput.Send(Index, $b0 + Channel, 0, Bank);  // 0x32, LSB Bank);
   MidiOutput.Send(Index, $c0 + Channel, Instr, 0);
 end;
+
+// Drum Kit: Channel 10
+// Program pp:  C9 pp
 
 procedure OpenMidiMicrosoft;
 begin

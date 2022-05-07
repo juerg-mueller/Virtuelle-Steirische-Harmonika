@@ -190,7 +190,7 @@ implementation
 {$ifdef FPC}
 //  {$R *.lfm}
 {$else}
-  {$R *.dfm}
+//  {$R *.dfm}
 {$endif}
 
 uses
@@ -1201,6 +1201,11 @@ begin
 
   CriticalMidiIn.Acquire;
   try
+    if ((aStatus and $f) = 9) then
+    begin
+      // Drum Kit
+      MidiOutput.Send(MicrosoftIndex, aStatus, aData1, aData2);
+    end else
     if ((aStatus shr 4) = 11) and
        ((aData1 = 64) or (aData1 = ControlSustain)) then
     begin
