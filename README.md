@@ -35,4 +35,4 @@ Diese MIDI-Sequenzen lassen sich eindeutig in Griffschrift umwandeln. Für das N
 Das V3 Sound-Modul Accordion Master XXL lässt sich konfigurieren
 ----------------------------------------------------------------
 
-MIDI-Bank und -Programm können für Diskant- und Bassseite getrennt konfiguriert werden und ganz speziell für den Acordion Master XXL.
+MIDI-Bank und -Programm können für Diskant- und Bassseite getrennt konfiguriert werden und ganz speziell für den Accordion Master XXL.
