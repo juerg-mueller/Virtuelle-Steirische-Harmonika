@@ -15,14 +15,14 @@ Mit Ctrl schaltet man von der äusseren Bassreihe auf die innere.
 
 Mit der Shift-Taste ändert man die Balgbewegung.
 
-Zusatzinformationen, welche im Synthesizer-Midi-Kanal mitgeliefert werden.
+Zusatzinformationen, welche im Synthesizer-MIDI-Kanal mitgeliefert werden.
 ==========================================================================
 
-Midi-Balg-Information, wird bei jedem Wechsel ausgegeben:
+MIDI-Balg-Information, wird bei jedem Wechsel ausgegeben:
 
   B0 1f 00/01   ;01 für Push; 00 für Pull
   
-Die Tastatur-Spalten werden je einem eigenen Midi-Kanal zugewiesen.
+Die Tastatur-Spalten werden je einem eigenen MIDI-Kanal zugewiesen.
 
   91 nn xx  für die äusserste Diskant-Spalte
 
@@ -30,9 +30,9 @@ Die Tastatur-Spalten werden je einem eigenen Midi-Kanal zugewiesen.
   
   96 nn xx  für die äusserste Bass-Spalte
 
-Diese Midi-Sequenzen lassen sich eindeutig in Griffschrift umwandeln. Für das Notenblatt-Korsett braucht es aber noch eine Quantisierung. 
+Diese MIDI-Sequenzen lassen sich eindeutig in Griffschrift umwandeln. Für das Notenblatt-Korsett braucht es aber noch eine Quantisierung. 
 
-MIDI Banks
-----------
+Das V3 Sound-Modul Accordion Master XXL lässt sich konfigurieren
+----------------------------------------------------------------
 
-MIDI Banks for "Accordion Master XXL" by V3 Sound!
+MIDI-Bank und -Programm können für Diskant- und Bassseite getrennt konfiguriert werden und ganz speziell für den Acordion Master XXL.
