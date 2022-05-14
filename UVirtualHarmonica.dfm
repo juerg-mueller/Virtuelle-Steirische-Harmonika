@@ -249,7 +249,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     end
     object cbxMidiDiskant: TComboBox
       Left = 122
-      Top = 55
+      Top = 56
       Width = 303
       Height = 21
       Style = csDropDownList

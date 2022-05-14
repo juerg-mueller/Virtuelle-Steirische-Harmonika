@@ -6,6 +6,8 @@
 
 interface
 
+{$define JM_}
+
 uses
 {$ifndef FPC}
   Winapi.Windows, Winapi.Messages,
@@ -79,6 +81,7 @@ type
     TimeEventArray: array of TMidiTimeEvent;
     procedure RegenerateMidi;
     procedure SendMidiOut(const aStatus, aData1, aData2: byte);
+    procedure BankChange(cbx: TComboBox);
   public
     Instrument: TInstrument;
   end;
@@ -295,35 +298,28 @@ end;
     result := StrToIntDef(trim(s), 0);
   end;
 
-procedure TfrmVirtualHarmonica.cbxDiskantBankChange(Sender: TObject);
+procedure TfrmVirtualHarmonica.BankChange(cbx: TComboBox);
 var
   Bank: TArrayOfString;
-  Index: integer;
-
-  procedure FillItems(cbx: TComboBox);
-  var
-    i: integer;
-  begin
-    cbx.Items.Clear;
-    for i := low(Bank) to high(Bank) do
-      if Bank[i] <> '' then
-        cbx.Items.Add(Bank[i]);
-    cbx.ItemIndex := 0;
-  end;
-
+  i, Index: integer;
 begin
-  with Sender as TComboBox do
-  begin
-    Index := GetIndex(cbxDiskantBank);
-    GetBank(Bank, Index);
-  end;
-  if Sender = cbxDiskantBank then
-  begin
-    if MidiBankDiskant <> cbxDiskantBank.ItemIndex then
-      FillItems(cbxMidiDiskant)
-  end else
-    if MidiBankBass <> cbxBankBass.ItemIndex then
-      FillItems(cbxInstrBass);
+  Index := GetIndex(cbx);
+  GetBank(Bank, Index);
+  if cbx = cbxDiskantBank then
+    cbx := cbxMidiDiskant
+  else
+    cbx := cbxInstrBass;
+
+  cbx.Items.Clear;
+  for i := low(Bank) to high(Bank) do
+    if Bank[i] <> '' then
+      cbx.Items.Add(Bank[i]);
+  cbx.ItemIndex := 0;
+end;
+
+procedure TfrmVirtualHarmonica.cbxDiskantBankChange(Sender: TObject);
+begin
+  BankChange(Sender as TComboBox);
   cbxMidiDiskantChange(Sender);
 end;
 
@@ -339,7 +335,8 @@ begin
     MidiBankBass := GetIndex(cbxBankBass);
     MidiInstrBass := GetIndex(cbxInstrBass);
   end;
-  OpenMidiMicrosoft;
+  if Sender <> nil then
+    OpenMidiMicrosoft;
 end;
 
 procedure TfrmVirtualHarmonica.cbxMidiOutChange(Sender: TObject);
@@ -430,15 +427,23 @@ begin
   Application.ProcessMessages;
 {$endif}
   CriticalSendOut := TCriticalSection.Create;
-
+{$ifdef JM}
   CopyBank(Bank, @bank_list);
   cbxDiskantBank.Items.Clear;
   for i := low(Bank) to high(Bank) do
     if Bank[i] <> '' then
       cbxDiskantBank.Items.Add(Bank[i]);
-  cbxDiskantBank.ItemIndex := 0;
+  cbxDiskantBank.ItemIndex := 12;
   cbxBankBass.Items := cbxDiskantBank.Items;
-  cbxBankBass.ItemIndex := 0;
+  cbxBankBass.ItemIndex := 23;
+
+  BankChange(cbxDiskantBank);
+  BankChange(cbxBankBass);
+
+  cbxMidiDiskant.ItemIndex := 32;
+  cbxInstrBass.ItemIndex := 32;
+  cbxMidiDiskantChange(nil);
+{$endif}
 end;
 
 procedure TfrmVirtualHarmonica.FormDestroy(Sender: TObject);
@@ -459,6 +464,15 @@ begin
 
   RegenerateMidi;
   MidiInput.OnMidiData := frmAmpel.OnMidiInData;
+
+{$ifdef JM}
+  i := cbxMidiInput.Items.IndexOf('Mobile Key 49');
+  if i > 0 then
+    cbxMidiInput.ItemIndex := i;
+  i := cbxMidiOut.Items.IndexOf('2-UM-ONE');
+  if i > 0 then
+    MicrosoftIndex := i-1;
+{$endif}
 
   frmAmpel.ChangeInstrument(@Instrument);
   frmAmpel.Show;
