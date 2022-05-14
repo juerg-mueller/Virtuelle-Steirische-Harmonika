@@ -427,23 +427,31 @@ begin
   Application.ProcessMessages;
 {$endif}
   CriticalSendOut := TCriticalSection.Create;
-{$ifdef JM}
   CopyBank(Bank, @bank_list);
   cbxDiskantBank.Items.Clear;
   for i := low(Bank) to high(Bank) do
     if Bank[i] <> '' then
       cbxDiskantBank.Items.Add(Bank[i]);
-  cbxDiskantBank.ItemIndex := 12;
   cbxBankBass.Items := cbxDiskantBank.Items;
+{$ifdef JM}
+  cbxDiskantBank.ItemIndex := 12;
   cbxBankBass.ItemIndex := 23;
+{$else}
+  cbxDiskantBank.ItemIndex := 0;
+  cbxBankBass.ItemIndex := 0;
+{$endif}
 
   BankChange(cbxDiskantBank);
   BankChange(cbxBankBass);
 
+{$ifdef JM}
   cbxMidiDiskant.ItemIndex := 32;
   cbxInstrBass.ItemIndex := 32;
-  cbxMidiDiskantChange(nil);
+{$else}
+  cbxMidiDiskant.ItemIndex := 21;
+  cbxInstrBass.ItemIndex := 21;
 {$endif}
+  cbxMidiDiskantChange(nil);
 end;
 
 procedure TfrmVirtualHarmonica.FormDestroy(Sender: TObject);
