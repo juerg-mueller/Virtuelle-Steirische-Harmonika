@@ -36,3 +36,5 @@ Das V3 Sound-Modul Accordion Master XXL lässt sich konfigurieren
 ----------------------------------------------------------------
 
 MIDI-Bank und -Programm können für Diskant- und Bassseite getrennt konfiguriert werden und ganz speziell für den Accordion Master XXL.
+
+https://www.youtube.com/watch?v=_RV61uIS8g4
