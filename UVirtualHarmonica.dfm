@@ -4,7 +4,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   ActiveControl = cbxTransInstrument
   Caption = 'Virtuelle Steirische Harmonika'
   ClientHeight = 611
-  ClientWidth = 440
+  ClientWidth = 404
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -21,11 +21,15 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   object gbMidi: TGroupBox
     Left = 0
     Top = 105
-    Width = 440
+    Width = 404
     Height = 136
     Align = alTop
     Caption = 'MIDI I/O'
     TabOrder = 1
+    ExplicitWidth = 440
+    DesignSize = (
+      404
+      136)
     object lblKeyboard: TLabel
       Left = 25
       Top = 34
@@ -50,47 +54,39 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     object cbxMidiOut: TComboBox
       Left = 122
       Top = 64
-      Width = 156
+      Width = 261
       Height = 21
       Style = csDropDownList
+      Anchors = [akLeft, akTop, akRight]
       TabOrder = 1
       OnChange = cbxMidiOutChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
+      ExplicitWidth = 199
     end
     object cbxMidiInput: TComboBox
       Left = 122
       Top = 31
-      Width = 156
+      Width = 261
       Height = 21
       Style = csDropDownList
+      Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
       OnChange = cbxMidiInputChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-    end
-    object btnResetMidi: TButton
-      Left = 310
-      Top = 62
-      Width = 100
-      Height = 25
-      Caption = 'Reset Synth.'
-      TabOrder = 2
-      Visible = False
-      OnClick = btnResetMidiClick
-      OnKeyDown = cbTransInstrumentKeyDown
-      OnKeyPress = cbTransInstrumentKeyPress
-      OnKeyUp = cbTransInstrumentKeyUp
+      ExplicitWidth = 199
     end
     object cbxVirtual: TComboBox
-      Left = 122
-      Top = 98
-      Width = 156
+      Left = 123
+      Top = 91
+      Width = 261
       Height = 21
       Style = csDropDownList
-      TabOrder = 3
+      Anchors = [akLeft, akTop, akRight]
+      TabOrder = 2
       OnChange = cbxVirtualChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
@@ -100,11 +96,15 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   object gbInstrument: TGroupBox
     Left = 0
     Top = 0
-    Width = 440
+    Width = 404
     Height = 105
     Align = alTop
     Caption = 'Steirische Harmonika / Schwyzer'#246'rgeli'
     TabOrder = 0
+    ExplicitWidth = 440
+    DesignSize = (
+      404
+      105)
     object Label13: TLabel
       Left = 24
       Top = 64
@@ -126,7 +126,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Height = 21
       Style = csDropDownList
       ItemIndex = 11
-      TabOrder = 0
+      TabOrder = 1
       Text = '0'
       OnChange = cbxTransInstrumentChange
       OnKeyDown = cbTransInstrumentKeyDown
@@ -160,11 +160,12 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     object cbTransInstrument: TComboBox
       Left = 122
       Top = 30
-      Width = 156
+      Width = 261
       Height = 21
       Style = csDropDownList
+      Anchors = [akLeft, akTop, akRight]
       ItemIndex = 0
-      TabOrder = 1
+      TabOrder = 0
       Text = 'B-'#214'rgeli'
       OnChange = cbTransInstrumentChange
       OnKeyDown = cbTransInstrumentKeyDown
@@ -173,16 +174,18 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Items.Strings = (
         'B-'#214'rgeli'
         'A-'#214'rgeli')
+      ExplicitWidth = 199
     end
   end
   object gbBalg: TGroupBox
     Left = 0
     Top = 457
-    Width = 440
+    Width = 404
     Height = 64
     Align = alTop
     Caption = 'Shift Button for Push/Pull'
-    TabOrder = 2
+    TabOrder = 4
+    ExplicitWidth = 440
     object Label2: TLabel
       Left = 25
       Top = 26
@@ -203,15 +206,29 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
     end
+    object btnResetMidi: TButton
+      Left = 178
+      Top = 23
+      Width = 100
+      Height = 25
+      Caption = 'Reset Synth.'
+      TabOrder = 1
+      Visible = False
+      OnClick = btnResetMidiClick
+      OnKeyDown = cbTransInstrumentKeyDown
+      OnKeyPress = cbTransInstrumentKeyPress
+      OnKeyUp = cbTransInstrumentKeyUp
+    end
   end
   object GroupBox1: TGroupBox
     Left = 0
     Top = 521
-    Width = 440
+    Width = 404
     Height = 84
     Align = alTop
     Caption = 'Record'
-    TabOrder = 3
+    TabOrder = 5
+    ExplicitWidth = 440
     object btnRecord: TButton
       Left = 122
       Top = 32
@@ -228,11 +245,15 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   object gbMidiInstrument: TGroupBox
     Left = 0
     Top = 241
-    Width = 440
+    Width = 404
     Height = 96
     Align = alTop
     Caption = 'MIDI Instrument'
-    TabOrder = 4
+    TabOrder = 2
+    ExplicitWidth = 440
+    DesignSize = (
+      404
+      96)
     object Label3: TLabel
       Left = 25
       Top = 58
@@ -250,11 +271,12 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     object cbxMidiDiskant: TComboBox
       Left = 122
       Top = 56
-      Width = 303
+      Width = 261
       Height = 21
       Style = csDropDownList
+      Anchors = [akLeft, akTop, akRight]
       ItemIndex = 21
-      TabOrder = 0
+      TabOrder = 1
       Text = '22 Accordion'
       OnChange = cbxMidiDiskantChange
       OnKeyDown = cbTransInstrumentKeyDown
@@ -389,15 +411,17 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         '126 Helicopter'
         '127 Applause'
         '128 Gun Shot (Gewehrschuss)')
+      ExplicitWidth = 199
     end
     object cbxDiskantBank: TComboBox
       Left = 122
       Top = 28
-      Width = 303
+      Width = 261
       Height = 21
       Style = csDropDownList
+      Anchors = [akLeft, akTop, akRight]
       ItemIndex = 0
-      TabOrder = 1
+      TabOrder = 0
       Text = '00 - General Midi'
       OnChange = cbxDiskantBankChange
       OnKeyDown = cbTransInstrumentKeyDown
@@ -475,16 +499,21 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         '68'
         '69'
         '70')
+      ExplicitWidth = 199
     end
   end
   object gbMidiBass: TGroupBox
     Left = 0
     Top = 337
-    Width = 440
+    Width = 404
     Height = 120
     Align = alTop
     Caption = 'MIDI Bass'
-    TabOrder = 5
+    TabOrder = 3
+    ExplicitWidth = 440
+    DesignSize = (
+      404
+      120)
     object Label5: TLabel
       Left = 25
       Top = 82
@@ -509,12 +538,13 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     object cbxInstrBass: TComboBox
       Left = 122
       Top = 79
-      Width = 303
+      Width = 261
       Height = 21
       Style = csDropDownList
+      Anchors = [akLeft, akTop, akRight]
       Enabled = False
       ItemIndex = 21
-      TabOrder = 0
+      TabOrder = 2
       Text = '22 Accordion'
       OnChange = cbxMidiDiskantChange
       OnKeyDown = cbTransInstrumentKeyDown
@@ -649,13 +679,15 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         '126 Helicopter'
         '127 Applause'
         '128 Gun Shot (Gewehrschuss)')
+      ExplicitWidth = 199
     end
     object cbxBankBass: TComboBox
       Left = 122
       Top = 52
-      Width = 303
+      Width = 261
       Height = 21
       Style = csDropDownList
+      Anchors = [akLeft, akTop, akRight]
       Enabled = False
       ItemIndex = 0
       TabOrder = 1
@@ -736,13 +768,14 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         '68'
         '69'
         '70')
+      ExplicitWidth = 199
     end
     object cbxBassDifferent: TCheckBox
       Left = 122
       Top = 29
       Width = 25
       Height = 17
-      TabOrder = 2
+      TabOrder = 0
       OnClick = cbxBassDifferentClick
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
@@ -752,7 +785,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   object SaveDialog1: TSaveDialog
     FileName = 'Recorded.mid'
     Filter = 'MIDI|*.mid'
-    Left = 368
+    Left = 192
     Top = 56
   end
 end

@@ -31,7 +31,6 @@ type
     lbVirtual: TLabel;
     cbxMidiOut: TComboBox;
     cbxMidiInput: TComboBox;
-    btnResetMidi: TButton;
     cbxVirtual: TComboBox;
     gbInstrument: TGroupBox;
     Label13: TLabel;
@@ -56,6 +55,7 @@ type
     Label7: TLabel;
     cbxBankBass: TComboBox;
     cbxDiskantBank: TComboBox;
+    btnResetMidi: TButton;
     procedure cbTransInstrumentChange(Sender: TObject);
     procedure cbxMidiInputChange(Sender: TObject);
     procedure cbxTransInstrumentChange(Sender: TObject);
@@ -250,24 +250,29 @@ end;
 procedure TfrmVirtualHarmonica.cbTransInstrumentKeyDown(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
-  frmAmpel.FormKeyDown(Sender, Key, Shift);
+  if Key <> 9 then
+    frmAmpel.FormKeyDown(Sender, Key, Shift);
 end;
 
 procedure TfrmVirtualHarmonica.cbTransInstrumentKeyPress(Sender: TObject;
   var Key: Char);
 begin
-  Key := #0;
+  if Key <> #9 then
+    Key := #0;
 end;
 
 procedure TfrmVirtualHarmonica.cbTransInstrumentKeyUp(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
-  if not frmAmpel.IsActive then
+  if Key <> 9 { vk_Tab } then
   begin
-    frmAmpel.Show;
+    if not frmAmpel.IsActive then
+    begin
+      frmAmpel.Show;
+    end;
+    frmAmpel.FormKeyUp(Sender, Key, Shift);
+    frmAmpel.SetFocus;
   end;
-  frmAmpel.FormKeyUp(Sender, Key, Shift);
-  frmAmpel.SetFocus;
 end;
 
 procedure TfrmVirtualHarmonica.cbxMidiInputChange(Sender: TObject);

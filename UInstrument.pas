@@ -444,30 +444,35 @@ var
     i: integer;
   begin
     Note := LowerCase(Note);
-    case AnsiChar(Note[1]) of
-      'c': result := 0;
-      'd': result := 2;
-      'e': result := 4;
-      'f': result := 5;
-      'g': result := 7;
-      'a': result := 9;
-      'b': result := 11;
-      else result := 0;
-    end;
-    if Copy(Note, 2, 2) = 'es' then
-      dec(result)
-    else
-    if Copy(Note, 2, 2) = 'is' then
-      inc(result);
-    inc(result, 48);
-    i := Length(Note);
-    while (i > 0) and (AnsiChar(Note[i]) in ['''', ',']) do
+    if Note = '' then
     begin
-      if Note[i] = '''' then
-        inc(result, 12)
+      result := 0;
+    end else begin
+      case AnsiChar(Note[1]) of
+        'c': result := 0;
+        'd': result := 2;
+        'e': result := 4;
+        'f': result := 5;
+        'g': result := 7;
+        'a': result := 9;
+        'b': result := 11;
+        else result := 0;
+      end;
+      if Copy(Note, 2, 2) = 'es' then
+        dec(result)
       else
-        dec(result, 12);
-      dec(i);
+      if Copy(Note, 2, 2) = 'is' then
+        inc(result);
+      inc(result, 48);
+      i := Length(Note);
+      while (i > 0) and (AnsiChar(Note[i]) in ['''', ',']) do
+      begin
+        if Note[i] = '''' then
+          inc(result, 12)
+        else
+          dec(result, 12);
+        dec(i);
+      end;
     end;
   end;
 

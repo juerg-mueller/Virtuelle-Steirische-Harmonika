@@ -850,7 +850,7 @@ const
       '76 Pulse',
       '77 Polso',
       '78 PWD 24',
-      '79 Xypho',
+      '79 Xylophone',
       '80 Champo',
       '81 Jippo',
       '82 JX Arp',
@@ -991,7 +991,7 @@ const
       '96 Hohner - Scot Domino VM 888',
       '97 Hohner - Domino 4816',
       '98 Hohner - Scot J-Shand 888',
-      '99 BOR Irish 888',
+      '99 Borsini Irish 888',
       '100 Pietro Mario - 88',
       '101 Pietro Mario - 88',
       '102 Pietro Mario - 88+16',
@@ -1030,8 +1030,8 @@ const
       '8 WM 888+8 Mega Tune',
       '9 Strasser - Steirisch II',
       '10 Alpengold Steirische',
-      '11 KAE Steirische',
-      '12 KAE Steirische Posch I',
+      '11 Kärtnerland Steirische',
+      '12 Kärtnerland Steirische Posch I',
       '13 Müller - Steirische',
       '14 Hohner - Corona Vintage 888',
       '15 Brandolini Irish Melodeon',
@@ -1162,4 +1162,4 @@ end.
 
 // BOR
 // WM
-// KAE
+
