@@ -30,11 +30,11 @@ const
       '17 - Classic Winds',
       '18 - Choir',
       '19 - Bass',
-      '20 - Synthesizer',
-      '21 - FX und Percussion',
-      '40 - Accordion French, German, Slvenia and others',
-      '41 - Bass and Chord Melo.',
-      '42 - Cordovox'
+      '20 - Synthesizer and Bass',
+      '21 - FX and Percussion',
+      '40 - Accordion French, German, Slovenija and others',
+      '41 - Melodeon, Bass, Chord Acc. and Chord Melo.',
+      '42 - Cordovox, Hawaii'
     ];
 
 
@@ -1019,15 +1019,15 @@ const
 
   s41: TArray<string> =
       [
-      '0 WM Reed 8',
-      '1 WM Reed 8',
+      '0 Weltmeister Melodion Reed 8',
+      '1 Weltmeister Melodion Reed 8',
       '2 V3 8+8+8 tune 0',
       '3 V3 8+8+8 tune 10',
       '4 V3 8+8+8 tune 20',
       '5 V3 88+8 tune 0',
       '6 V3 88+8 tune 20',
-      '7 WM 888',
-      '8 WM 888+8 Mega Tune',
+      '7 Weltmeister Melodion 888',
+      '8 Weltmeister Melodion 888+8 Mega Tune',
       '9 Strasser - Steirisch II',
       '10 Alpengold Steirische',
       '11 Kärtnerland Steirische',
@@ -1068,10 +1068,10 @@ const
       '74 Bugari - Chord 4+8',
       '75 Bugari - Chord 2+4',
       '76 Bugari - Chord 2+4',
-      '90 WM Bass',
-      '91 WM Bass',
-      '92 WM Chord',
-      '93 WM Chord',
+      '90 Weltmeister Melodion Bass',
+      '91 Weltmeister Melodion Bass',
+      '92 Weltmeister Melodion Chord',
+      '93 Weltmeister Melodion Chord',
       '94 Alpengold - Steirische Helikon',
       '95 Alpengold - Steirische Helikon soft off',
       '96 Müller - Steirische Bass',
@@ -1110,7 +1110,7 @@ const
       '61 Vox IV Hawaii long'
       ];
 
-  Banks : TBanks =
+  Banks: TBanks =
       (
         @s0, @s1, @s2, @s3, @s4, @s5, @s6, @s7,
         @s8, @s9, @s10, @s11, @s12, @s13, @s14, @s15,
@@ -1161,5 +1161,5 @@ end;
 end.
 
 // BOR
-// WM
+// Weltmeister Melodion
 

@@ -1,9 +1,9 @@
 object frmVirtualHarmonica: TfrmVirtualHarmonica
   Left = 0
   Top = 0
-  ActiveControl = cbxTransInstrument
+  ActiveControl = cbTransInstrument
   Caption = 'Virtuelle Steirische Harmonika'
-  ClientHeight = 611
+  ClientHeight = 566
   ClientWidth = 404
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -22,38 +22,37 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Left = 0
     Top = 105
     Width = 404
-    Height = 136
+    Height = 119
     Align = alTop
     Caption = 'MIDI I/O'
     TabOrder = 1
-    ExplicitWidth = 440
     DesignSize = (
       404
-      136)
+      119)
     object lblKeyboard: TLabel
       Left = 25
-      Top = 34
+      Top = 26
       Width = 83
       Height = 13
       Caption = 'Sustain Pedal (in)'
     end
     object Label17: TLabel
       Left = 25
-      Top = 67
+      Top = 54
       Width = 83
       Height = 13
       Caption = 'Synthesizer (out)'
     end
     object lbVirtual: TLabel
       Left = 25
-      Top = 101
+      Top = 82
       Width = 92
       Height = 13
       Caption = 'Virtual Device (out)'
     end
     object cbxMidiOut: TComboBox
       Left = 122
-      Top = 64
+      Top = 51
       Width = 261
       Height = 21
       Style = csDropDownList
@@ -63,11 +62,10 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      ExplicitWidth = 199
     end
     object cbxMidiInput: TComboBox
       Left = 122
-      Top = 31
+      Top = 23
       Width = 261
       Height = 21
       Style = csDropDownList
@@ -77,11 +75,10 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      ExplicitWidth = 199
     end
     object cbxVirtual: TComboBox
       Left = 123
-      Top = 91
+      Top = 79
       Width = 261
       Height = 21
       Style = csDropDownList
@@ -101,7 +98,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Align = alTop
     Caption = 'Steirische Harmonika / Schwyzer'#246'rgeli'
     TabOrder = 0
-    ExplicitWidth = 440
     DesignSize = (
       404
       105)
@@ -174,18 +170,16 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Items.Strings = (
         'B-'#214'rgeli'
         'A-'#214'rgeli')
-      ExplicitWidth = 199
     end
   end
   object gbBalg: TGroupBox
     Left = 0
-    Top = 457
+    Top = 428
     Width = 404
     Height = 64
     Align = alTop
     Caption = 'Shift Button for Push/Pull'
     TabOrder = 4
-    ExplicitWidth = 440
     object Label2: TLabel
       Left = 25
       Top = 26
@@ -222,16 +216,15 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   end
   object GroupBox1: TGroupBox
     Left = 0
-    Top = 521
+    Top = 492
     Width = 404
-    Height = 84
+    Height = 72
     Align = alTop
     Caption = 'Record'
     TabOrder = 5
-    ExplicitWidth = 440
     object btnRecord: TButton
       Left = 122
-      Top = 32
+      Top = 23
       Width = 156
       Height = 25
       Caption = 'Record'
@@ -244,33 +237,32 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   end
   object gbMidiInstrument: TGroupBox
     Left = 0
-    Top = 241
+    Top = 224
     Width = 404
-    Height = 96
+    Height = 91
     Align = alTop
     Caption = 'MIDI Instrument'
     TabOrder = 2
-    ExplicitWidth = 440
     DesignSize = (
       404
-      96)
+      91)
     object Label3: TLabel
       Left = 25
-      Top = 58
+      Top = 54
       Width = 79
       Height = 13
       Caption = 'MIDI Instrument'
     end
     object Label4: TLabel
       Left = 24
-      Top = 29
+      Top = 26
       Width = 23
       Height = 13
       Caption = 'Bank'
     end
     object cbxMidiDiskant: TComboBox
       Left = 122
-      Top = 56
+      Top = 51
       Width = 261
       Height = 21
       Style = csDropDownList
@@ -411,11 +403,10 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         '126 Helicopter'
         '127 Applause'
         '128 Gun Shot (Gewehrschuss)')
-      ExplicitWidth = 199
     end
     object cbxDiskantBank: TComboBox
       Left = 122
-      Top = 28
+      Top = 23
       Width = 261
       Height = 21
       Style = csDropDownList
@@ -499,45 +490,43 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         '68'
         '69'
         '70')
-      ExplicitWidth = 199
     end
   end
   object gbMidiBass: TGroupBox
     Left = 0
-    Top = 337
+    Top = 315
     Width = 404
-    Height = 120
+    Height = 113
     Align = alTop
     Caption = 'MIDI Bass'
     TabOrder = 3
-    ExplicitWidth = 440
     DesignSize = (
       404
-      120)
+      113)
     object Label5: TLabel
       Left = 25
-      Top = 82
+      Top = 74
       Width = 79
       Height = 13
       Caption = 'MIDI Instrument'
     end
     object Label6: TLabel
       Left = 24
-      Top = 53
+      Top = 46
       Width = 23
       Height = 13
       Caption = 'Bank'
     end
     object Label7: TLabel
       Left = 24
-      Top = 32
+      Top = 21
       Width = 77
       Height = 13
       Caption = 'Bass is different'
     end
     object cbxInstrBass: TComboBox
       Left = 122
-      Top = 79
+      Top = 71
       Width = 261
       Height = 21
       Style = csDropDownList
@@ -679,11 +668,10 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         '126 Helicopter'
         '127 Applause'
         '128 Gun Shot (Gewehrschuss)')
-      ExplicitWidth = 199
     end
     object cbxBankBass: TComboBox
       Left = 122
-      Top = 52
+      Top = 43
       Width = 261
       Height = 21
       Style = csDropDownList
@@ -768,11 +756,10 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         '68'
         '69'
         '70')
-      ExplicitWidth = 199
     end
     object cbxBassDifferent: TCheckBox
       Left = 122
-      Top = 29
+      Top = 20
       Width = 25
       Height = 17
       TabOrder = 0

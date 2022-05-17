@@ -65,7 +65,6 @@ type
       function SoundToGriff(const Pitch: byte; const VocalArr: TVocalArray; var iCol, Index: integer): integer; overload;
 //      function _SoundToGriffBass(Pitch: byte; var InPush, Sixth: boolean): integer;
       function RowIndexToSound(Row, Index: byte; Push_: boolean): byte;
-  //    function SoundToGriffBass_(Pitch: byte; InPush: boolean; var Sixth: boolean): integer;
       function GriffToSound(Pitch: byte; Push: boolean; Cross: boolean) : integer; overload;
       function SoundToGriff(const Pitch: byte; Push: boolean; var iCol, Index: integer): integer; overload;
       function IsDouble(Pitch: byte; isPush: boolean; var Index1, Index2: integer): boolean;
@@ -185,7 +184,7 @@ const
           );
 
     Bass: (( 0,53,41,55,43,48,36,53,41, 0),  // F g G c C f F              5. Reihe
-           ( 0,58,46,51,39,56,44,49,37, 0)   // b B es Es as As des Des    6. Reihe
+           ( 0,58,46,51,39,56,44,49,37, 0)   // b B es Es as As des Des    6. Reihe / Cross
            );
     PullBass:
           (( 0,48,36,56,44,49,37,54,42, 0),  // f F b B es Es as As
@@ -193,143 +192,9 @@ const
            );
   );
 
-
-  SteirischeBEsAs : TInstrument = (
-    Name: ('Steirische BEsAs');
-    Sharp: (false);
-    BassDiatonic: true;
-    Columns: (3);
-    Push: (
-      // doubles: 58 (B3: 3 - 2), 70 (B4: 6 - 5), 82 (B5: 9 - 8), 94 (B6: 12 - 11),
-      Col: ((46,50,53,58,62,65,70,74,77,82,86,89, 0, 0, 0, 0),  //   B2   D3   F3   B3   D4   F4   B4   D5   F5   B5   D6   F6   B6
-            (51,55,58,63,67,70,75,79,82,87,91, 0, 0, 0, 0, 0),  // Dis3   G3   B3 Dis4   G4   B4 Dis5   G5   B5 Dis6   G6   B6
-            ( 0,56,60,63,68,72,75,80,84,87,92, 0, 0, 0, 0, 0),  // Gis3   C4 Dis4 Gis4   C5 Dis5 Gis5   C6 Dis6 Gis6   C7
-            ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-           );
-          );
-    Pull: (
-      // doubles: 84 (C6: 11 - 9),
-      Col: ((51,53,57,60,63,67,69,72,75,79,81,84, 0, 0, 0, 0),  // Dis3   F3   A3   C4 Dis4   G4   A4   C5 Dis5   G5   A5   C6 Dis6
-            (56,58,62,65,68,70,74,77,80,84,86, 0, 0, 0, 0, 0),  // Gis3   B3   D4   F4 Gis4   B4   D5   F5 Gis5   C6   D6   F6
-            ( 0,61,63,67,70,73,75,79,82,85,89, 0, 0, 0, 0, 0),  // Cis4 Dis4   G4   B4 Cis5 Dis5   G5   B5 Cis6   F6   G6
-            ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-           );
-          );
-    Bass: (( 0,53,41,55,43,48,36, 0, 0, 0),  // F g G c C              5. Reihe
-           ( 0,58,46,51,39,56,44, 0, 0, 0)   // b B es Es as As   6. Reihe
-           );
-    PullBass:
-          (( 0,48,36,56,44,49,37, 0, 0, 0),  // f F b B es Es
-           ( 0,53,41,58,46,51,39, 0, 0, 0 )  // C as As des Des
-           );
-  );
-
-  Limex_Oergeli_B18 : TInstrument = (
-    Name: ('Limex Oergeli B18');
-    Sharp: (false);
-    Columns: (3);
-    Push: (
-      // doubles: 58 (B3: 3 - 3), 70 (B4: 6 - 6), 82 (B5: 9 - 9),
-      Col: (( 0,50,53,58,62,65,70,74,77,82,86, 0, 0, 0, 0, 0),  //   D3   F3   B3   D4   F4   B4   D5   F5   B5   D6
-            ( 0,64,55,58,63,67,70,75,79,82,87,91, 0, 0, 0, 0),  //   E4   G3   B3  Es4   G4   B4  Es5   G5   B5  Es6   G6
-            ( 0,54,71,61,72,68,73,80,84,85,83, 0, 0, 0, 0, 0),  // Ges3   H4 Des4   C5  As4 Des5  As5   C6 Des6   H5
-            ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-           );
-          );
-    Pull: (
-      // doubles: 72 (C5: 7 - 6),
-      Col: (( 0,53,57,60,63,67,69,72,75,79,81, 0, 0, 0, 0, 0),  //   F3   A3   C4  Es4   G4   A4   C5  Es5   G5   A5
-            ( 0,64,58,62,65,68,72,74,77,80,84,86, 0, 0, 0, 0),  //   E4   B3   D4   F4  As4   C5   D5   F5  As5   C6   D6
-            ( 0,49,71,56,66,73,70,78,82,85,88, 0, 0, 0, 0, 0),  // Des3   H4  As3 Ges4 Des5   B4 Ges5   B5 Des6   E6
-            ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-           );
-          );
-  );
-
-  Reist_Oegeli_18Num : TInstrument = (
-    Name: ('Reist Oergeli 18Num');
-    Sharp: (false);
-    Columns: (3);
-    Push: (
-      // doubles: 58 (B3: 4 - 3), 70 (B4: 7 - 6), 82 (B5: 10 - 9),
-      Col: (( 0,50,53,58,62,65,70,74,77,82,86, 0, 0, 0, 0, 0),  //   D3   F3   B3   D4   F4   B4   D5   F5   B5   D6
-            ( 0,64,55,58,63,67,70,75,79,82,87,91, 0, 0, 0, 0),  //   E4   G3   B3 Dis4   G4   B4 Dis5   G5   B5 Dis6   G6
-            ( 0,66,71,61,72,68,73,80,84,85,83, 0, 0, 0, 0, 0),  // Fis4   H4 Cis4   C5 Gis4 Cis5 Gis5   C6 Cis6   H5
-            ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-           );
-          );
-    Pull: (
-      // doubles: 72 (C5: 8 - 6),
-      Col: (( 0,53,57,60,63,67,69,72,75,79,81, 0, 0, 0, 0, 0),  //   F3   A3   C4 Dis4   G4   A4   C5 Dis5   G5   A5
-            ( 0,64,58,62,65,68,72,74,77,80,84,86, 0, 0, 0, 0),  //   E4   B3   D4   F4 Gis4   C5   D5   F5 Gis5   C6   D6
-            ( 0,61,71,56,66,73,70,78,82,85,76, 0, 0, 0, 0, 0),  // Cis4   H4 Gis3 Fis4 Cis5   B4 Fis5   B5 Cis6   E5
-            ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-           );
-          );
-  );
-
-  Club_Harmonika_30 : TInstrument = (
-    Name: ('Club Harmonika BbEb30');
-    Sharp: (true);
-    Columns: (3);
-    Push: (
-      // doubles: 58 (B3: 4 - 3), 70 (B4: 7 - 6), 82 (B5: 10 - 9),
-      Col: (( 0,52,50,53,58,62,65,70,74,77,82,86,89, 0, 0, 0),  //   E3   D3   F3   B3   D4   F4   B4   D5   F5   B5   D6   F6
-            ( 0,51,55,58,63,67,70,75,79,82,87,91, 0, 0, 0, 0),  // Dis3   G3   B3 Dis4   G4   B4 Dis5   G5   B5 Dis6   G6
-            ( 0, 0, 0,61,68,64,73,72,76,85, 0, 0, 0, 0, 0, 0),  // Cis4 Gis4   E4 Cis5   C5   E5 Cis6
-            ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-           );
-          );
-    Pull: (
-      // doubles:
-      Col: (( 0,54,53,57,60,63,67,69,72,75,79,81,82, 0, 0, 0),  // Fis3   F3   A3   C4 Dis4   G4   A4   C5 Dis5   G5   A5   B5
-            ( 0,56,58,62,65,68,70,74,77,80,84,86, 0, 0, 0, 0),  // Gis3   B3   D4   F4 Gis4   B4   D5   F5 Gis5   C6   D6
-            ( 0, 0, 0,59,64,66,71,73,78,83, 0, 0, 0, 0, 0, 0),  //   H3   E4 Fis4   H4 Cis5 Fis5   H5
-            ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-           );
-          );
-  );
-
-  Club_Harmonika_CF_33 : TInstrument = (
-    Name: ('Club Harmonika');
-    Sharp: (true);
-    Columns: (3);
-    Push: (
-      // doubles: 60 (C4: 4 - 3), 72 (C5: 7 - 6), 84 (C6: 10 - 9),
-      Col: (( 0,48,52,55,60,64,67,72,76,79,84,88,91, 0, 0, 0),  //   C3   E3   G3   C4   E4   G4   C5   E5   G5   C6   E6   G6
-            ( 0,53,57,60,65,69,72,77,81,84,89,93, 0, 0, 0, 0),  //   F3   A3   C4   F4   A4   C5   F5   A5   C6   F6   A6
-            ( 0,54,62,63,70,66,75,74,78,87,86, 0, 0, 0, 0, 0),  // Fis3   D4 Dis4   B4 Fis4 Dis5   D5 Fis5 Dis6   D6
-            ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-           );
-          );
-    Pull: (
-      // doubles:
-      Col: (( 0,50,55,59,62,65,69,71,74,77,81,83,84, 0, 0, 0),  //   D3   G3   H3   D4   F4   A4   H4   D5   F5   A5   H5   C6
-            ( 0,58,60,64,67,70,72,76,79,82,86,88, 0, 0, 0, 0),  //   B3   C4   E4   G4   B4   C5   E5   G5   B5   D6   E6
-            ( 0,56,63,61,66,68,73,75,80,85,87, 0, 0, 0, 0, 0),  // Gis3 Dis4 Cis4 Fis4 Gis4 Cis5 Dis5 Gis5 Cis6 Dis6
-            ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-           );
-          );
-    Bass: (( 0,53,41,55,43,48,36,53,41, 0),  // F g G c C f F              5. Reihe
-           ( 0,58,46,51,39,56,44,49,37, 0)   // b B es Es as As des Des    6. Reihe
-           );
-    PullBass:
-          (( 0,48,36,56,44,49,37,54,42, 0),  // f F b B es Es as As
-           ( 0,53,41,58,46,51,39,56,44, 0 )  // C as As des Des ges Ges
-           );
-
-  );
 var
   InstrumentsList_: array of TInstrument;
-{
-type
-  TInstrumentsList = array [0..13] of TInstrument;
-var
-  Instruments: TInstrumentsList = (@SteirischeBEsAsDes, @SteirischeGCFB, @SteirischeADGC,
-    @SteirischeCFBEs, @SteirischeFBEsAs, @SteirischeFisHEA, @SteirischeGisCisFisH, @SteirischeHEAD,
-    @Gwerder_b_Oergeli,@Gwerder_a_Oergeli, @Gwerder_gis_Oergeli, @Gwerder_h_Oergeli,
-    @Gwerder_c_Oergeli, @Gwerder_cis_Oergeli);
-}
+
 function InstrumentIndex(const Name: AnsiString): integer;
 function GetBassIndex(const Bass: TBassArr; Pitch: byte): integer;
 function SoundToGriff_(Pitch: byte; const Bass: TBassArray; var Sixth: boolean): integer;

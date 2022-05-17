@@ -245,6 +245,9 @@ begin
     MidiOutput.Send(MicrosoftIndex, aStatus, aData1, aData2);
   if @PSendMidiOut <> nil then
     PSendMidiOut(aStatus, aData1, aData2);
+{$ifdef CONSOLE}
+  writeln(aStatus, '  ', aData1, '  ', aData2);
+{$endif}
 end;
 
 
@@ -431,14 +434,22 @@ begin
   with MouseEvents[Index] do
   begin
     frmAmpel.PaintAmpel(Row_, Index_, Push_, On_);
-    Event.SetEvent(Row_, Index_, Push_, frmAmpel.Instrument^);
+    if not Event.SetEvent(Row_, Index_, Push_, frmAmpel.Instrument^) then
+      Event.SoundPitch := Pitch;
     if Row_ in [1..6] then
     begin
+      d := $5f;
+      if (Row_ >= 5) then
+      begin
+      {  if BassBankActiv and
+         (MidiBankBass = 41) and
+         (MidiInstrBass in [90, 91, 94 .. 97]) then
+           dec(Event.SoundPitch, 12)
+        else   }
+          d := $6F;
+      end;
       if On_ then
       begin
-        d := $5f;
-        if Row_ >= 5 then
-          d := $6F;
         SendMidiOut($90 + Row_ , Event.SoundPitch, d)
       end else begin
         SendMidiOut($80 + Row_, Event.SoundPitch, $40);
@@ -1196,18 +1207,18 @@ begin
 
   CriticalMidiIn.Acquire;
   try
-    if ((aStatus and $f) = 9) then
-    begin
-      // Drum Kit
-      MidiOutput.Send(MicrosoftIndex, aStatus, aData1, aData2);
-    end else
     if ((aStatus shr 4) = 11) and
        ((aData1 = 64) or (aData1 = ControlSustain)) then
     begin
       Sustain_ := aData2 > 0;
       Key := 0;
       frmAmpel.FormKeyDown(self, Key, []);
-    end;
+    end else
+    if ((aStatus and $f) = 9) then
+    begin
+      // Drum Kit
+      MidiOutput.Send(MicrosoftIndex, aStatus, aData1, aData2);
+    end else
     if aStatus = $80 then
     begin
       AmpelEvents.EventOff(Event);
@@ -1236,7 +1247,7 @@ begin
        ((aStatus shr 4) in [8, 9]) then
     begin
       Event.Row_ := (aStatus and $f);
-      if GetInstr(Event) then
+      GetInstr(Event);
       begin
         if (aStatus shr 4) = 9 then
           AmpelEvents.NewEvent(Event)

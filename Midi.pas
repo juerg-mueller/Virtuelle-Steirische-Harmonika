@@ -118,6 +118,7 @@ var
   TrueMicrosoftIndex: integer = -1;
   MidiInstrDiskant: byte = $15; // Akkordeon
   MidiInstrBass: byte = $15; // Akkordeon
+  BassBankActiv: boolean = false;
   MidiBankDiskant: byte = 0;
   MidiBankBass: byte = 0;
 

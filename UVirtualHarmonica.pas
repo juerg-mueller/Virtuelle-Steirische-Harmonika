@@ -287,6 +287,7 @@ procedure TfrmVirtualHarmonica.cbxBassDifferentClick(Sender: TObject);
 begin
   cbxBankBass.Enabled := cbxBassDifferent.Checked;
   cbxInstrBass.Enabled := cbxBassDifferent.Checked;
+  BassBankActiv := cbxBassDifferent.Checked;
 
   cbxMidiDiskantChange(Sender);
 end;
