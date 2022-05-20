@@ -6,7 +6,7 @@
 
 interface
 
-{$define JM_}
+{$define _JM}
 
 uses
 {$ifndef FPC}
@@ -167,6 +167,7 @@ begin
     frmAmpel.AmpelEvents.PSendMidiOut := nil;
     if TimeEventCount > 1 then
     begin
+      TimeOffset := 0;
       Stream := TMidiSaveStream.Create;
       DetailHeader.Clear;
       Stream.SetHead(DetailHeader.DeltaTimeTicks);
@@ -250,21 +251,26 @@ end;
 procedure TfrmVirtualHarmonica.cbTransInstrumentKeyDown(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
-  if Key <> 9 then
+  if not (Key in [9, 13, 37..40]) then
+  begin
     frmAmpel.FormKeyDown(Sender, Key, Shift);
+    Key := 0;
+  end;
 end;
 
 procedure TfrmVirtualHarmonica.cbTransInstrumentKeyPress(Sender: TObject;
   var Key: Char);
 begin
-  if Key <> #9 then
-    Key := #0;
+  if (Key = #13) and (Sender is TCheckBox) then
+    with Sender as TCheckBox do
+      Checked := not Checked;
+  Key := #0;
 end;
 
 procedure TfrmVirtualHarmonica.cbTransInstrumentKeyUp(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
-  if Key <> 9 { vk_Tab } then
+  if not (Key in [9, 13, 37..40]) then
   begin
     if not frmAmpel.IsActive then
     begin
@@ -272,6 +278,7 @@ begin
     end;
     frmAmpel.FormKeyUp(Sender, Key, Shift);
     frmAmpel.SetFocus;
+    Key := 0;
   end;
 end;
 
@@ -401,6 +408,7 @@ end;
 procedure TfrmVirtualHarmonica.cbxShiftIsPushClick(Sender: TObject);
 begin
   shiftIsPush := cbxShiftIsPush.Checked;
+  frmAmpel.PaintBalg(ShiftUsed);
 end;
 
 procedure TfrmVirtualHarmonica.FormCreate(Sender: TObject);
@@ -440,8 +448,8 @@ begin
       cbxDiskantBank.Items.Add(Bank[i]);
   cbxBankBass.Items := cbxDiskantBank.Items;
 {$ifdef JM}
-  cbxDiskantBank.ItemIndex := 12;
-  cbxBankBass.ItemIndex := 23;
+  cbxDiskantBank.ItemIndex := 25;
+  cbxBankBass.ItemIndex := 25;
 {$else}
   cbxDiskantBank.ItemIndex := 0;
   cbxBankBass.ItemIndex := 0;
@@ -451,8 +459,8 @@ begin
   BankChange(cbxBankBass);
 
 {$ifdef JM}
-  cbxMidiDiskant.ItemIndex := 32;
-  cbxInstrBass.ItemIndex := 32;
+  cbxMidiDiskant.ItemIndex := 9;
+  cbxInstrBass.ItemIndex := 9;
 {$else}
   cbxMidiDiskant.ItemIndex := 21;
   cbxInstrBass.ItemIndex := 21;
@@ -468,29 +476,34 @@ begin
 end;
 
 procedure TfrmVirtualHarmonica.FormShow(Sender: TObject);
-var
-  i, p: integer;
+
+  function GetIndex(cbx: TComboBox; const str: string): integer;
+  var
+    k: integer;
+  begin
+    result := -1;
+    for k := 0 to cbx.items.Count-1 do
+      if Pos(str, cbx.Items[k]) > 0 then
+      begin
+        result := k;
+        cbx.ItemIndex := k;
+        cbx.OnChange(nil);
+      end;
+  end;
+
 begin
-  i := cbTransInstrument.Items.IndexOf('Steirische ADGC');
-  if i >= 0 then
-    cbTransInstrument.ItemIndex := i;
-  cbTransInstrumentChange(nil);
+  GetIndex(cbTransInstrument, 'Steirische ADGC');
 
   RegenerateMidi;
   MidiInput.OnMidiData := frmAmpel.OnMidiInData;
 
-{$ifdef JM}
-  i := cbxMidiInput.Items.IndexOf('Mobile Key 49');
-  if i > 0 then
-    cbxMidiInput.ItemIndex := i;
-  i := cbxMidiOut.Items.IndexOf('2-UM-ONE');
-  if i > 0 then
-    MicrosoftIndex := i-1;
-{$endif}
+//{$ifdef JM}
+  GetIndex(cbxMidiInput, 'Mobile Keys 49');
+  GetIndex(cbxMidiOut, 'UM-ONE');
+//{$endif}
 
   frmAmpel.ChangeInstrument(@Instrument);
   frmAmpel.Show;
-  frmAmpel.SetFocus;
 end;
 
 {$ifdef FPC}

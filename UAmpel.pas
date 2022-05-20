@@ -163,6 +163,7 @@ type
     procedure ChangeInstrument(Instrument_: PInstrument);
     function KnopfRect(Row: byte {1..6}; index: byte {0..10}): TRect;
     procedure PaintAmpel(Row: byte {1..6}; index: integer {0..10}; Push, On_: boolean);
+    procedure PaintBalg(Push: boolean);
     function GetKeyIndex(var Event: TMouseEvent; Key: word): boolean;
     procedure InitLastPush;
 {$ifdef dcc}
@@ -273,6 +274,7 @@ var
 begin
   CriticalAmpel.Acquire;
   try
+    frmAmpel.PaintBalg(Push);
     if UsedEvents = 0 then
       exit;
 
@@ -777,6 +779,11 @@ var
   Push, Ctrl: boolean;
   Event: TMouseEvent;
 begin
+  if Key in [vk_Space] then
+  begin
+    Key := 0;
+    exit;
+  end;
   if Key in [vk_Left, vk_Right, vk_Up, vk_Down, vk_Tab,
              vk_Insert, vk_Delete] then
   begin
@@ -1024,6 +1031,7 @@ begin
   for k := 1 to 9 do
     if Instrument.Bass[true, k] > 0 then
       AmpelEvents.Paint(6, k);
+  PaintBalg(ShiftUsed);
 end;
 
 procedure TfrmAmpel.FormResize(Sender: TObject);
@@ -1082,6 +1090,8 @@ begin
     FormKeyDown(self, KeyCode, []);
     Handled := true;
   end;
+  if (KeyCode and $fff) = vk_Return then
+    Handled := true;
 {$endif}
 end;
 
@@ -1130,38 +1140,43 @@ begin
     canvas.MoveTo(rect.Right - 5, rect.Top + 5);
     canvas.LineTo(rect.Left + 5, rect.Bottom - 5);
   end;
+end;
+
+procedure TfrmAmpel.PaintBalg(Push: boolean);
+var
+  rect, rect1: TRect;
+begin
+  if Instrument = nil then
+    exit;
 
   // Balg-Strich
-  if (Row <= 4) or Instrument.BassDiatonic then
+  if Push { and On_} then
+    canvas.Brush.Color := 0
+  else
+    canvas.Brush.Color := Color;
+  if FlippedHorz then
+    rect := KnopfRect(2, 10)
+  else
+    rect := KnopfRect(2, 0);
+
+  rect.Height := rect.Height div 4;
+  if FlippedVert and Instrument.bigInstrument then
+    rect.Offset(-rect.Width, 0);
+  rect.Offset(-rect.Width, lbUnten.Top - rect.Top - (rect.Height - lbUnten.Height) div 2);
+  rect.Width := Instrument.Columns*rect.Width;
+  canvas.FillRect(rect);
+
+  if Instrument.BassDiatonic then
   begin
-    if Push and On_ then
-      canvas.Brush.Color := 0
+    if FlippedVert then
+      rect1 := KnopfRect(6, 0)
     else
-      canvas.Brush.Color := Color;
-    if FlippedHorz then
-      rect := KnopfRect(2, 10)
-    else
-      rect := KnopfRect(2, 0);
-
-    rect.Height := rect.Height div 4;
-    if FlippedVert and Instrument.bigInstrument then
-      rect.Offset(-rect.Width, 0);
-    rect.Offset(-rect.Width, lbUnten.Top - rect.Top - (rect.Height - lbUnten.Height) div 2);
-    rect.Width := Instrument.Columns*rect.Width;
+      rect1 := KnopfRect(5, 0);
+    rect.Left := rect1.Left;
+    rect.Width := 2*rect1.Width;
     canvas.FillRect(rect);
-
-    if Instrument.BassDiatonic then
-    begin
-      if FlippedVert then
-        rect1 := KnopfRect(6, 0)
-      else
-        rect1 := KnopfRect(5, 0);
-      rect.Left := rect1.Left;
-      rect.Width := 2*rect1.Width;
-      canvas.FillRect(rect);
-    end;
   end;
-end; 
+end;
 
 function TfrmAmpel.FlippedHorz: boolean;
 begin
@@ -1173,6 +1188,7 @@ var
   Event: TMouseEvent;
   Key: word;
   GriffEvent: TGriffEvent;
+  i: integer;
 
   function GetInstr(var Event: TMouseEvent): boolean;
   var
@@ -1207,12 +1223,22 @@ begin
 
   CriticalMidiIn.Acquire;
   try
-    if ((aStatus shr 4) = 11) and
-       ((aData1 = 64) or (aData1 = ControlSustain)) then
+    if (aStatus and $f0) = $b0 then
     begin
-      Sustain_ := aData2 > 0;
-      Key := 0;
-      frmAmpel.FormKeyDown(self, Key, []);
+      if(aData1 = 64) or (aData1 = ControlSustain) then
+      begin
+        Sustain_ := aData2 > 0;
+        Key := 0;
+        frmAmpel.FormKeyDown(self, Key, []);
+      end else
+      if aData1 = 11 then  // Expression Pedal
+      begin
+        for i := 1 to 6 do
+          MidiOutput.Send(MicrosoftIndex, $b0 + i, aData1, aData2);
+      end;
+    {$ifdef CONSOLE}
+        writeln(aStatus, '  ', aData1, '  ', aData2);
+    {$endif}
     end else
     if ((aStatus and $f) = 9) then
     begin
@@ -1254,6 +1280,10 @@ begin
         else
           AmpelEvents.EventOff(Event);
       end;
+    end else begin
+  {$ifdef CONSOLE}
+      writeln(aStatus, '  ', aData1, '  ', aData2);
+  {$endif}
     end;
   finally
     CriticalMidiIn.Release;
