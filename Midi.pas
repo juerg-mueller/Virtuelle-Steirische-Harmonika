@@ -107,7 +107,7 @@ type
   // MIDI output Devices
   function MidiOutput: TMidiOutput;
 
-  procedure DoSoundPitch(Pitch: byte; On_: boolean);
+//  procedure DoSoundPitch(Pitch: byte; On_: boolean);
   procedure ResetMidi;
 
 const
@@ -121,6 +121,9 @@ var
   BassBankActiv: boolean = false;
   MidiBankDiskant: byte = 0;
   MidiBankBass: byte = 0;
+
+  VolumeDiscant: double = 0.9;
+  VolumeBass: double = 0.9;
 
 procedure OpenMidiMicrosoft;
 
@@ -484,7 +487,7 @@ begin
   FreeAndNil(fSysExStream);
   inherited;
 end;
-
+{
 procedure DoSoundPitch(Pitch: byte; On_: boolean);
 begin
   if MicrosoftIndex >= 0 then
@@ -497,7 +500,7 @@ begin
       MidiOutput.Send(MicrosoftIndex, $80, Pitch, $40);
   end;
 end;
-
+}
 procedure ResetMidi;
 var
   i: integer;
@@ -524,19 +527,19 @@ end;
 // Program pp:  C9 pp
 
 procedure OpenMidiMicrosoft;
+var
+  i: integer;
 begin
   if MicrosoftIndex >= 0 then
   begin
     MidiOutput.Open(MicrosoftIndex);
     try
 //      ResetMidi;
-      ChangeBank(MicrosoftIndex, 0, MidiBankDiskant, MidiInstrDiskant);
-      ChangeBank(MicrosoftIndex, 1, MidiBankDiskant, MidiInstrDiskant);
-      ChangeBank(MicrosoftIndex, 2, MidiBankDiskant, MidiInstrDiskant);
-      ChangeBank(MicrosoftIndex, 3, MidiBankDiskant, MidiInstrDiskant);
-      ChangeBank(MicrosoftIndex, 4, MidiBankDiskant, MidiInstrDiskant);
-      ChangeBank(MicrosoftIndex, 5, MidiBankBass, MidiInstrBass);
-      ChangeBank(MicrosoftIndex, 6, MidiBankBass, MidiInstrBass);
+      for i := 0 to 6 do
+        if (i > 4) and BassBankActiv then
+          ChangeBank(MicrosoftIndex, i, MidiBankBass, MidiInstrBass)
+        else
+          ChangeBank(MicrosoftIndex, i, MidiBankBass, MidiInstrBass);
     finally
     end;
   {$if defined(CONSOLE)}

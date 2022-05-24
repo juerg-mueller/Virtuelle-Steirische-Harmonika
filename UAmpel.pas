@@ -145,7 +145,6 @@ type
   private
     function MakeMouseDown(const P: TPoint; Push: boolean): TMouseEvent;
     function FlippedHorz: boolean;
-    procedure Invalidate_;
   public
     Instrument: PInstrument;
     AmpelEvents: TAmpelEvents;
@@ -431,7 +430,7 @@ end;
 procedure TAmpelEvents.DoAmpel(Index: integer; On_: boolean);
 var
   Event: TGriffEvent;
-  d: byte;
+  d: double;
 begin
   with MouseEvents[Index] do
   begin
@@ -440,19 +439,13 @@ begin
       Event.SoundPitch := Pitch;
     if Row_ in [1..6] then
     begin
-      d := $5f;
-      if (Row_ >= 5) then
-      begin
-      {  if BassBankActiv and
-         (MidiBankBass = 41) and
-         (MidiInstrBass in [90, 91, 94 .. 97]) then
-           dec(Event.SoundPitch, 12)
-        else   }
-          d := $6F;
-      end;
       if On_ then
       begin
-        SendMidiOut($90 + Row_ , Event.SoundPitch, d)
+        if Row_ >= 5 then
+          d := 127*VolumeBass
+        else
+          d := 127*VolumeDiscant;
+        SendMidiOut($90 + Row_ , Event.SoundPitch, trunc(d))
       end else begin
         SendMidiOut($80 + Row_, Event.SoundPitch, $40);
       end;
@@ -577,11 +570,6 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-procedure TfrmAmpel.Invalidate_;
-begin
-  invalidate;
-end;
-
 procedure TfrmAmpel.ChangeInstrument(Instrument_: PInstrument);
 var
   Row: byte;
@@ -596,21 +584,21 @@ begin
     Caption := '';
   FormShow(nil);
   FormResize(nil);
-  Invalidate_;
+  invalidate;
 end;
 
 procedure TfrmAmpel.btnFlipClick(Sender: TObject);
 begin
   FlippedVert := not FlippedVert;
   cbSizeChange(nil);
-  Invalidate_;
+  invalidate;
 end;
 
 procedure TfrmAmpel.btnFlipHorzClick(Sender: TObject);
 begin
   FlippedHorz_ := not FlippedHorz_;
   cbSizeChange(nil);
-  Invalidate_;
+  invalidate;
 end;
 
 procedure TfrmAmpel.cbSizeChange(Sender: TObject);
@@ -662,13 +650,13 @@ begin
   lbTastatur.Top := lbTastatur.Top + d;
   cbxLinkshaender.Top := cbxLinkshaender.Top + d;
   cbxVerkehrt.Top := cbxVerkehrt.Top + d;
-  Invalidate_;
+  Invalidate;
 end;
 
 procedure TfrmAmpel.cbxLinkshaenderClick(Sender: TObject);
 begin
   cbSizeChange(nil);
-  Invalidate_;
+  invalidate;
 end;
 
 procedure TfrmAmpel.FormActivate(Sender: TObject);
@@ -1111,7 +1099,7 @@ end;
 
 procedure TfrmAmpel.PaintAmpel(Row: byte {1..6}; index: integer {0..12}; Push, On_: boolean);
 var
-  rect, rect1: TRect;
+  rect: TRect;
 begin
 
   if (Instrument = nil) or (Instrument.GetPitch(Row, Index, Push) <= 0) then
@@ -1220,6 +1208,8 @@ begin
   Event.Row_ := 1;
   Event.Index_ := -1;
   Event.Push_ := ShiftUsed;
+
+//  writeln(aStatus, '  ', aData1, '  ', aData2);
 
   CriticalMidiIn.Acquire;
   try

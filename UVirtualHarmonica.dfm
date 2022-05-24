@@ -3,7 +3,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   Top = 0
   ActiveControl = cbTransInstrument
   Caption = 'Virtuelle Steirische Harmonika'
-  ClientHeight = 566
+  ClientHeight = 672
   ClientWidth = 404
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -30,21 +30,21 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       404
       119)
     object lblKeyboard: TLabel
-      Left = 25
+      Left = 24
       Top = 26
       Width = 83
       Height = 13
       Caption = 'Sustain Pedal (in)'
     end
     object Label17: TLabel
-      Left = 25
+      Left = 24
       Top = 54
       Width = 83
       Height = 13
       Caption = 'Synthesizer (out)'
     end
     object lbVirtual: TLabel
-      Left = 25
+      Left = 24
       Top = 82
       Width = 92
       Height = 13
@@ -77,7 +77,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       OnKeyUp = cbTransInstrumentKeyUp
     end
     object cbxVirtual: TComboBox
-      Left = 123
+      Left = 122
       Top = 79
       Width = 261
       Height = 21
@@ -109,7 +109,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Caption = 'Transpose (Primes)'
     end
     object Label1: TLabel
-      Left = 25
+      Left = 24
       Top = 33
       Width = 53
       Height = 13
@@ -174,14 +174,14 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   end
   object gbBalg: TGroupBox
     Left = 0
-    Top = 428
+    Top = 477
     Width = 404
     Height = 64
     Align = alTop
     Caption = 'Shift Button for Push/Pull'
     TabOrder = 4
     object Label2: TLabel
-      Left = 25
+      Left = 24
       Top = 26
       Width = 58
       Height = 13
@@ -190,7 +190,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     object cbxShiftIsPush: TCheckBox
       Left = 122
       Top = 25
-      Width = 15
+      Width = 25
       Height = 17
       Checked = True
       State = cbChecked
@@ -216,15 +216,22 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   end
   object GroupBox1: TGroupBox
     Left = 0
-    Top = 492
+    Top = 541
     Width = 404
-    Height = 72
+    Height = 125
     Align = alTop
     Caption = 'Record'
     TabOrder = 5
+    object Label8: TLabel
+      Left = 24
+      Top = 34
+      Width = 90
+      Height = 13
+      Caption = 'Use Banks + Instr.'
+    end
     object btnRecord: TButton
       Left = 122
-      Top = 23
+      Top = 63
       Width = 156
       Height = 25
       Caption = 'Record'
@@ -234,20 +241,33 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
     end
+    object cbxUseBanks: TCheckBox
+      Left = 122
+      Top = 33
+      Width = 25
+      Height = 17
+      Checked = True
+      State = cbChecked
+      TabOrder = 1
+      OnClick = cbxShiftIsPushClick
+      OnKeyDown = cbTransInstrumentKeyDown
+      OnKeyPress = cbTransInstrumentKeyPress
+      OnKeyUp = cbTransInstrumentKeyUp
+    end
   end
   object gbMidiInstrument: TGroupBox
     Left = 0
     Top = 224
     Width = 404
-    Height = 91
+    Height = 117
     Align = alTop
     Caption = 'MIDI Instrument'
     TabOrder = 2
     DesignSize = (
       404
-      91)
+      117)
     object Label3: TLabel
-      Left = 25
+      Left = 24
       Top = 54
       Width = 79
       Height = 13
@@ -260,6 +280,13 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Height = 13
       Caption = 'Bank'
     end
+    object lbVolDiskant: TLabel
+      Left = 24
+      Top = 82
+      Width = 34
+      Height = 13
+      Caption = 'Volume'
+    end
     object cbxMidiDiskant: TComboBox
       Left = 122
       Top = 51
@@ -267,6 +294,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Height = 21
       Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]
+      DropDownCount = 30
       ItemIndex = 21
       TabOrder = 1
       Text = '22 Accordion'
@@ -411,6 +439,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Height = 21
       Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]
+      DropDownCount = 20
       ItemIndex = 0
       TabOrder = 0
       Text = '00 - General Midi'
@@ -491,20 +520,35 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         '69'
         '70')
     end
+    object sbVolDiscant: TScrollBar
+      Left = 122
+      Top = 80
+      Width = 261
+      Height = 17
+      Anchors = [akLeft, akTop, akRight]
+      Min = 40
+      PageSize = 0
+      Position = 90
+      TabOrder = 2
+      OnChange = sbVolChange
+      OnKeyDown = cbTransInstrumentKeyDown
+      OnKeyPress = cbTransInstrumentKeyPress
+      OnKeyUp = cbTransInstrumentKeyUp
+    end
   end
   object gbMidiBass: TGroupBox
     Left = 0
-    Top = 315
+    Top = 341
     Width = 404
-    Height = 113
+    Height = 136
     Align = alTop
     Caption = 'MIDI Bass'
     TabOrder = 3
     DesignSize = (
       404
-      113)
+      136)
     object Label5: TLabel
-      Left = 25
+      Left = 24
       Top = 74
       Width = 79
       Height = 13
@@ -524,6 +568,13 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Height = 13
       Caption = 'Bass is different'
     end
+    object lbVolBass: TLabel
+      Left = 24
+      Top = 102
+      Width = 34
+      Height = 13
+      Caption = 'Volume'
+    end
     object cbxInstrBass: TComboBox
       Left = 122
       Top = 71
@@ -531,6 +582,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Height = 21
       Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]
+      DropDownCount = 30
       Enabled = False
       ItemIndex = 21
       TabOrder = 2
@@ -676,6 +728,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Height = 21
       Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]
+      DropDownCount = 20
       Enabled = False
       ItemIndex = 0
       TabOrder = 1
@@ -768,10 +821,26 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
     end
+    object sbVolBass: TScrollBar
+      Left = 122
+      Top = 100
+      Width = 261
+      Height = 17
+      Anchors = [akLeft, akTop, akRight]
+      Min = 40
+      PageSize = 0
+      Position = 90
+      TabOrder = 3
+      OnChange = sbVolChange
+      OnKeyDown = cbTransInstrumentKeyDown
+      OnKeyPress = cbTransInstrumentKeyPress
+      OnKeyUp = cbTransInstrumentKeyUp
+    end
   end
   object SaveDialog1: TSaveDialog
     FileName = 'Recorded.mid'
     Filter = 'MIDI|*.mid'
+    InitialDir = '.'
     Left = 192
     Top = 56
   end

@@ -6,7 +6,7 @@
 
 interface
 
-{$define _JM}
+{$define JM_}
 
 uses
 {$ifndef FPC}
@@ -56,6 +56,12 @@ type
     cbxBankBass: TComboBox;
     cbxDiskantBank: TComboBox;
     btnResetMidi: TButton;
+    Label8: TLabel;
+    cbxUseBanks: TCheckBox;
+    sbVolDiscant: TScrollBar;
+    lbVolDiskant: TLabel;
+    lbVolBass: TLabel;
+    sbVolBass: TScrollBar;
     procedure cbTransInstrumentChange(Sender: TObject);
     procedure cbxMidiInputChange(Sender: TObject);
     procedure cbxTransInstrumentChange(Sender: TObject);
@@ -75,9 +81,10 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure cbxBassDifferentClick(Sender: TObject);
     procedure cbxDiskantBankChange(Sender: TObject);
+    procedure sbVolChange(Sender: TObject);
   private
     CriticalSendOut: TCriticalSection;
-    TimeEventCount: cardinal;
+    TimeEventCount: integer;
     TimeEventArray: array of TMidiTimeEvent;
     procedure RegenerateMidi;
     procedure SendMidiOut(const aStatus, aData1, aData2: byte);
@@ -155,6 +162,18 @@ var
   DetailHeader: TDetailHeader;
   Event: TMidiEvent;
   Saved: boolean;
+
+  procedure AppendInstr(Bank, Channel, Instr: byte);
+  begin
+    if Bank > 0 then
+    begin
+      Stream.AppendEvent($b0 + Channel, 0, Bank);  // 0x32, LSB Bank);
+      Stream.WriteByte(0); // var_len = 0
+    end;
+    Stream.AppendEvent($C0 + Channel, Instr, 0); // Instrument
+    Stream.WriteByte(0); // var_len = 0
+  end;
+
 begin
   if btnRecord.Caption = 'Record' then
   begin
@@ -179,11 +198,16 @@ begin
       Stream.AppendHeaderMetaEvents(DetailHeader);
       Stream.AppendTrackEnd(false);
       Stream.AppendTrackHead;
+
       for i := 1 to 6 do
-      begin
-        Stream.AppendEvent($C0 + i, MidiInstrDiskant, 0); // Instrument
-        Stream.WriteByte(0); // var_len = 0
-      end;
+        if cbxUseBanks.Checked then
+        begin
+          if (i > 4) and BassBankActiv then
+            AppendInstr(MidiBankBass, i, MidiInstrBass)
+          else
+            AppendInstr(MidiBankDiskant, i, MidiInstrDiskant);
+        end else
+          AppendInstr(0, i, $15); // Akkordeon
 
       i := 0;
       repeat
@@ -460,12 +484,16 @@ begin
 
 {$ifdef JM}
   cbxMidiDiskant.ItemIndex := 9;
-  cbxInstrBass.ItemIndex := 9;
+  cbxInstrBass.ItemIndex := 45;
 {$else}
   cbxMidiDiskant.ItemIndex := 21;
   cbxInstrBass.ItemIndex := 21;
 {$endif}
   cbxMidiDiskantChange(nil);
+  SaveDialog1.InitialDir := ExtractFilePath(ParamStr(0));
+
+  sbVolChange(sbVolDiscant);
+  sbVolChange(sbVolBass);
 end;
 
 procedure TfrmVirtualHarmonica.FormDestroy(Sender: TObject);
@@ -497,10 +525,11 @@ begin
   RegenerateMidi;
   MidiInput.OnMidiData := frmAmpel.OnMidiInData;
 
-//{$ifdef JM}
+{$ifdef JM}
+  cbxBassDifferent.Checked := true;
   GetIndex(cbxMidiInput, 'Mobile Keys 49');
   GetIndex(cbxMidiOut, 'UM-ONE');
-//{$endif}
+{$endif}
 
   frmAmpel.ChangeInstrument(@Instrument);
   frmAmpel.Show;
@@ -553,5 +582,25 @@ begin
   cbxVirtual.ItemIndex := 0;
 end;
 
+
+procedure TfrmVirtualHarmonica.sbVolChange(Sender: TObject);
+var
+  s: string;
+  p: double;
+begin
+  with Sender as TScrollBar do
+  begin
+    s := Format('Volume   (%d %%)', [Position]);
+    p := Position / 100.0;
+  end;
+  if Sender = sbVolBass then
+  begin
+    lbVolBass.Caption := s;
+    VolumeBass := p;
+  end else begin
+    lbVolDiskant.Caption := s;
+    VolumeDiscant := p;
+  end;
+end;
 
 end.
