@@ -18,7 +18,7 @@ Mit der Shift-Taste ändert man die Balgbewegung.
 Zusatzinformationen, welche im Synthesizer-MIDI-Kanal mitgeliefert werden.
 ==========================================================================
 
-MIDI-Balg-Information, wird bei jedem Wechsel ausgegeben:
+MIDI-Balg-Information, wird bei jedem Wechsel ausgegeben (alle Angaben sind hexadezimal):
 
   B0 1f 00/01   ;01 für Push; 00 für Pull
   
