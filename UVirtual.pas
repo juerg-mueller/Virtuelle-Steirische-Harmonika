@@ -49,7 +49,7 @@ begin
       exit;
     end;
 
-{$if defined(CONSOLE)}
+{$if defined(CONSOLE) and false}
   for i := 0 to DataLength-1 do
   begin
     b := MidiDataBytes[i];

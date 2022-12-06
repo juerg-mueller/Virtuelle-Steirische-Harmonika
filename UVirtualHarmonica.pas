@@ -6,7 +6,7 @@
 
 interface
 
-{$define JM_}
+{$define _JM}
 
 uses
 {$ifndef FPC}
@@ -19,7 +19,7 @@ uses
   UInstrument, UMidiEvent, StdCtrls, UAmpel, Classes;
 
 type
-  TMidiTimeEvent = record
+  TRecordEventArray = record
     TimeStamp: TDateTime;
     MidiEvent: TMidiEvent;
   end;
@@ -40,7 +40,7 @@ type
     gbBalg: TGroupBox;
     cbxShiftIsPush: TCheckBox;
     Label2: TLabel;
-    GroupBox1: TGroupBox;
+    gbRecord: TGroupBox;
     btnRecord: TButton;
     SaveDialog1: TSaveDialog;
     gbMidiInstrument: TGroupBox;
@@ -62,6 +62,11 @@ type
     lbVolDiskant: TLabel;
     lbVolBass: TLabel;
     sbVolBass: TScrollBar;
+    gbSzene: TGroupBox;
+    cbxScene: TComboBox;
+    Label9: TLabel;
+    cbAccordionMaster: TCheckBox;
+    btnReset: TButton;
     procedure cbTransInstrumentChange(Sender: TObject);
     procedure cbxMidiInputChange(Sender: TObject);
     procedure cbxTransInstrumentChange(Sender: TObject);
@@ -77,17 +82,19 @@ type
       Shift: TShiftState);
     procedure cbTransInstrumentKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
-    procedure btnRecordClick(Sender: TObject);
+//    procedure btnRecordClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure cbxBassDifferentClick(Sender: TObject);
     procedure cbxDiskantBankChange(Sender: TObject);
     procedure sbVolChange(Sender: TObject);
+    procedure cbAccordionMasterClick(Sender: TObject);
+    procedure btnResetClick(Sender: TObject);
   private
-    CriticalSendOut: TCriticalSection;
+    CriticalRecord: TCriticalSection;
     TimeEventCount: integer;
-    TimeEventArray: array of TMidiTimeEvent;
+    RecordEventArray: array of TRecordEventArray;
     procedure RegenerateMidi;
-    procedure SendMidiOut(const aStatus, aData1, aData2: byte);
+    procedure RecordMidi(const aStatus, aData1, aData2: byte);
     procedure BankChange(cbx: TComboBox);
   public
     Instrument: TInstrument;
@@ -108,28 +115,28 @@ uses
 {$ifndef FPC}
   UVirtual,
 {$endif}
-  UFormHelper, UGriffEvent, UMidiSaveStream, UBanks;
+  UFormHelper, UGriffEvent, UBanks;
 
 {$ifdef FPC}
 const
   IDYES = 1;
 {$endif}
 
-procedure TfrmVirtualHarmonica.SendMidiOut(const aStatus, aData1, aData2: byte);
+procedure TfrmVirtualHarmonica.RecordMidi(const aStatus, aData1, aData2: byte);
 var
   Last: double;
 begin
-  CriticalSendOut.Acquire;
+  CriticalRecord.Acquire;
   try
     inc(TimeEventCount);
-    if TimeEventCount >= Length(TimeEventArray) then
-      SetLength(TimeEventArray, TimeEventCount+1);
+    if TimeEventCount >= Length(RecordEventArray) then
+      SetLength(RecordEventArray, TimeEventCount+1);
 
     Last := time;
     if TimeEventCount > 1 then
-      TimeEventArray[TimeEventCount-2].TimeStamp := Last;
+      RecordEventArray[TimeEventCount-2].TimeStamp := Last;
 
-    with TimeEventArray[TimeEventCount-1] do
+    with RecordEventArray[TimeEventCount-1] do
     begin
       TimeStamp := Last;
       MidiEvent.Clear;
@@ -138,10 +145,10 @@ begin
       MidiEvent.d2 := aData2;
     end;
   finally
-    CriticalSendOut.Release;
+    CriticalRecord.Release;
   end;
 end;
-
+{
 procedure TfrmVirtualHarmonica.btnRecordClick(Sender: TObject);
 
   procedure Deactivate(Ok: boolean);
@@ -151,6 +158,7 @@ procedure TfrmVirtualHarmonica.btnRecordClick(Sender: TObject);
     gbBalg.Enabled := Ok;
     gbMidiInstrument.Enabled := Ok;
     gbMidiBass.Enabled := Ok;
+    gbSzene.Enabled := Ok;
   end;
 
 const
@@ -179,11 +187,11 @@ begin
   begin
     Deactivate(false);
     TimeEventCount := 0;
-    SendMidiOut($B0, ControlSustain, ord(ShiftUsed));
-    frmAmpel.AmpelEvents.PSendMidiOut := SendMidiOut;
+    RecordMidi($B0, ControlSustain, ord(ShiftUsed));
+    frmAmpel.AmpelEvents.PRecordMidi := RecordMidi;
     btnRecord.Caption := 'Stop';
   end else begin
-    frmAmpel.AmpelEvents.PSendMidiOut := nil;
+    frmAmpel.AmpelEvents.PRecordMidi := nil;
     if TimeEventCount > 1 then
     begin
       TimeOffset := 0;
@@ -211,15 +219,15 @@ begin
 
       i := 0;
       repeat
-        Stream.AppendEvent(TimeEventArray[i].MidiEvent);
+        Stream.AppendEvent(RecordEventArray[i].MidiEvent);
         inc(i);
-      until (i >= TimeEventCount) or (TimeEventArray[i].MidiEvent.Event = 9);
+      until (i >= TimeEventCount) or (RecordEventArray[i].MidiEvent.Event = 9);
       if i < TimeEventCount then
-        TimeOffset := TimeEventArray[i].TimeStamp;
+        TimeOffset := RecordEventArray[i].TimeStamp;
       while i < TimeEventCount do
       begin
-        with TimeEventArray[i] do begin
-          TimeEventArray[i].MidiEvent.var_len :=
+        with RecordEventArray[i] do begin
+          RecordEventArray[i].MidiEvent.var_len :=
             DetailHeader.MsDelayToTicks(round(MilliSekProTag*(TimeStamp - TimeOffset)));
           TimeOffset :=
             TimeOffset + DetailHeader.TicksToMs(MidiEvent.var_len) / MilliSekProTag;
@@ -244,11 +252,22 @@ begin
     Deactivate(true);
   end;
 end;
+}
+procedure TfrmVirtualHarmonica.btnResetClick(Sender: TObject);
+begin
+//  ResetMidi;
+  frmAmpel.AmpelEvents.AllEventsOff;
+end;
 
 procedure TfrmVirtualHarmonica.btnResetMidiClick(Sender: TObject);
 begin
 //  ResetMidi;
 //  RegenerateMidi;
+end;
+
+procedure TfrmVirtualHarmonica.cbAccordionMasterClick(Sender: TObject);
+begin
+  ChangeSzene(cbxScene.ItemIndex, cbAccordionMaster.Checked);
 end;
 
 procedure TfrmVirtualHarmonica.cbTransInstrumentChange(Sender: TObject);
@@ -263,7 +282,7 @@ begin
 
   index := InstrumentIndex(AnsiString(s));
   if index < 0 then
-     index := 0;
+   index := 0;
   Instrument := InstrumentsList_[index];
   cbxTransInstrumentChange(nil);
 
@@ -323,17 +342,17 @@ begin
   cbxMidiDiskantChange(Sender);
 end;
 
-  function GetIndex(cbxMidi: TComboBox): integer;
-  var
-    s: string;
-  begin
-    if cbxMidi.ItemIndex < 0 then
-      cbxMidi.ItemIndex := 0;
-    s := cbxMidi.Text;
-    if Pos(' ', s) > 0 then
-      s := Copy(s, 1,Pos(' ', s));
-    result := StrToIntDef(trim(s), 0);
-  end;
+function GetIndex(cbxMidi: TComboBox): integer;
+var
+  s: string;
+begin
+  if cbxMidi.ItemIndex < 0 then
+    cbxMidi.ItemIndex := 0;
+  s := cbxMidi.Text;
+  if Pos(' ', s) > 0 then
+    s := Copy(s, 1,Pos(' ', s));
+  result := StrToIntDef(trim(s), 0);
+end;
 
 procedure TfrmVirtualHarmonica.BankChange(cbx: TComboBox);
 var
@@ -445,7 +464,7 @@ begin
 {$else}
   Caption := Caption + ' (32)';
 {$endif}
-  SetLength(TimeEventArray, 100000);
+  SetLength(RecordEventArray, 100000);
   TimeEventCount := 0;
 
   cbTransInstrument.Items.Clear;
@@ -464,7 +483,7 @@ begin
   Sleep(10);
   Application.ProcessMessages;
 {$endif}
-  CriticalSendOut := TCriticalSection.Create;
+  CriticalRecord := TCriticalSection.Create;
   CopyBank(Bank, @bank_list);
   cbxDiskantBank.Items.Clear;
   for i := low(Bank) to high(Bank) do
@@ -477,6 +496,8 @@ begin
 {$else}
   cbxDiskantBank.ItemIndex := 0;
   cbxBankBass.ItemIndex := 0;
+  gbSzene.Visible := false;
+  Height := Height - 90;
 {$endif}
 
   BankChange(cbxDiskantBank);
@@ -499,8 +520,8 @@ end;
 procedure TfrmVirtualHarmonica.FormDestroy(Sender: TObject);
 begin
   MidiInput.CloseAll;
-  SetLength(TimeEventArray, 0);
-  CriticalSendOut.Free;
+  SetLength(RecordEventArray, 0);
+  CriticalRecord.Free;
 end;
 
 procedure TfrmVirtualHarmonica.FormShow(Sender: TObject);
@@ -520,7 +541,7 @@ procedure TfrmVirtualHarmonica.FormShow(Sender: TObject);
   end;
 
 begin
-  GetIndex(cbTransInstrument, 'Steirische ADGC');
+  GetIndex(cbTransInstrument, 'b-Oergeli');//'BEsAsDes');
 
   RegenerateMidi;
   MidiInput.OnMidiData := frmAmpel.OnMidiInData;
@@ -530,6 +551,7 @@ begin
   GetIndex(cbxMidiInput, 'Mobile Keys 49');
   GetIndex(cbxMidiOut, 'UM-ONE');
 {$endif}
+  cbAccordionMasterClick(nil);
 
   frmAmpel.ChangeInstrument(@Instrument);
   frmAmpel.Show;
@@ -604,3 +626,4 @@ begin
 end;
 
 end.
+

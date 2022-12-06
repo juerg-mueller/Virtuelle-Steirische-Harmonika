@@ -197,6 +197,8 @@ var
 procedure OpenMidiMicrosoft;
 
 implementation
+uses
+  UFormHelper;
 
 var
   hndLib: TLibHandle = 0;
@@ -371,7 +373,11 @@ end;
 
 initialization
 
+{$ifdef LINUX}
   hndLib := LoadLibrary(PChar('librtmidi.so'));
+{$else}
+  hndLib := LoadLibrary('rtmidi.dll');
+{$endif}
   if hndLib <> NilHandle then
   begin
     prtmidi_open_port :=  GetProcedureAddress(hndLib, 'rtmidi_open_port');
@@ -392,6 +398,9 @@ initialization
     MidiOutput := TMidiOutput.Create;
     MidiVirtual := TMidiOutput.Create;
     MidiInput := TMidiInput.Create;
+  end else begin
+    ErrMessage('rtmidi library not found');
+    halt;
   end;
 
 finalization

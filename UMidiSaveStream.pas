@@ -27,7 +27,7 @@ uses
   LCLIntf, LCLType, LMessages,
 {$endif}
   Classes, SysUtils,
-  UMyMidiStream, UMidiEvent;
+  UMyMidiStream;
 
 type
   TMidiSaveStream = class(TMyMidiStream)

@@ -203,6 +203,7 @@ function GetIndexToPitchInArray(pitch: byte; const arr: TPitchArray): integer;
 implementation
 
 uses
+  AnsiStrings,
   UMyMemoryStream, UMyMidiStream, UFormHelper;
 
 
@@ -304,11 +305,11 @@ procedure TVocalArray.CopyJson(Node: Tjson);
 var
   i, max: integer;
 
-  function GetPitch(Note: string): integer;
+  function GetPitch(Note: AnsiString): integer;
   var
     i: integer;
   begin
-    Note := LowerCase(Note);
+    Note := AnsiStrings.LowerCase(Note);
     if Note = '' then
     begin
       result := 0;

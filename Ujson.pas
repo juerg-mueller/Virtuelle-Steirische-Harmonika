@@ -123,7 +123,7 @@ begin
     result := result + CR;
     if ValueType = vtString then
       result := result + '"';
-    result := result + Value;
+    result := result + string(Value);
     if ValueType = vtString then
       result := result + '"';
   end else
@@ -195,7 +195,7 @@ var
       SetError;
     repeat
       ReadByte;
-      result := result + c;
+      result := result + Char(c);
       c := AnsiChar(NextByte);
     until not (c in ['0'..'9', '.', 'E', 'e']) or (ErrPos >= 0);
   end;
@@ -210,7 +210,7 @@ var
       SetError;
     repeat
       ReadByte;
-      result := result + c;
+      result := result + Char(c);
       c := AnsiChar(NextByte);
     until not (c in ['a'..'z']);
   end;
@@ -237,7 +237,7 @@ var
       Node.ValueType := vtInt;
       result := GetInt;
     end;
-    Node.Value := result;
+    Node.Value := AnsiString(result);
   end;
 
 begin
@@ -295,7 +295,7 @@ begin
     s := '';
     while (i + k < Size) and (k < 30) do
     begin
-      s := s + AnsiChar(GetByte(i + k));
+      s := s + Char(AnsiChar(GetByte(i + k)));
       inc(k);
     end;
 {$ifdef CONSOLE}
