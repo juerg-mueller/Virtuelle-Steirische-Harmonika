@@ -91,7 +91,7 @@ type
   TAmpelEvents = class
   private
     frmAmpel: TfrmAmpel;
-    MouseEvents: array [0..10] of TMouseEvent;
+    MouseEvents: array [0..64] of TMouseEvent;
     FUsedEvents: integer;
     LastPush: TLastPush;
 
@@ -1152,8 +1152,12 @@ begin
     canvas.Brush.Color := $ffff00;
   canvas.Ellipse(rect);
 
-  if (index = 5) and
-     (row = 2) {and (Instrument.Columns = 3)} then   // Kreuz
+  if ((index = 5) and (row = 2)) or
+     ( Instrument.BassDiatonic and
+       (((index = 6) and (row = 1)) or
+        ((index = 6) and (row = 3)) or
+        ((index = 6) and (row = 4)))
+      ) then   // Kreuz
   begin
     canvas.Pen.Color := $ffffff;
     canvas.MoveTo(rect.Left + 5, rect.Top + 5);
