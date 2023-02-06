@@ -12,12 +12,12 @@ uses
   UMidiEvent in 'UMidiEvent.pas',
   UInstrument in 'UInstrument.pas',
   UMyMemoryStream in 'UMyMemoryStream.pas',
-  UMidiSaveStream in 'UMidiSaveStream.pas',
   UMyMidiStream in 'UMyMidiStream.pas',
   UBanks in 'UBanks.pas',
   UXmlNode in 'UXmlNode.pas',
   UXmlParser in 'UXmlParser.pas',
-  Ujson in 'Ujson.pas';
+  Ujson in 'Ujson.pas',
+  UMidiSaveStream in 'UMidiSaveStream.pas';
 
 {$R *.res}
 

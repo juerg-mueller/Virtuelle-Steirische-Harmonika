@@ -3,7 +3,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   Top = 0
   ActiveControl = cbTransInstrument
   Caption = 'Virtuelle Steirische Harmonika'
-  ClientHeight = 624
+  ClientHeight = 714
   ClientWidth = 404
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -13,6 +13,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
@@ -32,16 +33,16 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     object lblKeyboard: TLabel
       Left = 24
       Top = 26
-      Width = 83
+      Width = 37
       Height = 13
-      Caption = 'Sustain Pedal (in)'
+      Caption = 'MIDI IN'
     end
     object Label17: TLabel
       Left = 24
       Top = 54
-      Width = 83
+      Width = 47
       Height = 13
-      Caption = 'Synthesizer (out)'
+      Caption = 'MIDI OUT'
     end
     object lbVirtual: TLabel
       Left = 24
@@ -92,11 +93,11 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       OnKeyUp = cbTransInstrumentKeyUp
     end
     object btnReset: TButton
-      Left = 308
+      Left = 256
       Top = 78
-      Width = 75
+      Width = 127
       Height = 25
-      Caption = 'Reset MIDI'
+      Caption = 'MIDI OUT zur'#252'cksetzen'
       TabOrder = 3
       OnClick = btnResetClick
     end
@@ -107,7 +108,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Width = 404
     Height = 105
     Align = alTop
-    Caption = 'Steirische Harmonika / Schwyzer'#246'rgeli'
+    Caption = 'Steirische Harmonika / Aarguer'#246'rgeli'
     TabOrder = 0
     DesignSize = (
       404
@@ -115,9 +116,9 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     object Label13: TLabel
       Left = 24
       Top = 64
-      Width = 92
+      Width = 69
       Height = 13
-      Caption = 'Transpose (Primes)'
+      Caption = 'Transponieren'
     end
     object Label1: TLabel
       Left = 24
@@ -187,7 +188,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Caption = 'Shift Button for Push/Pull'
     TabOrder = 4
     Visible = False
-    ExplicitTop = 531
     object Label2: TLabel
       Left = 24
       Top = 26
@@ -226,38 +226,39 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Left = 0
     Top = 627
     Width = 404
-    Height = 95
+    Height = 86
     Align = alTop
-    Caption = 'Record'
+    Caption = 'Aufnahme'
     TabOrder = 5
-    Visible = False
-    ExplicitTop = 595
     object Label8: TLabel
-      Left = 24
-      Top = 34
+      Left = 25
+      Top = 14
       Width = 90
       Height = 13
       Caption = 'Use Banks + Instr.'
+      Visible = False
     end
     object btnRecord: TButton
       Left = 122
-      Top = 63
+      Top = 35
       Width = 156
       Height = 25
-      Caption = 'Record'
+      Caption = 'MIDI IN Aufnahme starten'
       TabOrder = 0
+      OnClick = btnRecordClick
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
     end
     object cbxUseBanks: TCheckBox
-      Left = 122
-      Top = 33
+      Left = 123
+      Top = 13
       Width = 25
       Height = 17
       Checked = True
       State = cbChecked
       TabOrder = 1
+      Visible = False
       OnClick = cbxShiftIsPushClick
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
@@ -272,7 +273,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Align = alTop
     Caption = 'MIDI Instrument'
     TabOrder = 2
-    ExplicitTop = 185
     DesignSize = (
       404
       117)
@@ -293,9 +293,9 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     object lbVolDiskant: TLabel
       Left = 24
       Top = 82
-      Width = 34
+      Width = 51
       Height = 13
-      Caption = 'Volume'
+      Caption = 'Lautst'#228'rke'
     end
     object cbxMidiDiskant: TComboBox
       Left = 122
@@ -536,9 +536,10 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Width = 261
       Height = 17
       Anchors = [akLeft, akTop, akRight]
-      Min = 40
+      Max = 140
+      Min = 20
       PageSize = 0
-      Position = 90
+      Position = 95
       TabOrder = 2
       OnChange = sbVolChange
       OnKeyDown = cbTransInstrumentKeyDown
@@ -554,7 +555,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Align = alTop
     Caption = 'MIDI Bass'
     TabOrder = 3
-    ExplicitTop = 302
     DesignSize = (
       404
       136)
@@ -575,16 +575,16 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     object Label7: TLabel
       Left = 24
       Top = 21
-      Width = 77
+      Width = 67
       Height = 13
-      Caption = 'Bass is different'
+      Caption = 'Bass getrennt'
     end
     object lbVolBass: TLabel
       Left = 24
       Top = 102
-      Width = 34
+      Width = 51
       Height = 13
-      Caption = 'Volume'
+      Caption = 'Lautst'#228'rke'
     end
     object cbxInstrBass: TComboBox
       Left = 122
@@ -834,13 +834,14 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     end
     object sbVolBass: TScrollBar
       Left = 122
-      Top = 100
+      Top = 98
       Width = 261
       Height = 17
       Anchors = [akLeft, akTop, akRight]
+      Max = 120
       Min = 40
       PageSize = 0
-      Position = 90
+      Position = 95
       TabOrder = 3
       OnChange = sbVolChange
       OnKeyDown = cbTransInstrumentKeyDown
@@ -856,7 +857,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Align = alTop
     Caption = 'Scene'
     TabOrder = 6
-    ExplicitTop = 438
     DesignSize = (
       404
       93)

@@ -63,12 +63,13 @@ uses
 
 type
   TSoundGriff = procedure (Row: byte; index: byte; Push: boolean; On_:boolean) of object;
-  TRecordMidi = procedure (const aStatus, aData1, aData2: byte) of object;
+  TRecordMidiIn = procedure (const Status, Data1, Data2: byte; Timestamp: Int64) of object;
+  TRecordMidiOut = procedure (const Status, Data1, Data2: byte) of object;
 
   TMidiInData = record
     DeviceIndex: integer;
     Status, Data1, Data2: byte;
-    Timestamp: integer;
+    Timestamp: Int64;
   end;
 
   TMouseEvent = record
@@ -84,10 +85,12 @@ type
   end;
 
   TfrmAmpel = class;
+
 {$ifdef FPC}
   TWMKey = integer;
 {$endif}
   TLastPush = (unknown, LastPush_, LastPull_);
+
   TAmpelEvents = class
   private
     frmAmpel: TfrmAmpel;
@@ -99,7 +102,7 @@ type
     procedure SendPush(Push: boolean);
   public
     CriticalAmpel: syncobjs.TCriticalSection;
-    PRecordMidi: TRecordMidi;
+    PRecordMidiOut: TRecordMidiOut;
 
     constructor Create(Ampel: TfrmAmpel);
     destructor Destroy; override;
@@ -109,7 +112,7 @@ type
     procedure GetKeyEvent(Key: integer; var Event: TMouseEvent);
     procedure CheckMovePoint(const P: TPoint; Down: boolean);
     procedure InitLastPush;
-    procedure SendMidiOut(const aStatus, aData1, aData2: byte);
+    procedure SendMidiOut(const Status, Data1, Data2: byte);
     function  Paint(Row, Index: integer): boolean;
     procedure AllEventsOff;
 
@@ -169,6 +172,7 @@ type
     CriticalMidiIn: syncobjs.TCriticalSection;
     MidiBufferHead, MidiBufferTail: word;
     MidiInBuffer: array [0..1023] of TMidiInData;
+    PRecordMidiIn: TRecordMidiIn;
 
     procedure ChangeInstrument(Instrument_: PInstrument);
     function KnopfRect(Row: byte {1..6}; index: byte {0..10}): TRect;
@@ -179,7 +183,7 @@ type
 {$ifdef dcc}
     procedure KeyMessageEvent(var Msg: TMsg; var Handled: Boolean);
 {$endif}
-    procedure OnMidiInData(aDeviceIndex: integer; aStatus, aData1, aData2: byte; aTimestamp: integer);
+    procedure OnMidiInData(aDeviceIndex: integer; aStatus, aData1, aData2: byte; aTimestamp: Int64);
   end;
 
   TKeys = array [0..11] of AnsiChar;
@@ -251,11 +255,11 @@ begin
   AmpelEvents.InitLastPush;
 end;
 
-procedure TAmpelEvents.SendMidiOut(const aStatus, aData1, aData2: byte);
+procedure TAmpelEvents.SendMidiOut(const Status, Data1, Data2: byte);
 begin
-  SendSzene(aStatus, aData1, aData2);
-  if @PRecordMidi <> nil then
-    PRecordMidi(aStatus, aData1, aData2);
+  SendSzene(Status, Data1, Data2);
+  if @PRecordMidiOut <> nil then
+    PRecordMidiOut(Status, Data1, Data2);
 end;
 
 procedure TAmpelEvents.SendPush(Push: boolean);
@@ -463,10 +467,13 @@ begin
         begin
           d := Velocity;
         end else
+          d := 127;
         if Row_ >= 5 then
-          d := 127*VolumeBass
+          d := d*VolumeBass
         else
-          d := 127*VolumeDiscant;
+          d := d*VolumeDiscant;
+        if d > 120 then
+          d := 120;
         SendMidiOut($90 + Row_ , Event.SoundPitch, trunc(d))
       end else begin
         SendMidiOut($80 + Row_, Event.SoundPitch, $40);
@@ -1215,9 +1222,9 @@ var
   Event: TMouseEvent;
   Key: word;
   GriffEvent: TGriffEvent;
-  i: integer;
   Tail: integer;
   Data: TMidiInData;
+  v: double;
 
   function GetInstr(var Event: TMouseEvent): boolean;
   var
@@ -1230,7 +1237,7 @@ var
         Vocal := Instrument.Push
       else
         Vocal := Instrument.Pull;
-      Event.Index_ := GetIndexToPitchInArray(Event.Pitch, Vocal.Col[Event.Row_]);
+      Event.Index_ := GetPitchIndex(Event.Pitch, Vocal.Col[Event.Row_]);
     end else
     if Event.Row_ in [5..6] then
     begin
@@ -1238,7 +1245,7 @@ var
         Bass := Instrument.PullBass
       else
         Bass := Instrument.Bass;
-      Event.Index_ := GetBassIndex(Bass[Event.Row_ = 6], Event.Pitch);
+      Event.Index_ := GetPitchIndex(Event.Pitch, Bass[Event.Row_ = 6]);
     end;
     result := Event.Index_ >= 0;
   end;
@@ -1256,8 +1263,10 @@ begin
     finally
       CriticalMidiIn.Release;
     end;
-    if (Tail >= 0) and
-       ((Data.Status shr 4) in [8, 9, 11]) then
+    if Tail < 0 then
+      continue;
+
+    if (Data.Status shr 4) in [8, 9, 11] then
     begin
       Event.Clear;
       Event.Pitch := Data.Data1;
@@ -1304,6 +1313,7 @@ begin
           Event.Index_ := GriffEvent.GetIndex;
           if (Event.Row_ > 0) and (Event.Index_ >= 0) then
           begin
+            Event.Velocity := round(Event.Velocity);
             AmpelEvents.NewEvent(Event);
     {$if not defined(__VIRTUAL__) and defined(dcc)}
    //         if (GetKeyState(vk_scroll) = 1) then // numlock pause scroll
@@ -1318,8 +1328,10 @@ begin
         GetInstr(Event);
         begin
           if (Data.Status shr 4) = 9 then
+          begin
+            Event.Velocity := round(Event.Velocity);
             AmpelEvents.NewEvent(Event)
-          else
+          end else
             AmpelEvents.EventOff(Event);
         end;
       end else begin
@@ -1331,7 +1343,7 @@ begin
   end;
 end;
 
-procedure TfrmAmpel.OnMidiInData(aDeviceIndex: integer; aStatus, aData1, aData2: byte; aTimestamp: integer);
+procedure TfrmAmpel.OnMidiInData(aDeviceIndex: integer; aStatus, aData1, aData2: byte; aTimestamp: Int64);
 var
   old: word;
 begin
@@ -1348,13 +1360,15 @@ begin
       Status := aStatus;
       Data1 := aData1;
       Data2 := aData2;
-      Timestamp := aTimestamp;
+      Timestamp := aTimestamp;  // ms
 //      if (Status shr 4) <> 11 then
 //        writeln(Format('$%2.2x  $%2.2x  $%2.2x --' ,[Status, Data1, Data2]));
     end;
   finally
     CriticalMidiIn.Release;
   end;
+  if @PRecordMidiIn <> nil then
+    PRecordMidiIn(aStatus, aData1, aData2, aTimestamp);
 end;
 
 

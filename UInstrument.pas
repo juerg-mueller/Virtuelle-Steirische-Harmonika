@@ -32,9 +32,7 @@ uses
 type
   TPitchArray = array [0..15] of byte; 
   PPitchArray = ^TPitchArray;
-  TBassArr = array [0..9] of byte;
-  TBassArray = array [boolean] of TBassArr;
-//  TGriffArray = array [0..6] of byte; // tiefste Oktave in Es-Dur (D-Dur)
+  TBassArray = array [boolean] of TPitchArray;
   TColArray = array[1..4] of TPitchArray;
 
   TVocalArray =
@@ -149,8 +147,8 @@ const
           );
                // g   c   f   b  es  as des ges   h
     Bass: (
-           (  0, 43, 36, 41, 34, 39, 44, 37, 42, 35),
-           (  0, 55, 48, 53, 46, 51, 56, 49, 54, 47)    // Cross
+           (  0,43,36,41,34,39,44,37,42,35, 0, 0, 0, 0, 0, 0),
+           (  0,55,48,53,46,51,56,49,54,47, 0, 0, 0, 0, 0, 0)    // Cross
           );
   );
 
@@ -183,12 +181,12 @@ const
            );
           );
 
-    Bass: (( 0,53,41,55,43,48,36,53,41, 0),  // F g G c C f F              5. Reihe
-           ( 0,58,46,51,39,56,44,49,37, 0)   // b B es Es as As des Des    6. Reihe / Cross
+    Bass: ((  0,53,41,55,43,48,36,53,41, 0, 0, 0, 0, 0, 0, 0),  // F g G c C f F              5. Reihe
+           (  0,58,46,51,39,56,44,49,37, 0, 0, 0, 0, 0, 0, 0)   // b B es Es as As des Des    6. Reihe
            );
     PullBass:
-          (( 0,48,36,56,44,49,37,54,42, 0),  // f F b B es Es as As
-           ( 0,53,41,58,46,51,39,56,44, 0 )  // C as As des Des ges Ges
+          ((  0,48,36,56,44,49,37,54,42, 0, 0, 0, 0, 0, 0, 0),  // f F b B es Es as As
+           (  0,53,41,58,46,51,39,56,44, 0, 0, 0, 0, 0, 0, 0 )  // C as As des Des ges Ges
            );
   );
 
@@ -196,9 +194,8 @@ var
   InstrumentsList_: array of TInstrument;
 
 function InstrumentIndex(const Name: AnsiString): integer;
-function GetBassIndex(const Bass: TBassArr; Pitch: byte): integer;
 function SoundToGriff_(Pitch: byte; const Bass: TBassArray; var Sixth: boolean): integer;
-function GetIndexToPitchInArray(pitch: byte; const arr: TPitchArray): integer;
+function GetPitchIndex(Pitch: byte; const arr: TPitchArray): integer;
 
 implementation
 
@@ -213,13 +210,6 @@ begin
     result := 'accordion'
 //  else
 //    result := 'harmonica';
-end;
-
-function GetBassIndex(const Bass: TBassArr; Pitch: byte): integer;
-begin
-  result := High(TBassArr);
-  while (result > 0) and (Bass[result] <> Pitch) do
-    dec(result);
 end;
 
 function TInstrument.bigInstrument: boolean;
@@ -258,7 +248,7 @@ begin
   result := 0;
   if (Row > 6) or (Index > High(Push.Col[1])) or (Index < 0) then
     exit;
-  if (Row >= 5) and (Index > High(TBassArr)) then
+  if (Row >= 5) and (Index > High(TPitchArray)) then
     exit;
 
   if not BassDiatonic and (Row >= 5) then
@@ -284,10 +274,10 @@ begin
     dec(result); 
 end;
 
-procedure TransposeBass(var Bass: TBassArr; delta: integer);
+procedure TransposeBass(var Bass: TPitchArray; delta: integer);
 var i: integer;
 begin
-  for i := Low(TBassArr) to High(TBassArr) do
+  for i := Low(TPitchArray) to High(TPitchArray) do
     if Bass[i] > 0 then
       Bass[i] := Bass[i] + delta;
 end;
@@ -390,7 +380,7 @@ end;
 
 function TVocalArray.IsCross(Pitch: byte): boolean; 
 begin
-  result := GetIndexToPitchInArray(Pitch, Col[3]) >= 0;
+  result := GetPitchIndex(Pitch, Col[3]) >= 0;
 end;
 
 function TVocalArray.IsDouble(Pitch: byte; var Index1, Index2: integer): boolean;  
@@ -434,7 +424,7 @@ begin
   inc(TransposedPrimes, delta);
 end;
 
-function GetIndexToPitchInArray(pitch: byte; const arr: TPitchArray): integer;
+function GetPitchIndex(pitch: byte; const arr: TPitchArray): integer;
 begin
   result := High(arr);
   while result >= 0 do
@@ -484,7 +474,7 @@ begin
   result := 0;
   if Row in [5, 6] then
   begin
-    if Index in [Low(TBassArr) .. High(TBassArr)] then
+    if Index in [Low(TPitchArray) .. High(TPitchArray)] then
     begin
       if not Push_ and BassDiatonic then
         result := PullBass[Row = 6, Index]
@@ -590,7 +580,7 @@ begin
   iCol := 0;
   result := -1;
 
-  index := GetIndexToPitchInArray(Pitch, VocalArr.Col[2]);
+  index := GetPitchIndex(Pitch, VocalArr.Col[2]);
   if (index >= 0) then
   begin
     result := IndexToGriff(2*index+1);
@@ -598,7 +588,7 @@ begin
     exit;
   end;
 
-  index := GetIndexToPitchInArray(Pitch, VocalArr.Col[1]);
+  index := GetPitchIndex(Pitch, VocalArr.Col[1]);
   if (index >= 0) then
   begin
     result := IndexToGriff(2*index);
@@ -606,7 +596,7 @@ begin
     exit;
   end;
 
-  index := GetIndexToPitchInArray(Pitch, VocalArr.Col[3]);
+  index := GetPitchIndex(Pitch, VocalArr.Col[3]);
   if (index >= 0) then
   begin
     result := IndexToGriff(2*index);
@@ -616,7 +606,7 @@ begin
 
   if Columns = 4 then
   begin
-    index := GetIndexToPitchInArray(Pitch, VocalArr.Col[4]);
+    index := GetPitchIndex(Pitch, VocalArr.Col[4]);
     if (index >= 0) then
     begin
       result := IndexToGriff(2*index+1);
@@ -628,11 +618,11 @@ end;
 
 function SoundToGriff_(Pitch: byte; const Bass: TBassArray; var Sixth: boolean): integer;
 begin
-  result := GetBassIndex(Bass[Sixth], Pitch);
+  result := GetPitchIndex(Pitch, Bass[Sixth]);
   if result > 0 then
     exit;
 
-  result := GetBassIndex(Bass[not Sixth], Pitch);
+  result := GetPitchIndex(Pitch, Bass[not Sixth]);
   if result > 0 then
     Sixth := not Sixth;
 end;

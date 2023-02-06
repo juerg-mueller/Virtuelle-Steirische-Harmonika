@@ -16,7 +16,8 @@ uses
   Urtmidi,
 {$endif}
   Forms, SyncObjs, SysUtils, Graphics, Controls, Dialogs,
-  UInstrument, UMidiEvent, StdCtrls, UAmpel, Classes;
+  UInstrument, UMidiEvent, StdCtrls, UAmpel, Classes,
+  UMidiSaveStream;
 
 type
   TRecordEventArray = record
@@ -82,21 +83,20 @@ type
       Shift: TShiftState);
     procedure cbTransInstrumentKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
-//    procedure btnRecordClick(Sender: TObject);
+    procedure btnRecordClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure cbxBassDifferentClick(Sender: TObject);
     procedure cbxDiskantBankChange(Sender: TObject);
     procedure sbVolChange(Sender: TObject);
     procedure cbAccordionMasterClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    CriticalRecord: TCriticalSection;
-    TimeEventCount: integer;
-    RecordEventArray: array of TRecordEventArray;
+
     procedure RegenerateMidi;
-    procedure RecordMidi(const aStatus, aData1, aData2: byte);
     procedure BankChange(cbx: TComboBox);
   public
+    MidiRec: TMidiRecord;
     Instrument: TInstrument;
   end;
 
@@ -122,33 +122,6 @@ const
   IDYES = 1;
 {$endif}
 
-procedure TfrmVirtualHarmonica.RecordMidi(const aStatus, aData1, aData2: byte);
-var
-  Last: double;
-begin
-  CriticalRecord.Acquire;
-  try
-    inc(TimeEventCount);
-    if TimeEventCount >= Length(RecordEventArray) then
-      SetLength(RecordEventArray, TimeEventCount+1);
-
-    Last := time;
-    if TimeEventCount > 1 then
-      RecordEventArray[TimeEventCount-2].TimeStamp := Last;
-
-    with RecordEventArray[TimeEventCount-1] do
-    begin
-      TimeStamp := Last;
-      MidiEvent.Clear;
-      MidiEvent.command := aStatus;
-      MidiEvent.d1 := aData1;
-      MidiEvent.d2 := aData2;
-    end;
-  finally
-    CriticalRecord.Release;
-  end;
-end;
-{
 procedure TfrmVirtualHarmonica.btnRecordClick(Sender: TObject);
 
   procedure Deactivate(Ok: boolean);
@@ -159,103 +132,50 @@ procedure TfrmVirtualHarmonica.btnRecordClick(Sender: TObject);
     gbMidiInstrument.Enabled := Ok;
     gbMidiBass.Enabled := Ok;
     gbSzene.Enabled := Ok;
+    cbxMidiInput.Enabled := Ok;
   end;
 
-const
-  MilliSekProTag = 3600.0*24*1000;
 var
   i: integer;
-  Stream: TMidiSaveStream;
-  TimeOffset: double;
-  DetailHeader: TDetailHeader;
-  Event: TMidiEvent;
+  SaveStream: TMidiSaveStream;
   Saved: boolean;
-
-  procedure AppendInstr(Bank, Channel, Instr: byte);
-  begin
-    if Bank > 0 then
-    begin
-      Stream.AppendEvent($b0 + Channel, 0, Bank);  // 0x32, LSB Bank);
-      Stream.WriteByte(0); // var_len = 0
-    end;
-    Stream.AppendEvent($C0 + Channel, Instr, 0); // Instrument
-    Stream.WriteByte(0); // var_len = 0
-  end;
-
+  p: pointer;
 begin
-  if btnRecord.Caption = 'Record' then
+  if btnRecord.Caption <> 'Stopp' then
   begin
     Deactivate(false);
-    TimeEventCount := 0;
-    RecordMidi($B0, ControlSustain, ord(ShiftUsed));
-    frmAmpel.AmpelEvents.PRecordMidi := RecordMidi;
-    btnRecord.Caption := 'Stop';
+    MidiRec := TMidiRecord.Create;
+    frmAmpel.PRecordMidiIn := MidiRec.OnMidiInData;
+    btnRecord.Caption := 'Stopp';
   end else begin
-    frmAmpel.AmpelEvents.PRecordMidi := nil;
-    if TimeEventCount > 1 then
+    frmAmpel.PRecordMidiIn := nil;
+
+    if (MicrosoftIndex >= 0) and MidiRec.hasOns then
+      ResetMidiOut;
+
+    SaveStream := TMidiSaveStream.BuildSaveStream(MidiRec);
+    FreeAndNil(MidiRec);
+    if SaveStream <> nil then
     begin
-      TimeOffset := 0;
-      Stream := TMidiSaveStream.Create;
-      DetailHeader.Clear;
-      Stream.SetHead(DetailHeader.DeltaTimeTicks);
-      Stream.AppendTrackHead;
-      Event.MakeMetaEvent(2, 'VirtualHarmonica');
-      Stream.AppendEvent(Event);
-      Event.MakeMetaEvent(4, Instrument.Name);
-      Stream.AppendEvent(Event);
-      Stream.AppendHeaderMetaEvents(DetailHeader);
-      Stream.AppendTrackEnd(false);
-      Stream.AppendTrackHead;
-
-      for i := 1 to 6 do
-        if cbxUseBanks.Checked then
-        begin
-          if (i > 4) and BassBankActiv then
-            AppendInstr(MidiBankBass, i, MidiInstrBass)
-          else
-            AppendInstr(MidiBankDiskant, i, MidiInstrDiskant);
-        end else
-          AppendInstr(0, i, $15); // Akkordeon
-
-      i := 0;
-      repeat
-        Stream.AppendEvent(RecordEventArray[i].MidiEvent);
-        inc(i);
-      until (i >= TimeEventCount) or (RecordEventArray[i].MidiEvent.Event = 9);
-      if i < TimeEventCount then
-        TimeOffset := RecordEventArray[i].TimeStamp;
-      while i < TimeEventCount do
-      begin
-        with RecordEventArray[i] do begin
-          RecordEventArray[i].MidiEvent.var_len :=
-            DetailHeader.MsDelayToTicks(round(MilliSekProTag*(TimeStamp - TimeOffset)));
-          TimeOffset :=
-            TimeOffset + DetailHeader.TicksToMs(MidiEvent.var_len) / MilliSekProTag;
-          Stream.AppendEvent(MidiEvent);
-        end;
-        inc(i);
-      end;
-      Stream.AppendTrackEnd(true);
-      Saved := false;
       while not Saved and SaveDialog1.Execute do
       begin
         if not FileExists(SaveDialog1.FileName) or
-          (Warning('File exists! Overwrite?') = IDYES) then
+          (Warning('Datei existiert bereits! Überschreiben?') = IDYES) then
         begin
-          Stream.SaveToFile(SaveDialog1.FileName);
+          SaveStream.SaveToFile(SaveDialog1.FileName);
           Saved := true;
         end;
       end;
-      Stream.Free;
+      SaveStream.Free;
     end;
-    btnRecord.Caption := 'Record';
+    btnRecord.Caption := 'MIDI IN Aufnahme starten';
     Deactivate(true);
   end;
 end;
-}
+
 procedure TfrmVirtualHarmonica.btnResetClick(Sender: TObject);
 begin
-//  ResetMidi;
+  ResetMidiOut;
   frmAmpel.AmpelEvents.AllEventsOff;
 end;
 
@@ -274,6 +194,7 @@ procedure TfrmVirtualHarmonica.cbTransInstrumentChange(Sender: TObject);
 var
   s: string;
   index: integer;
+  isOergeli: boolean;
 begin
   if cbTransInstrument.ItemIndex < 0 then
     cbTransInstrument.ItemIndex := 0;
@@ -289,6 +210,17 @@ begin
   frmAmpel.ChangeInstrument(@Instrument);
   if Sender <> nil then
     OpenMidiMicrosoft;
+
+  if Pos('Oergeli', string(Instrument.Name)) > 0 then
+    s := 'Virtuelles Aargauerörgeli'
+  else
+    s := 'Virtuelle Steirische Harmonika';
+{$if defined(CPUX86_64) or defined(WIN64)}
+  s := s + ' (64)';
+{$else}
+  s := s + ' (32)';
+{$endif}
+  Caption := s;
 end;
 
 procedure TfrmVirtualHarmonica.cbTransInstrumentKeyDown(Sender: TObject;
@@ -334,10 +266,17 @@ begin
 end;
 
 procedure TfrmVirtualHarmonica.cbxBassDifferentClick(Sender: TObject);
+var
+  Checked: boolean;
 begin
-  cbxBankBass.Enabled := cbxBassDifferent.Checked;
-  cbxInstrBass.Enabled := cbxBassDifferent.Checked;
-  BassBankActiv := cbxBassDifferent.Checked;
+  Checked := cbxBassDifferent.Checked;
+  cbxBankBass.Enabled := Checked;
+  cbxInstrBass.Enabled := Checked;
+  BassBankActiv := Checked;
+  if Checked then
+    gbMidiInstrument.Caption := 'MIDI Diskant'
+  else
+    gbMidiInstrument.Caption := 'MIDI Instrument';
 
   cbxMidiDiskantChange(Sender);
 end;
@@ -454,26 +393,26 @@ begin
   frmAmpel.PaintBalg(ShiftUsed);
 end;
 
+procedure TfrmVirtualHarmonica.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+begin
+  if btnRecord.Caption = 'Stop' then
+    Action := caNone;
+end;
+
 procedure TfrmVirtualHarmonica.FormCreate(Sender: TObject);
 var
   i: integer;
   Bank: TArrayOfString;
 begin
-{$if defined(CPUX86_64) or defined(WIN64)}
-  Caption := Caption + ' (64)';
-{$else}
-  Caption := Caption + ' (32)';
-{$endif}
-  SetLength(RecordEventArray, 100000);
-  TimeEventCount := 0;
-
+  MidiRec := nil;
   cbTransInstrument.Items.Clear;
   for i := 0 to High(InstrumentsList_) do
     cbTransInstrument.Items.Add(string(InstrumentsList_[i].Name));
 {$ifndef FPC}
 {$if defined(CONSOLE)}
-  if not RunningWine then
-    ShowWindow(GetConsoleWindow, SW_SHOWMINIMIZED);
+  //if not RunningWine then
+    ShowWindow(GetConsoleWindow, SW_SHOWNORMAL);
   SetConsoleTitle('VirtualHarmonica - Trace Window');
 {$endif}
   Application.OnMessage := frmAmpel.KeyMessageEvent;
@@ -483,7 +422,6 @@ begin
   Sleep(10);
   Application.ProcessMessages;
 {$endif}
-  CriticalRecord := TCriticalSection.Create;
   CopyBank(Bank, @bank_list);
   cbxDiskantBank.Items.Clear;
   for i := low(Bank) to high(Bank) do
@@ -497,8 +435,16 @@ begin
   cbxDiskantBank.ItemIndex := 0;
   cbxBankBass.ItemIndex := 0;
   gbSzene.Visible := false;
-  Height := Height - 90;
+  gbBalg.Visible := false;
+  gbRecord.Visible := true;
 {$endif}
+
+  if not gbSzene.Visible then
+    Height := Height - gbSzene.Height;
+  if not gbBalg.Visible then
+    Height := Height - gbBalg.Height;
+  if not gbRecord.Visible then
+    Height := Height - gbRecord.Height;
 
   BankChange(cbxDiskantBank);
   BankChange(cbxBankBass);
@@ -520,8 +466,6 @@ end;
 procedure TfrmVirtualHarmonica.FormDestroy(Sender: TObject);
 begin
   MidiInput.CloseAll;
-  SetLength(RecordEventArray, 0);
-  CriticalRecord.Free;
 end;
 
 procedure TfrmVirtualHarmonica.FormShow(Sender: TObject);
@@ -541,7 +485,7 @@ procedure TfrmVirtualHarmonica.FormShow(Sender: TObject);
   end;
 
 begin
-  GetIndex(cbTransInstrument, 'b-Oergeli');//'BEsAsDes');
+  GetIndex(cbTransInstrument, 'BEsAsDes');  // 'b-Oergeli');
 
   RegenerateMidi;
   MidiInput.OnMidiData := frmAmpel.OnMidiInData;
@@ -551,7 +495,7 @@ begin
   GetIndex(cbxMidiInput, 'Mobile Keys 49');
   GetIndex(cbxMidiOut, 'UM-ONE');
 {$endif}
-  cbAccordionMasterClick(nil);
+//  cbAccordionMasterClick(nil);
 
   frmAmpel.ChangeInstrument(@Instrument);
   frmAmpel.Show;
@@ -612,7 +556,7 @@ var
 begin
   with Sender as TScrollBar do
   begin
-    s := Format('Volume   (%d %%)', [Position]);
+    s := Format('Lautstärke  (%d %%)', [Position]);
     p := Position / 100.0;
   end;
   if Sender = sbVolBass then
@@ -623,6 +567,7 @@ begin
     lbVolDiskant.Caption := s;
     VolumeDiscant := p;
   end;
+
 end;
 
 end.
