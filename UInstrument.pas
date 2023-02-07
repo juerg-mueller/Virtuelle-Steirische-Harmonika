@@ -85,12 +85,12 @@ function GetPitchLine(pitch: byte): integer;
 
 {$if defined(GenerateA_Oergeli)}
 var
-  Gwerder_a_Oergeli : TInstrument;
-  Gwerder_g_Oergeli : TInstrument;
-  Gwerder_gis_Oergeli : TInstrument;
-  Gwerder_h_Oergeli : TInstrument;
-  Gwerder_c_Oergeli : TInstrument;
-  Gwerder_cis_Oergeli : TInstrument;
+  a_Oergeli : TInstrument;
+  g_Oergeli : TInstrument;
+  gis_Oergeli : TInstrument;
+  h_Oergeli : TInstrument;
+  c_Oergeli : TInstrument;
+  cis_Oergeli : TInstrument;
 
   SteirischeFBEsAs: TInstrument;
   SteirischeFisHEA: TInstrument;
@@ -121,7 +121,7 @@ const
     (('a'+zwei, 'A'+zwei, 'b'+zwei, 'B'+zwei, 'c'+zwei, 'C'+zwei, 'd'+zwei, 'D'+zwei),
      ('a','A','b','B','c','C','d','D'));
 
-  Gwerder_b_Oergeli : TInstrument = (
+  b_Oergeli : TInstrument = (
     Name: ('b-Oergeli');
     Sharp: (false);
     TransposedPrimes: 0;
@@ -945,7 +945,7 @@ initialization
   SteirischeGisCisFisH.TransposedPrimes := 0;
   SteirischeGisCisFisH.Sharp := false;
   SteirischeGisCisFisH.Name := 'Steirische GisCisFisH';
-  AddInstr(Gwerder_cis_Oergeli);
+  AddInstr(cis_Oergeli);
 
   SteirischeHEAD := SteirischeBEsAsDes;
   SteirischeHEAD.Transpose(1);
@@ -954,41 +954,41 @@ initialization
   SteirischeHEAD.Name := 'Steirische HEAD';
   AddInstr(SteirischeHEAD);
 
-  AddInstr(Gwerder_b_Oergeli);
-  Gwerder_a_Oergeli := Gwerder_b_Oergeli;
-  Gwerder_a_Oergeli.Transpose(-1);
-  Gwerder_a_Oergeli.TransposedPrimes := 0;
-  Gwerder_a_Oergeli.Sharp := true;
-  Gwerder_a_Oergeli.Name := 'a-Oergeli';
-  AddInstr(Gwerder_a_Oergeli);
+  AddInstr(b_Oergeli);
+  a_Oergeli := b_Oergeli;
+  a_Oergeli.Transpose(-1);
+  a_Oergeli.TransposedPrimes := 0;
+  a_Oergeli.Sharp := true;
+  a_Oergeli.Name := 'a-Oergeli';
+  AddInstr(a_Oergeli);
 
-  Gwerder_gis_Oergeli := Gwerder_b_Oergeli;
-  Gwerder_gis_Oergeli.Transpose(-2);
-  Gwerder_gis_Oergeli.TransposedPrimes := 0;
-  Gwerder_gis_Oergeli.Sharp := true;
-  Gwerder_gis_Oergeli.Name := 'gis-Oergeli';
-  AddInstr(Gwerder_gis_Oergeli);
+  gis_Oergeli := b_Oergeli;
+  gis_Oergeli.Transpose(-2);
+  gis_Oergeli.TransposedPrimes := 0;
+  gis_Oergeli.Sharp := true;
+  gis_Oergeli.Name := 'gis-Oergeli';
+  AddInstr(gis_Oergeli);
 
-  Gwerder_h_Oergeli := Gwerder_b_Oergeli;
-  Gwerder_h_Oergeli.Transpose(1);
-  Gwerder_h_Oergeli.TransposedPrimes := 0;
-  Gwerder_h_Oergeli.Sharp := true;
-  Gwerder_h_Oergeli.Name := 'h-Oergeli';
-  AddInstr(Gwerder_h_Oergeli);
+  h_Oergeli := b_Oergeli;
+  h_Oergeli.Transpose(1);
+  h_Oergeli.TransposedPrimes := 0;
+  h_Oergeli.Sharp := true;
+  h_Oergeli.Name := 'h-Oergeli';
+  AddInstr(h_Oergeli);
 
-  Gwerder_c_Oergeli := Gwerder_b_Oergeli;
-  Gwerder_c_Oergeli.Transpose(2);
-  Gwerder_c_Oergeli.TransposedPrimes := 0;
-  Gwerder_c_Oergeli.Sharp := true;
-  Gwerder_c_Oergeli.Name := 'c-Oergeli';
-  AddInstr(Gwerder_c_Oergeli);
+  c_Oergeli := b_Oergeli;
+  c_Oergeli.Transpose(2);
+  c_Oergeli.TransposedPrimes := 0;
+  c_Oergeli.Sharp := true;
+  c_Oergeli.Name := 'c-Oergeli';
+  AddInstr(c_Oergeli);
 
-  Gwerder_cis_Oergeli := Gwerder_b_Oergeli;
-  Gwerder_cis_Oergeli.Transpose(3);
-  Gwerder_cis_Oergeli.TransposedPrimes := 0;
-  Gwerder_cis_Oergeli.Sharp := true;
-  Gwerder_cis_Oergeli.Name := 'cis-Oergeli';
-  AddInstr(Gwerder_cis_Oergeli);
+  cis_Oergeli := b_Oergeli;
+  cis_Oergeli.Transpose(3);
+  cis_Oergeli.TransposedPrimes := 0;
+  cis_Oergeli.Sharp := true;
+  cis_Oergeli.Name := 'cis-Oergeli';
+  AddInstr(cis_Oergeli);
 {$endif}
 
 {$if defined(InstrumentsList)}

@@ -32,22 +32,23 @@ uses
 type
   TMidiRecord = class
   private
-    CriticalMidiIn: syncobjs.TCriticalSection;
+    CriticalMidi: syncobjs.TCriticalSection;
   public
+    InstrumentName: string;
     eventCount: integer;
     MidiEvents: array of TMidiEvent;
     hasOns: boolean;
     OldTime: Int64;
     Header: TDetailHeader;
 
-    constructor Create;
+    constructor Create(Name: string);
     destructor Destroy;
     procedure OnMidiInData(const Status, Data1, Data2: byte; Timestamp: Int64);
   end;
 
   TMidiSaveStream = class(TMyMidiStream)
   public
-      Title: string;
+      Instrument: string;
       trackOffset: cardinal;
       constructor Create;
       procedure SetHead(DeltaTimeTicks: integer = 192);
@@ -62,11 +63,10 @@ type
 
 implementation
 
-constructor TMidiRecord.Create;
-var
-  i, k: integer;
+constructor TMidiRecord.Create(Name: string);
 begin
-  CriticalMidiIn := TCriticalSection.Create;
+  CriticalMidi := TCriticalSection.Create;
+  InstrumentName := Name;
   eventCount := 0;
   SetLength(MidiEvents, 1000000);
   hasOns := false;
@@ -77,7 +77,7 @@ end;
 destructor TMidiRecord.Destroy;
 begin
   SetLength(MidiEvents, 0);
-  CriticalMidiIn.Free;
+  CriticalMidi.Free;
 end;
 
 procedure TMidiRecord.OnMidiInData(const Status, Data1, Data2: byte; Timestamp: Int64);
@@ -85,7 +85,7 @@ var
   Event: TMidiEvent;
   time: Int64;
 begin
-  CriticalMidiIn.Acquire;
+  CriticalMidi.Acquire;
   try
     if eventCount >= Length(MidiEvents)-1 then
       SetLength(MidiEvents, 2*Length(MidiEvents));
@@ -105,7 +105,7 @@ begin
     inc(eventCount);
     OldTime := time;
   finally
-    CriticalMidiIn.Release;
+    CriticalMidi.Release;
   end;
 end;
 
@@ -116,7 +116,7 @@ begin
   inherited;
 
   BigEndian := true;
-  Title := '';
+  Instrument := '';
 end;
 
 procedure TMidiSaveStream.AppendMetaEvent(EventNr: byte; b: AnsiString);
@@ -151,6 +151,8 @@ begin
   if (Details.CDur <> 0) or Details.Minor then
     AppendMetaEvent($59, Details.GetMetaDurMinor59);
   AppendMetaEvent($58, Details.GetMetaMeasure58);
+  if Instrument <> '' then
+    AppendMetaEvent(4, AnsiString(Instrument));
 end;
 
 procedure TMidiSaveStream.AppendTrackHead(delay: integer);
@@ -163,8 +165,6 @@ begin
   WriteVariableLen(delay);
   count := GetWord(10) + 1;
   SetWord(count, 10); // increment track count
-  if (count = 1) and (Length(Title) > 0) then
-    AppendMetaEvent(2, AnsiString(Title)); // Copyright
 end;
 
 procedure TMidiSaveStream.AppendTrackEnd(IsLastTrack: boolean);
@@ -211,7 +211,6 @@ class function TMidiSaveStream.BuildSaveStream(var MidiRec: TMidiRecord): TMidiS
 var
   i, newCount: integer;
   SaveStream: TMidiSaveStream;
-  name: string;
   inpush, isEvent: boolean;
 begin
   result := nil;
@@ -255,9 +254,10 @@ begin
   SaveStream := TMidiSaveStream.Create;
   try
     SaveStream.SetSize(6*newCount + 10000);
-    SaveStream.Title := 'juerg5524.ch';
+    SaveStream.Instrument := MidiRec.InstrumentName;
     SaveStream.SetHead;
     SaveStream.AppendTrackHead(0);
+    SaveStream.AppendMetaEvent(2, 'juerg5524.ch');
     SaveStream.AppendHeaderMetaEvents(MidiRec.Header);
     SaveStream.AppendTrackEnd(false);
     SaveStream.AppendTrackHead(0);

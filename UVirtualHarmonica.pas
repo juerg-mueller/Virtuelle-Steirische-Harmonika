@@ -29,20 +29,15 @@ type
     gbMidi: TGroupBox;
     lblKeyboard: TLabel;
     Label17: TLabel;
-    lbVirtual: TLabel;
     cbxMidiOut: TComboBox;
     cbxMidiInput: TComboBox;
-    cbxVirtual: TComboBox;
     gbInstrument: TGroupBox;
     Label13: TLabel;
     cbxTransInstrument: TComboBox;
     cbTransInstrument: TComboBox;
     Label1: TLabel;
-    gbBalg: TGroupBox;
-    cbxShiftIsPush: TCheckBox;
-    Label2: TLabel;
     gbRecord: TGroupBox;
-    btnRecord: TButton;
+    btnRecordIn: TButton;
     SaveDialog1: TSaveDialog;
     gbMidiInstrument: TGroupBox;
     Label3: TLabel;
@@ -56,9 +51,6 @@ type
     Label7: TLabel;
     cbxBankBass: TComboBox;
     cbxDiskantBank: TComboBox;
-    btnResetMidi: TButton;
-    Label8: TLabel;
-    cbxUseBanks: TCheckBox;
     sbVolDiscant: TScrollBar;
     lbVolDiskant: TLabel;
     lbVolBass: TLabel;
@@ -68,6 +60,8 @@ type
     Label9: TLabel;
     cbAccordionMaster: TCheckBox;
     btnReset: TButton;
+    btnRecordOut: TButton;
+    btnResetMidi: TButton;
     procedure cbTransInstrumentChange(Sender: TObject);
     procedure cbxMidiInputChange(Sender: TObject);
     procedure cbxTransInstrumentChange(Sender: TObject);
@@ -75,15 +69,13 @@ type
     procedure FormShow(Sender: TObject);
     procedure cbxMidiOutChange(Sender: TObject);
     procedure btnResetMidiClick(Sender: TObject);
-    procedure cbxVirtualChange(Sender: TObject);
-    procedure cbxShiftIsPushClick(Sender: TObject);
     procedure cbxMidiDiskantChange(Sender: TObject);
     procedure cbTransInstrumentKeyPress(Sender: TObject; var Key: Char);
     procedure cbTransInstrumentKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure cbTransInstrumentKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
-    procedure btnRecordClick(Sender: TObject);
+    procedure btnRecordInClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure cbxBassDifferentClick(Sender: TObject);
     procedure cbxDiskantBankChange(Sender: TObject);
@@ -91,12 +83,15 @@ type
     procedure cbAccordionMasterClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure btnRecordOutClick(Sender: TObject);
   private
 
     procedure RegenerateMidi;
     procedure BankChange(cbx: TComboBox);
+    procedure SaveMidi(var MidiRec: TMidiRecord);
   public
-    MidiRec: TMidiRecord;
+    MidiRecIn: TMidiRecord;
+    MidiRecOut: TMidiRecord;
     Instrument: TInstrument;
   end;
 
@@ -122,53 +117,87 @@ const
   IDYES = 1;
 {$endif}
 
-procedure TfrmVirtualHarmonica.btnRecordClick(Sender: TObject);
+procedure TfrmVirtualHarmonica.btnRecordInClick(Sender: TObject);
 
   procedure Deactivate(Ok: boolean);
   begin
     gbInstrument.Enabled := Ok;
     gbMidi.Enabled := Ok;
-    gbBalg.Enabled := Ok;
     gbMidiInstrument.Enabled := Ok;
     gbMidiBass.Enabled := Ok;
     gbSzene.Enabled := Ok;
     cbxMidiInput.Enabled := Ok;
   end;
 
-var
-  i: integer;
-  SaveStream: TMidiSaveStream;
-  Saved: boolean;
-  p: pointer;
 begin
-  if btnRecord.Caption <> 'Stopp' then
+  if btnRecordIn.Caption <> 'Stopp' then
   begin
     Deactivate(false);
-    MidiRec := TMidiRecord.Create;
-    frmAmpel.PRecordMidiIn := MidiRec.OnMidiInData;
-    btnRecord.Caption := 'Stopp';
+    MidiRecIn := TMidiRecord.Create(string(Instrument.Name));
+    frmAmpel.PRecordMidiIn := MidiRecIn.OnMidiInData;
+    btnRecordIn.Caption := 'Stopp';
   end else begin
     frmAmpel.PRecordMidiIn := nil;
 
-    if (MicrosoftIndex >= 0) and MidiRec.hasOns then
+    if (MicrosoftIndex >= 0) and MidiRecIn.hasOns then
       ResetMidiOut;
 
-    SaveStream := TMidiSaveStream.BuildSaveStream(MidiRec);
-    FreeAndNil(MidiRec);
-    if SaveStream <> nil then
+    SaveMidi(MidiRecIn);
+    btnRecordIn.Caption := 'MIDI IN Aufnahme starten';
+    Deactivate(true);
+  end;
+end;
+
+procedure TfrmVirtualHarmonica.SaveMidi(var MidiRec: TMidiRecord);
+var
+  Saved: boolean;
+  SaveStream: TMidiSaveStream;
+begin
+  Saved := false;
+  SaveStream := TMidiSaveStream.BuildSaveStream(MidiRec);
+  FreeAndNil(MidiRec);
+  if SaveStream <> nil then
+  begin
+    while not Saved and SaveDialog1.Execute do
     begin
-      while not Saved and SaveDialog1.Execute do
+      if not FileExists(SaveDialog1.FileName) or
+        (Warning('Eine Datei mit diesem Namen existiert bereits! Überschreiben?') = IDYES) then
       begin
-        if not FileExists(SaveDialog1.FileName) or
-          (Warning('Datei existiert bereits! Überschreiben?') = IDYES) then
-        begin
-          SaveStream.SaveToFile(SaveDialog1.FileName);
-          Saved := true;
-        end;
+        SaveStream.SaveToFile(SaveDialog1.FileName);
+        Saved := true;
       end;
-      SaveStream.Free;
     end;
-    btnRecord.Caption := 'MIDI IN Aufnahme starten';
+    SaveStream.Free;
+  end;
+end;
+
+procedure TfrmVirtualHarmonica.btnRecordOutClick(Sender: TObject);
+
+  procedure Deactivate(Ok: boolean);
+  begin
+    gbInstrument.Enabled := Ok;
+    gbMidi.Enabled := Ok;
+    gbMidiInstrument.Enabled := Ok;
+    gbMidiBass.Enabled := Ok;
+    gbSzene.Enabled := Ok;
+    cbxMidiOut.Enabled := Ok;
+  end;
+
+begin
+  if btnRecordOut.Caption <> 'Stopp' then
+  begin
+    Deactivate(false);
+    MidiRecOut := TMidiRecord.Create(string(Instrument.Name));
+    frmAmpel.AmpelEvents.PRecordMidiOut := MidiRecOut.OnMidiInData;
+    btnRecordOut.Caption := 'Stopp';
+  end else begin
+    frmAmpel.AmpelEvents.PRecordMidiOut := nil;
+
+    if (MicrosoftIndex >= 0) and MidiRecOut.hasOns then
+      ResetMidiOut;
+
+    SaveMidi(MidiRecOut);
+    btnRecordOut.Caption := 'MIDI OUT Aufnahme starten';
     Deactivate(true);
   end;
 end;
@@ -181,8 +210,8 @@ end;
 
 procedure TfrmVirtualHarmonica.btnResetMidiClick(Sender: TObject);
 begin
-//  ResetMidi;
-//  RegenerateMidi;
+  ResetMidiOut;
+  RegenerateMidi;
 end;
 
 procedure TfrmVirtualHarmonica.cbAccordionMasterClick(Sender: TObject);
@@ -194,7 +223,6 @@ procedure TfrmVirtualHarmonica.cbTransInstrumentChange(Sender: TObject);
 var
   s: string;
   index: integer;
-  isOergeli: boolean;
 begin
   if cbTransInstrument.ItemIndex < 0 then
     cbTransInstrument.ItemIndex := 0;
@@ -263,6 +291,8 @@ begin
   MidiInput.CloseAll;
   if cbxMidiInput.ItemIndex > 0 then
     MidiInput.Open(cbxMidiInput.ItemIndex - 1);
+
+  btnRecordIn.Enabled := cbxMidiInput.ItemIndex > 0;
 end;
 
 procedure TfrmVirtualHarmonica.cbxBassDifferentClick(Sender: TObject);
@@ -365,38 +395,11 @@ begin
   end;
 end;
 
-procedure TfrmVirtualHarmonica.cbxVirtualChange(Sender: TObject);
-begin
-  if iVirtualMidi >= 0 then
-{$ifdef FPC}
-    MidiVirtual.Close(iVirtualMidi);
-{$else}
-    MidiOutput.Close(iVirtualMidi);
-{$endif}
-  iVirtualMidi := CbxVirtual.ItemIndex - 1;
-  if cbxMidiOut.ItemIndex = iVirtualMidi then
-  begin
-    iVirtualMidi := -1;
-    CbxVirtual.ItemIndex := 0;
-  end;
-  if iVirtualMidi >= 0 then
-{$ifdef FPC}
-    MidiVirtual.Open(iVirtualMidi);
-{$else}
-    MidiOutput.Open(iVirtualMidi);
-{$endif}
-end;
-
-procedure TfrmVirtualHarmonica.cbxShiftIsPushClick(Sender: TObject);
-begin
-  shiftIsPush := cbxShiftIsPush.Checked;
-  frmAmpel.PaintBalg(ShiftUsed);
-end;
-
 procedure TfrmVirtualHarmonica.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  if btnRecord.Caption = 'Stop' then
+
+  if btnRecordIn.Caption = 'Stopp' then
     Action := caNone;
 end;
 
@@ -405,7 +408,7 @@ var
   i: integer;
   Bank: TArrayOfString;
 begin
-  MidiRec := nil;
+  MidiRecIn := nil;
   cbTransInstrument.Items.Clear;
   for i := 0 to High(InstrumentsList_) do
     cbTransInstrument.Items.Add(string(InstrumentsList_[i].Name));
@@ -435,14 +438,11 @@ begin
   cbxDiskantBank.ItemIndex := 0;
   cbxBankBass.ItemIndex := 0;
   gbSzene.Visible := false;
-  gbBalg.Visible := false;
   gbRecord.Visible := true;
 {$endif}
 
   if not gbSzene.Visible then
     Height := Height - gbSzene.Height;
-  if not gbBalg.Visible then
-    Height := Height - gbBalg.Height;
   if not gbRecord.Visible then
     Height := Height - gbRecord.Height;
 
@@ -524,6 +524,7 @@ begin
   MidiOutput.GenerateList;
   MidiInput.GenerateList;
 
+  cbxMidiOut.Clear;
   InsertList(cbxMidiOut, MidiOutput.DeviceNames);
   cbxMidiOut.Items.Insert(0, '');
   OpenMidiMicrosoft;
@@ -536,16 +537,12 @@ begin
   lblKeyboard.Visible := cbxMidiInput.Visible;
   if cbxMidiInput.Visible then
   begin
+    cbxMidiInput.Clear;
     InsertList(cbxMidiInput, MidiInput.DeviceNames);
     cbxMidiInput.Items.Insert(0, '');
     cbxMidiInput.ItemIndex := 0;
     cbxMidiInputChange(nil);
   end;
-
-  cbxVirtual.Items.Clear;
-  InsertList(cbxVirtual, MidiOutput.DeviceNames);
-  cbxVirtual.Items.Insert(0, '');
-  cbxVirtual.ItemIndex := 0;
 end;
 
 

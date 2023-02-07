@@ -102,7 +102,7 @@ type
     procedure SendPush(Push: boolean);
   public
     CriticalAmpel: syncobjs.TCriticalSection;
-    PRecordMidiOut: TRecordMidiOut;
+    PRecordMidiOut: TRecordMidiIn;
 
     constructor Create(Ampel: TfrmAmpel);
     destructor Destroy; override;
@@ -259,7 +259,7 @@ procedure TAmpelEvents.SendMidiOut(const Status, Data1, Data2: byte);
 begin
   SendSzene(Status, Data1, Data2);
   if @PRecordMidiOut <> nil then
-    PRecordMidiOut(Status, Data1, Data2);
+    PRecordMidiOut(Status, Data1, Data2, trunc(24*3600*1000*now));
 end;
 
 procedure TAmpelEvents.SendPush(Push: boolean);
@@ -1224,7 +1224,6 @@ var
   GriffEvent: TGriffEvent;
   Tail: integer;
   Data: TMidiInData;
-  v: double;
 
   function GetInstr(var Event: TMouseEvent): boolean;
   var
