@@ -107,19 +107,30 @@ type
   // MIDI output Devices
   function MidiOutput: TMidiOutput;
 
-  procedure DoSoundPitch(Pitch: byte; On_: boolean);
-  procedure ResetMidi;
+//  procedure DoSoundPitch(Pitch: byte; On_: boolean);
+  procedure ResetMidiOut;
 
 const
   MicrosoftSync = 'Microsoft GS Wavetable Synth';
   UM_ONE = 'UM-ONE';
   
 var
-  MicrosoftIndex: integer = 0;
+  MicrosoftIndex: integer = -1;
   TrueMicrosoftIndex: integer = -1;
-  MidiInstr: byte = $15; // Akkordeon
+  MidiInstrDiskant: byte = $15; // Akkordeon
+  MidiInstrBass: byte = $15; // Akkordeon
+  BassBankActiv: boolean = false;
+  MidiBankDiskant: byte = 0;
+  MidiBankBass: byte = 0;
+  Scene: integer = 0;
+
+  VolumeDiscant: double = 0.9;
+  VolumeBass: double = 0.9;
 
 procedure OpenMidiMicrosoft;
+procedure SendSzene(Status, Data1, Data2: byte);
+procedure ChangeSzene(Index: integer; UseMasterAcc: boolean);
+
 
 implementation
 
@@ -485,7 +496,7 @@ begin
   FreeAndNil(fSysExStream);
   inherited;
 end;
-
+{
 procedure DoSoundPitch(Pitch: byte; On_: boolean);
 begin
   if MicrosoftIndex >= 0 then
@@ -498,8 +509,8 @@ begin
       MidiOutput.Send(MicrosoftIndex, $80, Pitch, $40);
   end;
 end;
-
-procedure ResetMidi;
+}
+procedure ResetMidiOut;
 var
   i: integer;
 begin
@@ -510,7 +521,101 @@ begin
       begin
         MidiOutput.Send(MicrosoftIndex, $B0 + i, 120, 0);  // all sound off
       end;
-    Sleep(5);
+  end;
+end;
+
+procedure ChangeBank(Index, Channel, Bank, Instr: byte);
+begin
+  MidiOutput.Send(Index, $b0 + Channel, 0, Bank);  // 0x32, LSB Bank);
+  MidiOutput.Send(Index, $c0 + Channel, Instr, 0);
+end;
+
+// Drum Kit: Channel 10
+// Program pp:  C9 pp
+
+// Trompete  Klarinette  Gitarre   Akkordeon
+// 12            16        07         41
+// 00            00        04         61
+// 0             -5         0          0
+type
+  Accord = record
+    Channel: byte;
+    Bank: byte;
+    Instr: byte;
+    Delta: integer;
+    Velo: integer;      // in %
+  end;
+
+  AccordArr = array [0..4] of Accord;
+
+const
+
+  tx : AccordArr =
+    (
+      (Channel: 1; Bank: 12; Instr: 0; Delta: 3; Velo: -5),
+      (Channel: 2; Bank: 17; Instr: 0; Delta: -5; Velo: -5),
+      (Channel: 3; Bank: 7; Instr: 4; Delta: 0; Velo: -5),
+      (Channel: 4; Bank: 41; Instr: 61; Delta: 0),
+      ()
+    );
+
+    tx0 : AccordArr =
+    (
+      (Channel: 1; Bank: 0; Instr: 56; Delta: 3; Velo: -5),
+      (Channel: 2; Bank: 0; Instr: 71; Delta: -5; Velo: -5),
+      (Channel: 3; Bank: 0; Instr: 24; Delta: 0; Velo: -5),
+      (Channel: 4; Bank: 0; Instr: 21; Delta: 0),
+      ()
+    );
+
+  ty : AccordArr =
+    (
+      (Channel: 5; Bank: 15; Instr: 27; Delta: 0),  // Bariton
+      (Channel: 6; Bank: 19; Instr: 7; Delta: 0),  // E-Bass
+      (Channel: 7; Bank: 7; Instr: 4; Delta: 0),   // Akkordenbass
+      (Channel: 8; Bank: 41; Instr: 61; Delta: 0),  // Gitarre
+      ()
+    );
+
+var
+  AccDiskant: AccordArr;
+  AccBass: AccordArr;
+
+procedure SendSzene(Status, Data1, Data2: byte);
+var
+  i: integer;
+
+   procedure Send(const Acc: Accord);
+   var
+     d1, d2: integer;
+   begin
+     if Acc.Channel > 0 then
+     begin
+       d1 := Data1 + Acc.Delta;
+       if not (d1 in [0 .. 127]) then
+         d1 := Data1;
+       d2 := round(Data2*(100 + Acc.Velo)/100.0) ;
+       if not (d2 in [0 .. 127]) then
+         d2 := Data2;
+       MidiOutput.Send(MicrosoftIndex, (Status and $f0) or Acc.Channel, d1, d2);
+     end;
+   end;
+
+begin
+  if (MicrosoftIndex >= 0) then
+  begin
+    if Scene <= 0 then
+      MidiOutput.Send(MicrosoftIndex, Status, Data1, Data2)
+    else begin
+      if (Status and $f) < 5 then
+      begin
+        for i := 0 to High(AccDiskant) do
+          Send(AccDiskant[i]);
+      end else begin
+        for i := 0 to High(AccBass) do
+          Send(AccBass[i]);
+      end;
+    end;
   end;
 end;
 
@@ -522,14 +627,43 @@ begin
   begin
     MidiOutput.Open(MicrosoftIndex);
     try
-      for i := 0 to 8 do
-        MidiOutput.Send(MicrosoftIndex, $c0 + i, MidiInstr, $00);
+      if Scene <= 0 then
+      begin
+        for i := 0 to 9 do
+          if (i > 4) and BassBankActiv then
+            ChangeBank(MicrosoftIndex, i, MidiBankBass, MidiInstrBass)
+          else
+            ChangeBank(MicrosoftIndex, i, MidiBankDiskant, MidiInstrDiskant);
+      end else begin
+        for i := 0 to High(AccDiskant) do
+          with AccDiskant[i] do
+            if Channel > 0 then
+              ChangeBank(MicrosoftIndex, Channel, Bank, Instr);
+        for i := 0 to High(AccBass) do
+          with AccBass[i] do
+            if Channel > 0 then
+              ChangeBank(MicrosoftIndex, Channel, Bank, Instr);
+      end;
     finally
     end;
   {$if defined(CONSOLE)}
     writeln('Midi Port-', MicrosoftIndex, ' opend');
   {$endif}
   end;
+end;
+
+procedure ChangeSzene(Index: integer; UseMasterAcc: boolean);
+begin
+  Scene := Index;
+  if UseMasterAcc then
+  begin
+    AccDiskant := tx;
+  end else begin
+    AccDiskant := tx0;
+  end;
+  AccBass := ty;
+
+  OpenMidiMicrosoft;
 end;
 
 initialization
@@ -541,3 +675,4 @@ finalization
   FreeAndNil(gMidiOutput);
 
 end.
+

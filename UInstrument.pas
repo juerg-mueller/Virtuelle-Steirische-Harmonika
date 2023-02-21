@@ -105,6 +105,19 @@ type
   TSteiBass = array [5..6,1..8] of String[4];
 
 const
+  OergeliBassZusatz : array [1..9, 0..1] of integer =
+    (
+      (63-71, 66-71),
+      (70-66, 61-66),
+      (65-61, 68-61),
+      (60-68, 63-68),
+      (67-63, 70-63),
+      (62-70, 65-70),
+      (60-65, 69-65),
+      (64-60, 67-60),
+      (71-67, 62-67)
+    );
+
                                 // e ist die tiefste Diskant-Note
   CDur : array [0..6] of byte = (52,53,55,57,59,60,62); // e, f, g, a, h, c, d
 
@@ -147,8 +160,8 @@ const
           );
                // g   c   f   b  es  as des ges   h
     Bass: (
-           (  0,43,36,41,34,39,44,37,42,35, 0, 0, 0, 0, 0, 0),
-           (  0,55,48,53,46,51,56,49,54,47, 0, 0, 0, 0, 0, 0)    // Cross
+           ( 0,43,36,41,46,39,44,37,42,47, 0, 0, 0, 0, 0, 0),
+           ( 0,67,60,65,70,63,68,61,66,71, 0, 0, 0, 0, 0, 0)
           );
   );
 
@@ -426,13 +439,15 @@ end;
 
 function GetPitchIndex(pitch: byte; const arr: TPitchArray): integer;
 begin
-  result := High(arr);
+  result := 0;
   while result >= 0 do
   begin 
     if pitch = arr[result] then
       break;
-    dec(result);
+    inc(result);
   end;
+  if result > High(arr) then
+    result := -1;
 end;
 
 function TInstrument.GriffToSound(Pitch: byte; Push: boolean; Cross: boolean): integer;
@@ -1002,3 +1017,22 @@ finalization
 
 end.
 
+
+BassBttn1=+,h,63,66,71,0,63,66,71,0           47  71  63, 66
+BassBttn1=+,ges,61,66,70,0,61,66,70,0         42  66  61, 70
+BassBttn1=+,des,61,65,68,0,61,65,68,0         37  61  65, 68
+BassBttn1=+,as,60,63,68,0,60,63,68,0          44  68  60, 63
+BassBttn1=+,es,63,67,70,0,63,67,70,0          39  67  63, 70
+BassBttn1=+,b,62,65,70,0,62,65,70,0           46  70  62, 65
+BassBttn1=+,f,60,65,69,0,60,65,69,0           41  65  60, 69
+BassBttn1=+,c,60,64,67,0,60,64,67,0           36  60  64, 67
+BassBttn1=+,g,62,67,71,0,62,67,71,0           43  67  62, 71
+BassBttn2=-,H,47,0,0,0,47,0,0,0
+BassBttn2=-,Ges,42,0,0,0,42,0,0,0
+BassBttn2=-,Des,37,0,0,0,37,0,0,0
+BassBttn2=-,As,44,0,0,0,44,0,0,0
+BassBttn2=-,Es,39,0,0,0,39,0,0,0
+BassBttn2=-,B,46,0,0,0,46,0,0,0
+BassBttn2=-,F,41,0,0,0,41,0,0,0
+BassBttn2=-,C,36,0,0,0,36,0,0,0
+BassBttn2=-,G,43,0,0,0,43,0,0,0

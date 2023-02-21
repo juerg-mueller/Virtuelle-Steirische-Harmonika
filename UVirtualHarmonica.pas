@@ -32,8 +32,6 @@ type
     cbxMidiOut: TComboBox;
     cbxMidiInput: TComboBox;
     gbInstrument: TGroupBox;
-    Label13: TLabel;
-    cbxTransInstrument: TComboBox;
     cbTransInstrument: TComboBox;
     Label1: TLabel;
     gbRecord: TGroupBox;
@@ -62,9 +60,9 @@ type
     btnReset: TButton;
     btnRecordOut: TButton;
     btnResetMidi: TButton;
+    gbNoten: TGroupBox;
     procedure cbTransInstrumentChange(Sender: TObject);
     procedure cbxMidiInputChange(Sender: TObject);
-    procedure cbxTransInstrumentChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure cbxMidiOutChange(Sender: TObject);
@@ -233,7 +231,6 @@ begin
   if index < 0 then
    index := 0;
   Instrument := InstrumentsList_[index];
-  cbxTransInstrumentChange(nil);
 
   frmAmpel.ChangeInstrument(@Instrument);
   if Sender <> nil then
@@ -244,7 +241,7 @@ begin
   else
     s := 'Virtuelle Steirische Harmonika';
 {$if defined(CPUX86_64) or defined(WIN64)}
-  s := s + ' (64)';
+//  s := s + ' (64)';
 {$else}
   s := s + ' (32)';
 {$endif}
@@ -383,18 +380,6 @@ begin
   end;
 end;
 
-procedure TfrmVirtualHarmonica.cbxTransInstrumentChange(Sender: TObject);
-var
-  delta: integer;
-begin
-  if cbxTransInstrument.ItemIndex >= 0 then
-  begin
-    delta := cbxTransInstrument.ItemIndex - 11;
-    delta := delta - Instrument.TransposedPrimes;
-    Instrument.Transpose(delta);
-  end;
-end;
-
 procedure TfrmVirtualHarmonica.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
@@ -415,7 +400,7 @@ begin
 {$ifndef FPC}
 {$if defined(CONSOLE)}
   //if not RunningWine then
-    ShowWindow(GetConsoleWindow, SW_SHOWNORMAL);
+  //  ShowWindow(GetConsoleWindow, SW_SHOWNORMAL);
   SetConsoleTitle('VirtualHarmonica - Trace Window');
 {$endif}
   Application.OnMessage := frmAmpel.KeyMessageEvent;
@@ -459,6 +444,10 @@ begin
   cbxMidiDiskantChange(nil);
   SaveDialog1.InitialDir := ExtractFilePath(ParamStr(0));
 
+  sbVolDiscant.Min := 20;
+  sbVolBass.Min := 20;
+  sbVolDiscant.Max := 140;
+  sbVolBass.Max := 140;
   sbVolChange(sbVolDiscant);
   sbVolChange(sbVolBass);
 end;
@@ -485,7 +474,7 @@ procedure TfrmVirtualHarmonica.FormShow(Sender: TObject);
   end;
 
 begin
-  GetIndex(cbTransInstrument, 'BEsAsDes');  // 'b-Oergeli');
+  GetIndex(cbTransInstrument, 'b-Oergeli'); //    'BEsAsDes');
 
   RegenerateMidi;
   MidiInput.OnMidiData := frmAmpel.OnMidiInData;
