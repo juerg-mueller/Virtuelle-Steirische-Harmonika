@@ -90,19 +90,22 @@ type
   TWMKey = integer;
 {$endif}
   TLastPush = (unknown, LastPush_, LastPull_);
-
   TAmpelEvents = class
   private
     frmAmpel: TfrmAmpel;
     MouseEvents: array [0..64] of TMouseEvent;
     FUsedEvents: integer;
     LastPush: TLastPush;
+    AmpelOn: array [1..6, Low(TPitchArray) .. High(TPitchArray)] of record
+      On_: boolean;
+      Push: boolean;
+    end;
 
     procedure DoAmpel(Index: integer; On_: boolean);
     procedure SendPush(Push: boolean);
   public
     CriticalAmpel: syncobjs.TCriticalSection;
-    PRecordMidiOut: TRecordMidiIn;
+//    PSendMidiOut: TSendMidiOut;
 
     constructor Create(Ampel: TfrmAmpel);
     destructor Destroy; override;
@@ -115,6 +118,8 @@ type
     procedure SendMidiOut(const Status, Data1, Data2: byte);
     function  Paint(Row, Index: integer): boolean;
     procedure AllEventsOff;
+    procedure SetAmpelOn(Row: byte; Index: integer; Push: boolean; On_: boolean);
+    procedure SetAmpel(Row: byte; Index: integer; Push: boolean; On_: boolean);
 
     property UsedEvents : integer read FUsedEvents;
   end;
@@ -163,7 +168,7 @@ type
     FlippedVert: boolean;
     FlippedHorz_: boolean;
     //SoundGriff: TSoundGriff;
-//    SelectedChanges: PSelectedProc;
+    SelectedChanges: PSelectedProc;
     KnopfGroesse: integer;
     MinIndex, MaxIndex: integer;
     PlayControl: PPlayControl;
@@ -176,7 +181,7 @@ type
 
     procedure ChangeInstrument(Instrument_: PInstrument);
     function KnopfRect(Row: byte {1..6}; index: byte {0..10}): TRect;
-    procedure PaintAmpel(Row: byte {1..6}; index: integer {0..10}; Push, On_: boolean);
+    procedure PaintAmpel_(Row: byte {1..6}; index: integer {0..10}; Push, On_: boolean);
     procedure PaintBalg(Push: boolean);
     function GetKeyIndex(var Event: TMouseEvent; Key: word): boolean;
     procedure InitLastPush;
@@ -202,11 +207,7 @@ var
 
 implementation
 
-{$ifdef FPC}
-//  {$R *.lfm}
-{$else}
-//  {$R *.dfm}
-{$endif}
+{$R *.dfm}
 
 uses
 {$if not defined(__VIRTUAL__) and defined(dcc)}
@@ -231,11 +232,19 @@ begin
 end;
 
 constructor TAmpelEvents.Create(Ampel: TfrmAmpel);
+var
+  i, k: integer;
 begin
   frmAmpel := Ampel;
   CriticalAmpel := TCriticalSection.Create;
   FUsedEvents := 0;
   LastPush := unknown;
+  for i := 1 to 6 do
+    for k := Low(TPitchArray) to High(TPitchArray) do
+    begin
+      AmpelOn[i, k].On_ := false;
+      AmpelOn[i, k].Push := false;
+    end;
 end;
 
 destructor TAmpelEvents.Destroy;
@@ -257,9 +266,10 @@ end;
 
 procedure TAmpelEvents.SendMidiOut(const Status, Data1, Data2: byte);
 begin
-  SendSzene(Status, Data1, Data2);
-  if @PRecordMidiOut <> nil then
-    PRecordMidiOut(Status, Data1, Data2, trunc(24*3600*1000*now));
+  if (MicrosoftIndex >= 0) then
+  MidiOutput.Send(MicrosoftIndex, Status, Data1, Data2);
+//  if @PRecordMidiOut <> nil then
+//    PRecordMidiOut(Status, Data1, Data2, trunc(24*3600*1000*now));
 end;
 
 procedure TAmpelEvents.SendPush(Push: boolean);
@@ -438,11 +448,7 @@ begin
       d := $40;
       if Event.Push_ and On_ then
         inc(d, $10);
-{$ifdef FPC}
-      MidiVirtual.Send(iVirtualMidi, c, b, d);
-{$else}
       MidiOutput.Send(iVirtualMidi, c, b, d);
-{$endif}
 //      write(Format('$%2.2x $%2.2x $%2.2x', [c, b, d]));
 //      writeln(Format('  (%d  %d  %d)', [c, b, d]));
     end;
@@ -452,15 +458,20 @@ end;
 procedure TAmpelEvents.DoAmpel(Index: integer; On_: boolean);
 var
   Event: TGriffEvent;
+  idx: integer;
   d: double;
+  di: integer;
 begin
   with MouseEvents[Index] do
   begin
-    frmAmpel.PaintAmpel(Row_, Index_, Push_, On_);
     if not Event.SetEvent(Row_, Index_, Push_, frmAmpel.Instrument^) then
       Event.SoundPitch := Pitch;
     if Row_ in [1..6] then
     begin
+      idx := -1;
+      if not frmAmpel.Instrument.BassDiatonic and (Row_ = 6) then
+        idx := 10-Event.GetIndex;
+
       if On_ then
       begin
         if Velocity > 0 then
@@ -468,27 +479,42 @@ begin
           d := Velocity;
         end else
           d := 127;
-        if Row_ >= 5 then
+       { if Row_ >= 5 then
           d := d*VolumeBass
         else
-          d := d*VolumeDiscant;
+          d := d*VolumeDiscant;  }
         if d > 120 then
           d := 120;
-        SendMidiOut($90 + Row_ , Event.SoundPitch, trunc(d))
+        di := trunc(d);
+        SendMidiOut($90 + Row_ , Event.SoundPitch, di);
+        if idx in [1..9] then
+        begin
+          SendMidiOut($90 + 7, Event.SoundPitch + OergeliBassZusatz[idx, 0], di);
+          SendMidiOut($90 + 7, Event.SoundPitch + OergeliBassZusatz[idx, 1], di);
+        end;
       end else begin
         SendMidiOut($80 + Row_, Event.SoundPitch, $40);
+        if idx in [1..9] then
+        begin
+          SendMidiOut($80 + 7, Event.SoundPitch + OergeliBassZusatz[idx, 0], 40);
+          SendMidiOut($80 + 7, Event.SoundPitch + OergeliBassZusatz[idx, 1], 40);
+        end;
+        if row_ = 6 then
+          writeln('------------------------');
       end;
     end;
+
+    SetAmpel(Row_, Index_, Push_, On_);
     UseVirtualMidi(MouseEvents[Index], On_);
 
-  {  if assigned(frmAmpel.SelectedChanges) then
+    if assigned(frmAmpel.SelectedChanges) then
     begin
       if not On_ then
       begin
         frmAmpel.SelectedChanges(nil)
       end else
         frmAmpel.SelectedChanges(@Event);
-    end; }
+    end;
   end
 end;
 
@@ -499,8 +525,7 @@ begin
   CriticalAmpel.Acquire;
   try
     for i := 0 to UsedEvents-1 do
-      if ((MouseEvents[i].Row_ = Event.Row_) and (MouseEvents[i].Index_ = Event.Index_)) or
-         ((MouseEvents[i].Pitch = Event.Pitch) and (Event.Pitch > 0)) then
+      if (MouseEvents[i].Row_ = Event.Row_) and (MouseEvents[i].Index_ = Event.Index_) then
       begin
         DoAmpel(i, false);
         for j := i+1 to UsedEvents-1 do
@@ -585,25 +610,28 @@ begin
     frmAmpel.MakeMouseDown(P, ShiftUsed);
 end;
 
-function TAmpelEvents.Paint(Row, Index: integer): boolean;
-var
-  i: integer;
+procedure TAmpelEvents.SetAmpelOn(Row: byte; Index: integer; Push: boolean; On_: boolean);
 begin
-  result := false;
-  i := 0;
-  while i < UsedEvents do
+  if (Row in [1..6]) and (Index in [Low(TPitchArray) .. High(TPitchArray)]) then
   begin
-    if (MouseEvents[i].Row_ = Row) and (MouseEvents[i].Index_ = Index) then
-    begin
-      result := true;
-      break;
-    end;
-    inc(i);
+    AmpelOn[Row, Index].On_ := On_;
+    AmpelOn[Row, Index].Push := Push;
   end;
+end;
+
+function TAmpelEvents.Paint(Row, Index: integer): boolean;
+begin
+  result := AmpelOn[Row, Index].On_;
   if result then
-    frmAmpel.PaintAmpel(Row, Index, MouseEvents[i].Push_, true)
+    frmAmpel.PaintAmpel_(Row, Index, AmpelOn[Row, Index].Push, true)
   else
-    frmAmpel.PaintAmpel(Row, Index, false, false);
+    frmAmpel.PaintAmpel_(Row, Index, false, false);
+end;
+
+procedure TAmpelEvents.SetAmpel(Row: byte; Index: integer; Push: boolean; On_: boolean);
+begin
+  SetAmpelOn(Row, Index, Push, On_);
+  Paint(Row, Index);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -679,7 +707,7 @@ begin
   lbUnten.Top := rectMax.Bottom + 10;
   lbUnten.Left := Mitte - lbUnten.Width div 2;
 
-  if FlippedVert then
+ { if FlippedVert then
     rect2.Offset(-rect2.Width, 0);
   lbTastatur.Left := rect2.Left;
   cbxVerkehrt.Left := rect2.Left;
@@ -687,7 +715,7 @@ begin
   d := btnFlip.Top - lbTastatur.Top;
   lbTastatur.Top := lbTastatur.Top + d;
   cbxLinkshaender.Top := cbxLinkshaender.Top + d;
-  cbxVerkehrt.Top := cbxVerkehrt.Top + d;
+  cbxVerkehrt.Top := cbxVerkehrt.Top + d;     }
   Invalidate;
 end;
 
@@ -796,7 +824,7 @@ begin
   begin
     if Event.Row_ >= 5 then
     begin
-      result := true; //(Instrument.Bass[Event.Row_ = 6] > 0)
+      result := Event.Index_ > 0;
     end else
       result := (Instrument.Push.Col[Event.Row_][Event.Index_] > 0);
   end;
@@ -1005,7 +1033,7 @@ begin
     end else
     if {not} FlippedHorz then
       index := 9 - Index;
-    if Instrument.bigInstrument then
+//    if Instrument.bigInstrument then
     begin
       if FlippedHorz then
       begin
@@ -1105,7 +1133,6 @@ procedure TfrmAmpel.FormShortCut(var Msg: TWMKey; var Handled: Boolean);
 var
   KeyCode: word;
 begin
-{$ifdef dcc}
   if (Msg.KeyData and $40000000) <> 0 then // auto repeat
   begin
     Handled := true;
@@ -1121,7 +1148,6 @@ begin
   end;
   if (KeyCode and $fff) = vk_Return then
     Handled := true;
-{$endif}
 end;
 
 procedure TfrmAmpel.FormShow(Sender: TObject);
@@ -1138,7 +1164,7 @@ begin
   Height := lbUnten.Top + 100;
 end;
 
-procedure TfrmAmpel.PaintAmpel(Row: byte {1..6}; index: integer {0..12}; Push, On_: boolean);
+procedure TfrmAmpel.PaintAmpel_(Row: byte {1..6}; index: integer {0..12}; Push, On_: boolean);
 var
   rect: TRect;
 begin
@@ -1149,6 +1175,8 @@ begin
   if (Row >= 5) and not Instrument.BassDiatonic then
     Push := false;
 
+  AmpelEvents.AmpelOn[Row, Index].On_ := On_;
+  AmpelEvents.AmpelOn[Row, Index].Push := Push;
   rect := KnopfRect(Row, index);
   if not On_ then
     canvas.Brush.Color := $7f0000
@@ -1335,7 +1363,7 @@ begin
         end;
       end else begin
     {$ifdef CONSOLE}
-        writeln(Format('MIDI IN: $%2.2x  $%2.2x  $%2.2x' ,[Data.Status, Data.Data1, Data.Data2]));
+        writeln(Format('MIDI IN: $%2.2x %3d  $%2.2x' ,[Data.Status, Data.Data1, Data.Data2]));
     {$endif}
       end;
     end;
@@ -1370,8 +1398,6 @@ begin
     PRecordMidiIn(aStatus, aData1, aData2, aTimestamp);
 end;
 
-
-{$ifdef dcc}
 procedure TfrmAmpel.KeyMessageEvent(var Msg: TMsg; var Handled: Boolean);
 begin
   if ((Msg.message = WM_KEYDOWN) or (Msg.message = WM_KEYUP)) then
@@ -1434,15 +1460,6 @@ begin
     end;
   end;
 end;
-{$endif}
 
 end.
 
-https://www.rolflehmann.ch
-https://www.sergio-theiler.ch/
-http://handorgele-flickerei.ch/
-https://musik-kollegger.ch/index.php
-
-https://www.stefan-buehler.ch/occ-schwyzer%C3%B6rgeli/
-
-https://www.stalder-oergeli.ch

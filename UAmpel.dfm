@@ -70,7 +70,6 @@ object frmAmpel: TfrmAmpel
     TabOrder = 0
     OnClick = btnFlipClick
     OnKeyDown = FormKeyDown
-    OnKeyPress = FormKeyPress
     OnKeyUp = FormKeyUp
   end
   object btnFlipHorz: TButton
@@ -88,7 +87,6 @@ object frmAmpel: TfrmAmpel
     TabOrder = 1
     OnClick = btnFlipHorzClick
     OnKeyDown = FormKeyDown
-    OnKeyPress = FormKeyPress
     OnKeyUp = FormKeyUp
   end
   object cbxLinkshaender: TCheckBox
@@ -100,7 +98,6 @@ object frmAmpel: TfrmAmpel
     TabOrder = 2
     OnClick = cbxLinkshaenderClick
     OnKeyDown = FormKeyDown
-    OnKeyPress = FormKeyPress
     OnKeyUp = FormKeyUp
   end
   object cbxVerkehrt: TCheckBox
@@ -112,13 +109,12 @@ object frmAmpel: TfrmAmpel
     TabOrder = 3
     OnClick = cbxLinkshaenderClick
     OnKeyDown = FormKeyDown
-    OnKeyPress = FormKeyPress
     OnKeyUp = FormKeyUp
   end
   object Timer1: TTimer
     Interval = 1
     OnTimer = Timer1Timer
-    Left = 312
-    Top = 192
+    Left = 272
+    Top = 224
   end
 end
