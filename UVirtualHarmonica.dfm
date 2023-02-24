@@ -3,7 +3,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   Top = 0
   ActiveControl = cbTransInstrument
   Caption = 'Virtuelle Steirische Harmonika'
-  ClientHeight = 677
+  ClientHeight = 750
   ClientWidth = 404
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -128,15 +128,15 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   end
   object gbRecord: TGroupBox
     Left = 0
-    Top = 571
+    Top = 478
     Width = 404
-    Height = 102
+    Height = 99
     Align = alTop
     Caption = 'Aufnahme'
     TabOrder = 4
     DesignSize = (
       404
-      102)
+      99)
     object btnRecordIn: TButton
       Left = 122
       Top = 24
@@ -154,9 +154,9 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       OnKeyUp = cbTransInstrumentKeyUp
     end
     object btnRecordOut: TButton
-      Left = 123
+      Left = 122
       Top = 55
-      Width = 260
+      Width = 261
       Height = 25
       Anchors = [akLeft, akTop, akRight]
       Caption = 'MIDI OUT Aufnahme starten'
@@ -753,12 +753,13 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   end
   object gbSzene: TGroupBox
     Left = 0
-    Top = 478
+    Top = 745
     Width = 404
     Height = 93
     Align = alTop
     Caption = 'Scene'
     TabOrder = 5
+    ExplicitTop = 708
     DesignSize = (
       404
       93)
@@ -799,22 +800,143 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       OnKeyUp = cbTransInstrumentKeyUp
     end
   end
-  object gbNoten: TGroupBox
+  object gbHeader: TGroupBox
     Left = 0
-    Top = 673
+    Top = 577
     Width = 404
-    Height = 96
+    Height = 168
     Align = alTop
-    Caption = 'Griffschriftnoten'
+    Caption = 'Tackangaben'
     TabOrder = 6
-    Visible = False
-    ExplicitTop = 672
+    DesignSize = (
+      404
+      168)
+    object Label8: TLabel
+      Left = 24
+      Top = 32
+      Width = 21
+      Height = 13
+      Caption = 'Takt'
+    end
+    object Label12: TLabel
+      Left = 24
+      Top = 59
+      Width = 84
+      Height = 13
+      Caption = 'Viertel pro Minute'
+    end
+    object Label2: TLabel
+      Left = 24
+      Top = 115
+      Width = 74
+      Height = 13
+      Caption = 'Begleitung  ein.'
+    end
+    object lbBegleitung: TLabel
+      Left = 24
+      Top = 95
+      Width = 51
+      Height = 13
+      Caption = 'Lautst'#228'rke'
+    end
+    object Label10: TLabel
+      Left = 24
+      Top = 135
+      Width = 41
+      Height = 13
+      Caption = 'Nur Takt'
+    end
+    object cbxViertel: TComboBox
+      Left = 198
+      Top = 29
+      Width = 70
+      Height = 21
+      Style = csDropDownList
+      ItemIndex = 0
+      TabOrder = 1
+      Text = 'Viertel'
+      OnChange = cbxViertelChange
+      Items.Strings = (
+        'Viertel'
+        'Achtel')
+    end
+    object cbxTakt: TComboBox
+      Left = 122
+      Top = 29
+      Width = 70
+      Height = 21
+      Style = csDropDownList
+      ItemIndex = 2
+      TabOrder = 0
+      Text = '4'
+      OnChange = cbxTaktChange
+      Items.Strings = (
+        '2'
+        '3'
+        '4'
+        '5'
+        '6'
+        '7'
+        '8'
+        '9'
+        '10'
+        '11'
+        '12')
+    end
+    object edtBPM: TEdit
+      Left = 122
+      Top = 56
+      Width = 70
+      Height = 21
+      Alignment = taRightJustify
+      TabOrder = 2
+      Text = '120'
+      OnExit = edtBPMExit
+    end
+    object cbxBegleitung: TCheckBox
+      Left = 122
+      Top = 114
+      Width = 25
+      Height = 17
+      TabOrder = 3
+      OnClick = cbxBegleitungClick
+      OnKeyDown = cbTransInstrumentKeyDown
+      OnKeyPress = cbTransInstrumentKeyPress
+      OnKeyUp = cbTransInstrumentKeyUp
+    end
+    object sbBegleitung: TScrollBar
+      Left = 122
+      Top = 91
+      Width = 261
+      Height = 17
+      Anchors = [akLeft, akTop, akRight]
+      Max = 120
+      Min = 20
+      PageSize = 0
+      Position = 80
+      TabOrder = 4
+      OnChange = sbVolChange
+      OnKeyDown = cbTransInstrumentKeyDown
+      OnKeyPress = cbTransInstrumentKeyPress
+      OnKeyUp = cbTransInstrumentKeyUp
+    end
+    object cbxNurTakt: TCheckBox
+      Left = 122
+      Top = 134
+      Width = 25
+      Height = 17
+      TabOrder = 5
+      OnClick = cbxNurTaktClick
+      OnKeyDown = cbTransInstrumentKeyDown
+      OnKeyPress = cbTransInstrumentKeyPress
+      OnKeyUp = cbTransInstrumentKeyUp
+    end
   end
   object SaveDialog1: TSaveDialog
     FileName = 'Aufnahme.mid'
     Filter = 'MIDI|*.mid'
     InitialDir = '.'
     Left = 40
-    Top = 184
+    Top = 240
   end
 end

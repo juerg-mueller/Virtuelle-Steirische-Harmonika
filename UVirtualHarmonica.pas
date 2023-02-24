@@ -60,7 +60,18 @@ type
     btnReset: TButton;
     btnRecordOut: TButton;
     btnResetMidi: TButton;
-    gbNoten: TGroupBox;
+    gbHeader: TGroupBox;
+    Label8: TLabel;
+    Label12: TLabel;
+    cbxViertel: TComboBox;
+    cbxTakt: TComboBox;
+    edtBPM: TEdit;
+    cbxBegleitung: TCheckBox;
+    Label2: TLabel;
+    sbBegleitung: TScrollBar;
+    lbBegleitung: TLabel;
+    cbxNurTakt: TCheckBox;
+    Label10: TLabel;
     procedure cbTransInstrumentChange(Sender: TObject);
     procedure cbxMidiInputChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -82,6 +93,11 @@ type
     procedure btnResetClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnRecordOutClick(Sender: TObject);
+    procedure cbxBegleitungClick(Sender: TObject);
+    procedure cbxTaktChange(Sender: TObject);
+    procedure cbxViertelChange(Sender: TObject);
+    procedure edtBPMExit(Sender: TObject);
+    procedure cbxNurTaktClick(Sender: TObject);
   private
 
     procedure RegenerateMidi;
@@ -132,6 +148,7 @@ begin
   begin
     Deactivate(false);
     MidiRecIn := TMidiRecord.Create(string(Instrument.Name));
+    MidiRecIn.Header := frmAmpel.Header;
     frmAmpel.PRecordMidiIn := MidiRecIn.OnMidiInData;
     btnRecordIn.Caption := 'Stopp';
   end else begin
@@ -149,6 +166,7 @@ end;
 procedure TfrmVirtualHarmonica.SaveMidi(var MidiRec: TMidiRecord);
 var
   Saved: boolean;
+  s: string;
   SaveStream: TMidiSaveStream;
 begin
   Saved := false;
@@ -158,10 +176,14 @@ begin
   begin
     while not Saved and SaveDialog1.Execute do
     begin
-      if not FileExists(SaveDialog1.FileName) or
+      s := SaveDialog1.FileName;
+      if ExtractFileExt(s) <> '.mid' then
+        s := s + '.mid';
+      if not FileExists(s) or
         (Warning('Eine Datei mit diesem Namen existiert bereits! Überschreiben?') = IDYES) then
       begin
-        SaveStream.SaveToFile(SaveDialog1.FileName);
+
+        SaveStream.SaveToFile(s);
         Saved := true;
       end;
     end;
@@ -186,6 +208,7 @@ begin
   begin
     Deactivate(false);
     MidiRecOut := TMidiRecord.Create(string(Instrument.Name));
+    MidiRecOut.Header := frmAmpel.Header;
     frmAmpel.AmpelEvents.PRecordMidiOut := MidiRecOut.OnMidiInData;
     btnRecordOut.Caption := 'Stopp';
   end else begin
@@ -308,6 +331,11 @@ begin
   cbxMidiDiskantChange(Sender);
 end;
 
+procedure TfrmVirtualHarmonica.cbxBegleitungClick(Sender: TObject);
+begin
+  frmAmpel.Begleitung := cbxBegleitung.Checked;
+end;
+
 function GetIndex(cbxMidi: TComboBox): integer;
 var
   s: string;
@@ -380,6 +408,34 @@ begin
   end;
 end;
 
+procedure TfrmVirtualHarmonica.cbxNurTaktClick(Sender: TObject);
+begin
+  NurTakt := cbxNurTakt.Checked;
+end;
+
+procedure TfrmVirtualHarmonica.cbxTaktChange(Sender: TObject);
+begin
+  frmAmpel.Header.measureFact := cbxTakt.ItemIndex + 2;
+end;
+
+procedure TfrmVirtualHarmonica.cbxViertelChange(Sender: TObject);
+var
+  q: integer;
+begin
+  case cbxViertel.ItemIndex of
+    0: q := 4;
+    1: q := 8;
+    else q := 4;
+  end;
+  frmAmpel.Header.MeasureDiv :=  q;
+end;
+
+procedure TfrmVirtualHarmonica.edtBPMExit(Sender: TObject);
+begin
+  frmAmpel.Header.beatsPerMin := StrToInt(edtBPM.Text);
+  cbxViertelChange(Sender);
+end;
+
 procedure TfrmVirtualHarmonica.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
@@ -425,12 +481,12 @@ begin
   gbSzene.Visible := false;
   gbRecord.Visible := true;
 {$endif}
-
+{
   if not gbSzene.Visible then
     Height := Height - gbSzene.Height;
   if not gbRecord.Visible then
     Height := Height - gbRecord.Height;
-
+}
   BankChange(cbxDiskantBank);
   BankChange(cbxBankBass);
 
@@ -549,10 +605,16 @@ begin
   begin
     lbVolBass.Caption := s;
     VolumeBass := p;
-  end else begin
+  end else
+  if Sender = sbVolDiscant then begin
     lbVolDiskant.Caption := s;
     VolumeDiscant := p;
+  end else
+  if Sender = sbBegleitung then begin
+    lbBegleitung.Caption := s;
+    VolumeBegleitung := p;
   end;
+
 
 end;
 

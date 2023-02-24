@@ -53,7 +53,7 @@ uses
 {$endif}
   Forms, SyncObjs, Graphics, Types, StdCtrls, Dialogs, Controls, SysUtils,
   Classes,
-  UInstrument, UGriffEvent, Menus, Vcl.ExtCtrls;
+  UMidiEvent, UInstrument, UGriffEvent, Menus, Vcl.ExtCtrls;
 
 type
   TSoundGriff = procedure (Row: byte; index: byte; Push: boolean; On_:boolean) of object;
@@ -167,6 +167,11 @@ type
     MidiBufferHead, MidiBufferTail: word;
     MidiInBuffer: array [0..1023] of TMidiInData;
     PRecordMidiIn: TRecordMidiIn;
+    nextPip: TTime;
+    pipDelay: TTime;
+    Begleitung: boolean;
+    pipCount: integer;
+    Header: TDetailHeader;
 
     procedure ChangeInstrument(Instrument_: PInstrument);
     function KnopfRect(Row: byte {1..6}; index: byte {0..10}): TRect;
@@ -206,7 +211,7 @@ uses
 {$if not defined(__VIRTUAL__) and defined(dcc)}
   UfrmGriff,
 {$endif}
-  UFormHelper, UMidiEvent;
+  UFormHelper;
 
 procedure TMouseEvent.Clear;
 begin
@@ -512,7 +517,7 @@ begin
   try
     r := -1;
     for i := 0 to UsedEvents-1 do
-      if ((MouseEvents[i].Row_ = Event.Row_) and (MouseEvents[i].Index_ = Event.Index_)) then
+      if (MouseEvents[i].Row_ = Event.Row_) and (MouseEvents[i].Index_ = Event.Index_) then
       begin
         r := i;
         break;
@@ -520,7 +525,7 @@ begin
 
     if r = -1 then
       for i := 0 to UsedEvents-1 do
-        if ((MouseEvents[i].Pitch = Event.Pitch) and (Event.Pitch > 0)) then
+        if (MouseEvents[i].Pitch = Event.Pitch) and (Event.Pitch > 0) then
         begin
           r := i;
           break;
@@ -744,6 +749,7 @@ begin
   MidiBufferHead := 0;
   MidiBufferTail := 0;
   FillChar(MidiInBuffer, sizeof(MidiInBuffer), 0);
+  Header.Clear;
 end;
 
 procedure TfrmAmpel.FormDeactivate(Sender: TObject);
@@ -1249,6 +1255,9 @@ var
   GriffEvent: TGriffEvent;
   Tail: integer;
   Data: TMidiInData;
+  BPM, mDiv: integer;
+  sec: boolean;
+  vol: double;
 
   function GetInstr(var Event: TMouseEvent): boolean;
   var
@@ -1274,7 +1283,55 @@ var
     result := Event.Index_ >= 0;
   end;
 
+  procedure SendMidiOut(Status, Data1, Data2: byte);
+  begin
+    OnMidiInData(MicrosoftIndex, Status, Data1, Data2, 0);
+    MidiOutput.Send(MicrosoftIndex, Status, Data1, Data2);
+    if @AmpelEvents.PRecordMidiOut <> nil then
+      AmpelEvents.PRecordMidiOut(Status, Data1, Data2, trunc(24*3600*1000*now));
+  end;
+
 begin
+  if Begleitung then
+  begin
+    BPM := Header.beatsPerMin;
+    mDiv := Header.measureDiv; // ist 4 oder 8
+    if NurTakt then
+      sec := false
+    else
+    if mDiv = 8 then
+    begin
+      BPM := 2*BPM;
+      sec := (Header.measureFact = 6) and (pipCount = 3);
+    end else
+      sec := true;
+    if Now >= nextPip then
+    begin
+      vol := 100*VolumeBegleitung;
+      if vol > 126 then
+        vol := 126;
+      if pipCount = 0 then
+        SendMidiOut($99, 59, trunc(vol))
+      else
+      if sec then
+        SendMidiOut($99, 69, trunc(vol));
+      nextPip := Now + 1/(24.0*60.0)/BPM;
+      pipDelay := Now + 0.1/(24*3600);
+    end else
+    if (Now >= pipDelay) and (pipDelay > 0) then
+    begin
+      pipDelay := 0;
+      if pipCount = 0 then
+        SendMidiOut($89, 59, 100)
+      else
+      if sec then
+        SendMidiOut($89, 69, 100);
+      inc(pipCount);
+      if pipCount >= Header.measureFact then
+        pipCount := 0;
+    end;
+  end;
+
 //  MidiBufferTail := MidiBufferHead;
   while MidiBufferHead <> MidiBufferTail do
   begin
@@ -1384,7 +1441,7 @@ begin
       Status := aStatus;
       Data1 := aData1;
       Data2 := aData2;
-      Timestamp := aTimestamp;  // ms
+      Timestamp := trunc(Now*24000*3600);   //aTimestamp;  // ms
 //      if (Status shr 4) <> 11 then
 //        writeln(Format('$%2.2x  $%2.2x  $%2.2x --' ,[Status, Data1, Data2]));
     end;

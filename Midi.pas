@@ -126,6 +126,8 @@ var
 
   VolumeDiscant: double = 0.9;
   VolumeBass: double = 0.9;
+  VolumeBegleitung: double = 0.8;
+  NurTakt: boolean = false;
 
 procedure OpenMidiMicrosoft;
 procedure SendSzene(Status, Data1, Data2: byte);
