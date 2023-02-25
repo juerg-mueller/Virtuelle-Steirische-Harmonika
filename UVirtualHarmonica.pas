@@ -550,6 +550,8 @@ begin
 {$endif}
 //  cbAccordionMasterClick(nil);
 
+  cbxTaktChange(nil);
+  edtBPMExit(nil);
   frmAmpel.ChangeInstrument(@Instrument);
   frmAmpel.Show;
 end;

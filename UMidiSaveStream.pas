@@ -209,11 +209,14 @@ end;
 
 class function TMidiSaveStream.BuildSaveStream(var MidiRec: TMidiRecord): TMidiSaveStream;
 var
-  i, newCount: integer;
+  i, k, newCount: integer;
   SaveStream: TMidiSaveStream;
   inpush, isEvent: boolean;
+  lastTakt: integer;
 begin
   result := nil;
+  inpush := true;
+  lastTakt := -1;
   if not MidiRec.hasOns then
     exit;
 
@@ -227,16 +230,31 @@ begin
 
   i := newCount;
   while (i < MidiRec.eventCount-2) and
-        MidiRec.MidiEvents[i].IsSustain and MidiRec.MidiEvents[i+1].IsSustain do
+        MidiRec.MidiEvents[i].IsSustain or (MidiRec.MidiEvents[i].Channel = 10) do
+  begin
+    if MidiRec.MidiEvents[i].Channel = 10 then
+      lastTakt := i;
     inc(i);
+  end;
 
-  while (i < MidiRec.eventCount) and MidiRec.MidiEvents[MidiRec.eventCount-1].IsSustain do
+  for k := newCount to i-1 do
+    if MidiRec.MidiEvents[i].IsSustain then
+      inpush := (MidiRec.MidiEvents[k].d2 <> 0);
+
+  while (i < MidiRec.eventCount) and
+        (MidiRec.MidiEvents[MidiRec.eventCount-1].IsSustain or (MidiRec.MidiEvents[MidiRec.eventCount-1].Channel = 9)) do
     dec(MidiRec.eventCount);
 
-  inpush := true;
+  if lastTakt > 0 then
+    i := lastTakt;
   MidiRec.MidiEvents[i].var_len := 0;
   while i < MidiRec.eventCount do
   begin
+    if MidiRec.MidiEvents[i].Channel = 9 then
+    begin
+      inc(i);
+      continue;
+    end;
     isEvent := MidiRec.MidiEvents[i].IsSustain;
     if not isEvent or (inpush <> (MidiRec.MidiEvents[i].d2 <> 0)) then
     begin
