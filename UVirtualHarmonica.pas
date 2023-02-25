@@ -98,6 +98,7 @@ type
     procedure cbxViertelChange(Sender: TObject);
     procedure edtBPMExit(Sender: TObject);
     procedure cbxNurTaktClick(Sender: TObject);
+    procedure FormResize(Sender: TObject);
   private
 
     procedure RegenerateMidi;
@@ -511,6 +512,13 @@ end;
 procedure TfrmVirtualHarmonica.FormDestroy(Sender: TObject);
 begin
   MidiInput.CloseAll;
+end;
+
+procedure TfrmVirtualHarmonica.FormResize(Sender: TObject);
+begin
+  VertScrollBar.Visible := Height < VertScrollBar.Range;
+  if VertScrollBar.Visible then
+    VertScrollBar.Size := Height;
 end;
 
 procedure TfrmVirtualHarmonica.FormShow(Sender: TObject);
