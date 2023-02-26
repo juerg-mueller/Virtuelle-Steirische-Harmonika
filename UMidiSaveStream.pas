@@ -38,27 +38,27 @@ type
     eventCount: integer;
     MidiEvents: array of TMidiEvent;
     hasOns: boolean;
-    OldTime: Int64;
+    OldTime: TTime;
     Header: TDetailHeader;
 
     constructor Create(Name: string);
     destructor Destroy;
-    procedure OnMidiInData(const Status, Data1, Data2: byte; Timestamp: Int64);
+    procedure OnMidiInData(const Status, Data1, Data2: byte; Timestamp: int64);
   end;
 
   TMidiSaveStream = class(TMyMidiStream)
   public
-      Instrument: string;
-      trackOffset: cardinal;
-      constructor Create;
-      procedure SetHead(DeltaTimeTicks: integer = 192);
-      procedure AppendTrackHead(delay: integer = 0);
-      procedure AppendHeaderMetaEvents(const Details: TDetailHeader);
-      procedure AppendTrackEnd(IsLastTrack: boolean);
-      procedure AppendEvent(const Event: TMidiEvent); overload;
-      procedure AppendEvent(command, d1, d2: byte); overload;
-      procedure AppendMetaEvent(EventNr: byte; b: AnsiString);
-      class function BuildSaveStream(var MidiRec: TMidiRecord): TMidiSaveStream;
+    Instrument: string;
+    trackOffset: cardinal;
+    constructor Create;
+    procedure SetHead(DeltaTimeTicks: integer = 192);
+    procedure AppendTrackHead(delay: integer = 0);
+    procedure AppendHeaderMetaEvents(const Details: TDetailHeader);
+    procedure AppendTrackEnd(IsLastTrack: boolean);
+    procedure AppendEvent(const Event: TMidiEvent); overload;
+    procedure AppendEvent(command, d1, d2: byte); overload;
+    procedure AppendMetaEvent(EventNr: byte; b: AnsiString);
+    class function BuildSaveStream(var MidiRec: TMidiRecord): TMidiSaveStream;
   end;
 
 implementation
@@ -80,10 +80,10 @@ begin
   CriticalMidi.Free;
 end;
 
-procedure TMidiRecord.OnMidiInData(const Status, Data1, Data2: byte; Timestamp: Int64);
+procedure TMidiRecord.OnMidiInData(const Status, Data1, Data2: byte; Timestamp: int64);
 var
   Event: TMidiEvent;
-  time: Int64;
+  time: int64;
 begin
   CriticalMidi.Acquire;
   try
@@ -101,7 +101,7 @@ begin
     Event.d2 := Data2;
     MidiEvents[eventCount] := Event;
     if eventCount > 0 then
-      MidiEvents[eventCount-1].var_len := Header.MsDelayToTicks(time - OldTime);  // ms
+      MidiEvents[eventCount-1].var_len := Header.MsDelayToTicks(trunc(time - OldTime));  // ms
     inc(eventCount);
     OldTime := time;
   finally
@@ -213,6 +213,7 @@ var
   SaveStream: TMidiSaveStream;
   inpush, isEvent: boolean;
   lastTakt: integer;
+  startEvent: TMidiEvent;
 begin
   result := nil;
   inpush := true;
@@ -222,31 +223,43 @@ begin
 
   // stream bereinigen
   newCount := 0;
+  // Instrumentenwahl
   while (newCount < MidiRec.eventCount) and (MidiRec.MidiEvents[newCount].Event = 12) do
   begin
     MidiRec.MidiEvents[newCount].var_len := 0;
     inc(newCount);
   end;
 
+  // Balg- und Metronom-Angaben überspringen
   i := newCount;
   while (i < MidiRec.eventCount-2) and
-        MidiRec.MidiEvents[i].IsSustain or (MidiRec.MidiEvents[i].Channel = 10) do
+        MidiRec.MidiEvents[i].IsSustain or (MidiRec.MidiEvents[i].Channel in [9, 10]) do
   begin
-    if MidiRec.MidiEvents[i].Channel = 10 then
+    if MidiRec.MidiEvents[i].Channel in [9, 10] then
       lastTakt := i;
     inc(i);
+  end;
+
+  // Am Ende des Stücks kürzen
+  while (i < MidiRec.eventCount) and
+        (MidiRec.MidiEvents[MidiRec.eventCount-1].IsSustain or
+          (MidiRec.MidiEvents[MidiRec.eventCount-1].Channel in [9, 10])) do
+    dec(MidiRec.eventCount);
+
+  if lastTakt > 0 then
+  begin
+    i := lastTakt;
+    startEvent.Clear;
+    startEvent.command := $B0;
+    startEvent.d1 := ControlPartiturStart;
+    MidiRec.MidiEvents[newCount] := startEvent;
+    inc(newCount);
   end;
 
   for k := newCount to i-1 do
     if MidiRec.MidiEvents[i].IsSustain then
       inpush := (MidiRec.MidiEvents[k].d2 <> 0);
 
-  while (i < MidiRec.eventCount) and
-        (MidiRec.MidiEvents[MidiRec.eventCount-1].IsSustain or (MidiRec.MidiEvents[MidiRec.eventCount-1].Channel = 9)) do
-    dec(MidiRec.eventCount);
-
-  if lastTakt > 0 then
-    i := lastTakt;
   MidiRec.MidiEvents[i].var_len := 0;
   while i < MidiRec.eventCount do
   begin

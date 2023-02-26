@@ -57,13 +57,12 @@ uses
 
 type
   TSoundGriff = procedure (Row: byte; index: byte; Push: boolean; On_:boolean) of object;
-  TRecordMidiIn = procedure (const Status, Data1, Data2: byte; Timestamp: Int64) of object;
+  TRecordMidiIn = procedure (const Status, Data1, Data2: byte; Timestamp: int64) of object;
   TRecordMidiOut = procedure (const Status, Data1, Data2: byte) of object;
 
   TMidiInData = record
-    DeviceIndex: integer;
     Status, Data1, Data2: byte;
-    Timestamp: Int64;
+    Timestamp: int64;
   end;
 
   TMouseEvent = record
@@ -1257,6 +1256,7 @@ var
   Data: TMidiInData;
   BPM, mDiv: integer;
   sec: boolean;
+  pip: byte;
   vol: double;
 
   function GetInstr(var Event: TMouseEvent): boolean;
@@ -1285,6 +1285,7 @@ var
 
   procedure SendMidiOut(Status, Data1, Data2: byte);
   begin
+    Status := Status + pipChannel;
     OnMidiInData(MicrosoftIndex, Status, Data1, Data2, 0);
     MidiOutput.Send(MicrosoftIndex, Status, Data1, Data2);
     if @AmpelEvents.PRecordMidiOut <> nil then
@@ -1311,10 +1312,10 @@ begin
       if vol > 126 then
         vol := 126;
       if pipCount = 0 then
-        SendMidiOut($99, 59, trunc(vol))
+        SendMidiOut($90, pipFirst, trunc(vol))
       else
       if sec then
-        SendMidiOut($99, 69, trunc(vol));
+        SendMidiOut($90, pipSecond, trunc(vol));
       nextPip := Now + 1/(24.0*60.0)/BPM;
       pipDelay := Now + 0.1/(24*3600);
     end else
@@ -1322,10 +1323,10 @@ begin
     begin
       pipDelay := 0;
       if pipCount = 0 then
-        SendMidiOut($89, 59, 100)
+        SendMidiOut($80, pipFirst, 64)
       else
       if sec then
-        SendMidiOut($89, 69, 100);
+        SendMidiOut($80, pipSecond, 64);
       inc(pipCount);
       if pipCount >= Header.measureFact then
         pipCount := 0;
@@ -1427,7 +1428,9 @@ end;
 procedure TfrmAmpel.OnMidiInData(aDeviceIndex: integer; aStatus, aData1, aData2: byte; aTimestamp: Int64);
 var
   old: word;
+  t: int64;
 begin
+  t := trunc(Now*24000*3600);
   CriticalMidiIn.Acquire;
   try
     old := MidiBufferHead;
@@ -1437,11 +1440,10 @@ begin
 
     with MidiInBuffer[old] do
     begin
-      DeviceIndex := aDeviceIndex;
       Status := aStatus;
       Data1 := aData1;
       Data2 := aData2;
-      Timestamp := trunc(Now*24000*3600);   //aTimestamp;  // ms
+      Timestamp := t; // ms
 //      if (Status shr 4) <> 11 then
 //        writeln(Format('$%2.2x  $%2.2x  $%2.2x --' ,[Status, Data1, Data2]));
     end;
@@ -1449,7 +1451,7 @@ begin
     CriticalMidiIn.Release;
   end;
   if @PRecordMidiIn <> nil then
-    PRecordMidiIn(aStatus, aData1, aData2, aTimestamp);
+    PRecordMidiIn(aStatus, aData1, aData2, t);
 end;
 
 
