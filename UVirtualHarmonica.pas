@@ -17,7 +17,7 @@ uses
 {$endif}
   Forms, SyncObjs, SysUtils, Graphics, Controls, Dialogs,
   UInstrument, UMidiEvent, StdCtrls, UAmpel, Classes,
-  UMidiSaveStream;
+  UMidiSaveStream, Vcl.ExtCtrls;
 
 type
   TRecordEventArray = record
@@ -72,6 +72,8 @@ type
     lbBegleitung: TLabel;
     cbxNurTakt: TCheckBox;
     Label10: TLabel;
+    cbxOhneBlinker: TCheckBox;
+    Label11: TLabel;
     procedure cbTransInstrumentChange(Sender: TObject);
     procedure cbxMidiInputChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -99,6 +101,8 @@ type
     procedure edtBPMExit(Sender: TObject);
     procedure cbxNurTaktClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure edtBPMKeyPress(Sender: TObject; var Key: Char);
+    procedure cbxOhneBlinkerClick(Sender: TObject);
   private
 
     procedure RegenerateMidi;
@@ -372,6 +376,22 @@ procedure TfrmVirtualHarmonica.cbxDiskantBankChange(Sender: TObject);
 begin
   BankChange(Sender as TComboBox);
   cbxMidiDiskantChange(Sender);
+
+  if MidiBankDiskant > 0 then
+  begin
+    if pipChannel <> 10 then
+    begin
+      ChangeBank(MicrosoftIndex, 10, 21, 64);
+      pipChannel := 10;
+    end;
+  end else begin
+    if pipChannel <> 9 then
+    begin
+      ChangeBank(MicrosoftIndex, 0, 0, 21);
+      pipChannel := 9;
+    end;
+  end;
+
 end;
 
 procedure TfrmVirtualHarmonica.cbxMidiDiskantChange(Sender: TObject);
@@ -414,6 +434,11 @@ begin
   NurTakt := cbxNurTakt.Checked;
 end;
 
+procedure TfrmVirtualHarmonica.cbxOhneBlinkerClick(Sender: TObject);
+begin
+  OhneBlinker := cbxOhneBlinker.Checked;
+end;
+
 procedure TfrmVirtualHarmonica.cbxTaktChange(Sender: TObject);
 begin
   frmAmpel.Header.measureFact := cbxTakt.ItemIndex + 2;
@@ -435,6 +460,15 @@ procedure TfrmVirtualHarmonica.edtBPMExit(Sender: TObject);
 begin
   frmAmpel.Header.beatsPerMin := StrToInt(edtBPM.Text);
   cbxViertelChange(Sender);
+end;
+
+procedure TfrmVirtualHarmonica.edtBPMKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = #13 then
+  begin
+    Key := #0;
+    cbTransInstrument.SetFocus;
+  end;
 end;
 
 procedure TfrmVirtualHarmonica.FormClose(Sender: TObject;
@@ -507,6 +541,7 @@ begin
   sbVolBass.Max := 140;
   sbVolChange(sbVolDiscant);
   sbVolChange(sbVolBass);
+  FormResize(self);
 end;
 
 procedure TfrmVirtualHarmonica.FormDestroy(Sender: TObject);

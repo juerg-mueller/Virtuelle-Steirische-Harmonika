@@ -123,15 +123,20 @@ var
   MidiBankDiskant: byte = 0;
   MidiBankBass: byte = 0;
   Scene: integer = 0;
+  pipFirst: byte = 59;
+  pipSecond: byte = 69;
+  pipChannel: byte = 9;
 
   VolumeDiscant: double = 0.9;
   VolumeBass: double = 0.9;
   VolumeBegleitung: double = 0.8;
   NurTakt: boolean = false;
+  OhneBlinker: boolean = true;
 
 procedure OpenMidiMicrosoft;
 procedure SendSzene(Status, Data1, Data2: byte);
 procedure ChangeSzene(Index: integer; UseMasterAcc: boolean);
+procedure ChangeBank(Index, Channel, Bank, Instr: byte);
 
 
 implementation

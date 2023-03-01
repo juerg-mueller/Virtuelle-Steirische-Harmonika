@@ -210,7 +210,7 @@ uses
 {$if not defined(__VIRTUAL__) and defined(dcc)}
   UfrmGriff,
 {$endif}
-  UFormHelper;
+  UFormHelper, UVirtualHarmonica;
 
 procedure TMouseEvent.Clear;
 begin
@@ -674,7 +674,6 @@ var
   rectMin, rectMax: TRect;
   i: integer;
   Mitte: integer;
-  d: integer;
 begin
   if FlippedHorz then
     lbUnten.Caption := 'Fuss'
@@ -1292,6 +1291,26 @@ var
       AmpelEvents.PRecordMidiOut(Status, Data1, Data2, trunc(24*3600*1000*now));
   end;
 
+  procedure pipPaint(On_: boolean);
+  var
+    rect: TRect;
+  begin
+    if not OhneBlinker then
+    begin
+      rect.left:= 0;
+      rect.top := 0;
+      rect.Height := KnopfGroesse;
+      rect.Width := KnopfGroesse;
+      rect.Offset(Width - 20 - Knopfgroesse, Height - 50 - KnopfGroesse);
+      canvas.Pen.Color := clBtnFace;
+      if On_ then
+        canvas.Brush.Color := clGray
+      else
+        canvas.Brush.Color := clBtnFace;
+      canvas.Ellipse(rect);
+    end;
+  end;
+
 begin
   if Begleitung then
   begin
@@ -1306,27 +1325,40 @@ begin
       sec := (Header.measureFact = 6) and (pipCount = 3);
     end else
       sec := true;
+    pip := 0;
+    if pipCount = 0 then
+      pip := pipFirst
+    else
+    if sec then
+      pip := pipSecond;
     if Now >= nextPip then
     begin
       vol := 100*VolumeBegleitung;
       if vol > 126 then
         vol := 126;
-      if pipCount = 0 then
-        SendMidiOut($90, pipFirst, trunc(vol))
-      else
-      if sec then
-        SendMidiOut($90, pipSecond, trunc(vol));
+      if pip > 0 then
+      begin
+        SendMidiOut($90, pip, trunc(vol));
+        if pipCount = 0 then
+        begin
+          pipPaint(true);
+        end;
+      end;
       nextPip := Now + 1/(24.0*60.0)/BPM;
       pipDelay := Now + 0.1/(24*3600);
     end else
     if (Now >= pipDelay) and (pipDelay > 0) then
     begin
       pipDelay := 0;
-      if pipCount = 0 then
-        SendMidiOut($80, pipFirst, 64)
-      else
-      if sec then
-        SendMidiOut($80, pipSecond, 64);
+      if pip > 0 then
+      begin
+        if pip > 0 then
+          SendMidiOut($80, pip, 64);
+        if pipCount = 0 then
+        begin
+          pipPaint(false);
+        end;
+      end;
       inc(pipCount);
       if pipCount >= Header.measureFact then
         pipCount := 0;
@@ -1336,7 +1368,6 @@ begin
 //  MidiBufferTail := MidiBufferHead;
   while MidiBufferHead <> MidiBufferTail do
   begin
-    Tail := -1;
     CriticalMidiIn.Acquire;
     try
       Tail := MidiBufferTail;
@@ -1345,8 +1376,6 @@ begin
     finally
       CriticalMidiIn.Release;
     end;
-    if Tail < 0 then
-      continue;
 
     if (Data.Status shr 4) in [8, 9, 11] then
     begin
