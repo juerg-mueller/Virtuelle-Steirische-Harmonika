@@ -2,7 +2,7 @@
 Virtual Steirische Harmonica and Virtual Schwyzerörgeli
 
 ![Steirische](https://user-images.githubusercontent.com/14039478/165329913-ff17eb57-ce12-472d-b0f7-e0f2132c363e.png)
-![Bedienung](https://user-images.githubusercontent.com/14039478/166447306-0a542911-c92a-44f3-b401-521da8d361c6.png)
+![VirtuelleHarmonika](https://github.com/juerg-mueller/Virtuelle-Steirische-Harmonika/assets/14039478/aa3e9ba2-b486-46ad-b86f-bc66eddecee0)
 
 Tastatureingabe
 ===============
