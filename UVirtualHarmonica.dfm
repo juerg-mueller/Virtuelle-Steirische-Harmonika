@@ -2,7 +2,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   Left = 0
   Top = 0
   Width = 415
-  Height = 804
+  Height = 825
   VertScrollBar.Range = 765
   VertScrollBar.Smooth = True
   VertScrollBar.Size = 100
@@ -28,13 +28,13 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Left = 0
     Top = 73
     Width = 399
-    Height = 152
+    Height = 176
     Align = alTop
     Caption = 'MIDI I/O'
     TabOrder = 1
     DesignSize = (
       399
-      152)
+      176)
     object lblKeyboard: TLabel
       Left = 24
       Top = 26
@@ -44,19 +44,26 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     end
     object Label17: TLabel
       Left = 24
-      Top = 54
+      Top = 83
       Width = 47
       Height = 13
       Caption = 'MIDI OUT'
     end
+    object Label13: TLabel
+      Left = 24
+      Top = 55
+      Width = 75
+      Height = 13
+      Caption = 'MIDI IN System'
+    end
     object cbxMidiOut: TComboBox
       Left = 122
-      Top = 51
+      Top = 80
       Width = 256
       Height = 21
       Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]
-      TabOrder = 1
+      TabOrder = 2
       OnChange = cbxMidiOutChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
@@ -77,12 +84,12 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     end
     object btnReset: TButton
       Left = 122
-      Top = 78
+      Top = 107
       Width = 256
       Height = 25
       Anchors = [akLeft, akTop, akRight]
       Caption = 'MIDI OUT zur'#252'cksetzen'
-      TabOrder = 2
+      TabOrder = 3
       OnClick = btnResetClick
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
@@ -90,16 +97,34 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     end
     object btnResetMidi: TButton
       Left = 122
-      Top = 109
+      Top = 138
       Width = 256
       Height = 25
       Anchors = [akLeft, akTop, akRight]
       Caption = 'MIDI Konfiguration neu laden'
-      TabOrder = 3
+      TabOrder = 4
       OnClick = btnResetMidiClick
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
+    end
+    object cbxLimex: TComboBox
+      Left = 122
+      Top = 52
+      Width = 256
+      Height = 21
+      Style = csDropDownList
+      Anchors = [akLeft, akTop, akRight]
+      ItemIndex = 0
+      TabOrder = 1
+      Text = 'Standard'
+      OnClick = cbxLimexClick
+      OnKeyDown = cbTransInstrumentKeyDown
+      OnKeyPress = cbTransInstrumentKeyPress
+      OnKeyUp = cbTransInstrumentKeyUp
+      Items.Strings = (
+        'Standard'
+        'Limex')
     end
   end
   object gbInstrument: TGroupBox
@@ -136,12 +161,13 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   end
   object gbRecord: TGroupBox
     Left = 0
-    Top = 478
+    Top = 502
     Width = 399
     Height = 99
     Align = alTop
     Caption = 'Aufnahme'
     TabOrder = 4
+    ExplicitTop = 478
     DesignSize = (
       399
       99)
@@ -177,12 +203,13 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   end
   object gbMidiInstrument: TGroupBox
     Left = 0
-    Top = 225
+    Top = 249
     Width = 399
     Height = 117
     Align = alTop
     Caption = 'MIDI Instrument'
     TabOrder = 2
+    ExplicitTop = 225
     DesignSize = (
       399
       117)
@@ -459,12 +486,13 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   end
   object gbMidiBass: TGroupBox
     Left = 0
-    Top = 342
+    Top = 366
     Width = 399
     Height = 136
     Align = alTop
     Caption = 'MIDI Bass'
     TabOrder = 3
+    ExplicitTop = 342
     DesignSize = (
       399
       136)
@@ -761,12 +789,13 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   end
   object gbSzene: TGroupBox
     Left = 0
-    Top = 761
+    Top = 785
     Width = 399
     Height = 93
     Align = alTop
     Caption = 'Scene'
     TabOrder = 5
+    ExplicitTop = 761
     DesignSize = (
       399
       93)
@@ -809,12 +838,13 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   end
   object gbHeader: TGroupBox
     Left = 0
-    Top = 577
+    Top = 601
     Width = 399
     Height = 184
     Align = alTop
     Caption = 'Taktangaben'
     TabOrder = 6
+    ExplicitTop = 577
     DesignSize = (
       399
       184)
@@ -919,7 +949,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Top = 114
       Width = 25
       Height = 17
-      TabOrder = 3
+      TabOrder = 4
       OnClick = cbxBegleitungClick
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
@@ -935,7 +965,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Min = 20
       PageSize = 0
       Position = 80
-      TabOrder = 4
+      TabOrder = 3
       OnChange = sbVolChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress

@@ -40,8 +40,9 @@ type
     hasOns: boolean;
     OldTime: TTime;
     Header: TDetailHeader;
+    Push: boolean;
 
-    constructor Create(Name: string);
+    constructor Create(Name: string; InitPush: boolean);
     destructor Destroy;
     procedure OnMidiInData(const Status, Data1, Data2: byte; Timestamp: int64);
   end;
@@ -63,9 +64,13 @@ type
 
 implementation
 
-constructor TMidiRecord.Create(Name: string);
+uses
+  UFormHelper;
+
+constructor TMidiRecord.Create(Name: string; InitPush: boolean);
 begin
   CriticalMidi := TCriticalSection.Create;
+  Push := InitPush;
   InstrumentName := Name;
   eventCount := 0;
   SetLength(MidiEvents, 1000000);
@@ -92,7 +97,15 @@ begin
 
     time := Timestamp;
     if eventCount = 0 then
+    begin
+      Event.Clear;
+      Event.command := $b0;
+      Event.d1 := ControlSustain;
+      Event.d2 := ord(ShiftUsed);
+      MidiEvents[eventCount] := Event;
+      inc(eventCount);
       OldTime := time;
+    end;
     Event.Clear;
     Event.command := Status;
     if Event.Event = 9 then
@@ -100,8 +113,7 @@ begin
     Event.d1 := Data1;
     Event.d2 := Data2;
     MidiEvents[eventCount] := Event;
-    if eventCount > 0 then
-      MidiEvents[eventCount-1].var_len := Header.MsDelayToTicks(trunc(time - OldTime));  // ms
+    MidiEvents[eventCount-1].var_len := Header.MsDelayToTicks(trunc(time - OldTime));  // ms
     inc(eventCount);
     OldTime := time;
   finally
@@ -216,7 +228,8 @@ var
   startEvent: TMidiEvent;
 begin
   result := nil;
-  inpush := true;
+  inpush := MidiRec.Push;
+  //system.writeln('inpush ', ord(inpush));
   lastTakt := -1;
   if not MidiRec.hasOns then
     exit;
@@ -246,6 +259,16 @@ begin
           (MidiRec.MidiEvents[MidiRec.eventCount-1].Channel in [9, 10])) do
     dec(MidiRec.eventCount);
 
+  for k := newCount to i-1 do
+    if MidiRec.MidiEvents[i].IsSustain then
+      inpush := (MidiRec.MidiEvents[k].d2 <> 0);
+  startEvent.Clear;
+  startEvent.command := $B0;
+  startEvent.d1 := ControlSustain;
+  startEvent.d2 := ord(inpush);
+  MidiRec.MidiEvents[newCount] := startEvent;
+  inc(newCount);
+
   if lastTakt > 0 then
   begin
     i := lastTakt;
@@ -255,10 +278,6 @@ begin
     MidiRec.MidiEvents[newCount] := startEvent;
     inc(newCount);
   end;
-
-  for k := newCount to i-1 do
-    if MidiRec.MidiEvents[i].IsSustain then
-      inpush := (MidiRec.MidiEvents[k].d2 <> 0);
 
   MidiRec.MidiEvents[i].var_len := 0;
   while i < MidiRec.eventCount do

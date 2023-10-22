@@ -48,6 +48,7 @@ end;
 
 function ShiftUsed: boolean;
 begin
+  //writeln('cap ', GetKeyState(vk_capital), '   shift ', GetKeyState(vk_shift));
   result := (GetKeyState(vk_capital) = 1) or
             (GetKeyState(vk_shift) < 0) or
             Sustain_;

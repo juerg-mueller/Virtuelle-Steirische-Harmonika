@@ -74,6 +74,8 @@ type
     Label10: TLabel;
     cbxOhneBlinker: TCheckBox;
     Label11: TLabel;
+    cbxLimex: TComboBox;
+    Label13: TLabel;
     procedure cbTransInstrumentChange(Sender: TObject);
     procedure cbxMidiInputChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -103,6 +105,7 @@ type
     procedure FormResize(Sender: TObject);
     procedure edtBPMKeyPress(Sender: TObject; var Key: Char);
     procedure cbxOhneBlinkerClick(Sender: TObject);
+    procedure cbxLimexClick(Sender: TObject);
   private
 
     procedure RegenerateMidi;
@@ -152,7 +155,7 @@ begin
   if btnRecordIn.Caption <> 'Stopp' then
   begin
     Deactivate(false);
-    MidiRecIn := TMidiRecord.Create(string(Instrument.Name));
+    MidiRecIn := TMidiRecord.Create(string(Instrument.Name), ShiftUsed);
     MidiRecIn.Header := frmAmpel.Header;
     frmAmpel.PRecordMidiIn := MidiRecIn.OnMidiInData;
     btnRecordIn.Caption := 'Stopp';
@@ -212,7 +215,8 @@ begin
   if btnRecordOut.Caption <> 'Stopp' then
   begin
     Deactivate(false);
-    MidiRecOut := TMidiRecord.Create(string(Instrument.Name));
+    MidiRecOut := TMidiRecord.Create(string(Instrument.Name), ShiftUsed);
+    //writeln('push ', ord(MidiRecOut.Push));
     MidiRecOut.Header := frmAmpel.Header;
     frmAmpel.AmpelEvents.PRecordMidiOut := MidiRecOut.OnMidiInData;
     btnRecordOut.Caption := 'Stopp';
@@ -235,9 +239,32 @@ begin
 end;
 
 procedure TfrmVirtualHarmonica.btnResetMidiClick(Sender: TObject);
+var
+  sIn, sOut: string;
+  i: integer;
 begin
+  sIn := cbxMidiInput.Text;
+  sOut := cbxMidiOut.Text;
   ResetMidiOut;
   RegenerateMidi;
+  if sIn <> cbxMidiInput.Text then
+  begin
+    i := cbxMidiInput.Items.IndexOf(sIn);
+    if i >= 0 then
+    begin
+      cbxMidiInput.ItemIndex := i;
+      cbxMidiInputChange(Sender);
+    end;
+  end;
+  if sOut <> cbxMidiOut.Text then
+  begin
+    i := cbxMidiOut.Items.IndexOf(sOut);
+    if i >= 0 then
+    begin
+      cbxMidiOut.ItemIndex := i;
+      cbxMidiOutChange(Sender);
+    end;
+  end;
 end;
 
 procedure TfrmVirtualHarmonica.cbAccordionMasterClick(Sender: TObject);
@@ -392,6 +419,11 @@ begin
     end;
   end;
 
+end;
+
+procedure TfrmVirtualHarmonica.cbxLimexClick(Sender: TObject);
+begin
+  IsLimex := cbxLimex.ItemIndex = 1;
 end;
 
 procedure TfrmVirtualHarmonica.cbxMidiDiskantChange(Sender: TObject);
@@ -573,7 +605,7 @@ procedure TfrmVirtualHarmonica.FormShow(Sender: TObject);
   end;
 
 begin
-  GetIndex(cbTransInstrument, 'b-Oergeli'); //    'BEsAsDes');
+  GetIndex(cbTransInstrument, 'b-Oergeli'); // 'BEsAsDes');
 
   RegenerateMidi;
   MidiInput.OnMidiData := frmAmpel.OnMidiInData;

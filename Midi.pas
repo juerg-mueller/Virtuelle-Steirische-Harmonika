@@ -634,23 +634,11 @@ begin
   begin
     MidiOutput.Open(MicrosoftIndex);
     try
-      if Scene <= 0 then
-      begin
-        for i := 0 to 9 do
-          if (i > 4) and BassBankActiv then
-            ChangeBank(MicrosoftIndex, i, MidiBankBass, MidiInstrBass)
-          else
-            ChangeBank(MicrosoftIndex, i, MidiBankDiskant, MidiInstrDiskant);
-      end else begin
-        for i := 0 to High(AccDiskant) do
-          with AccDiskant[i] do
-            if Channel > 0 then
-              ChangeBank(MicrosoftIndex, Channel, Bank, Instr);
-        for i := 0 to High(AccBass) do
-          with AccBass[i] do
-            if Channel > 0 then
-              ChangeBank(MicrosoftIndex, Channel, Bank, Instr);
-      end;
+      for i := 0 to 9 do
+        if (i > 4) and BassBankActiv then
+          ChangeBank(MicrosoftIndex, i, MidiBankBass, MidiInstrBass)
+        else
+          ChangeBank(MicrosoftIndex, i, MidiBankDiskant, MidiInstrDiskant);
     finally
     end;
   {$if defined(CONSOLE)}
