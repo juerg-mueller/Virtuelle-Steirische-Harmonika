@@ -1497,14 +1497,14 @@ begin
         DeviceIndex := aDeviceIndex;
         Status := $B7;
         Data1 := ControlSustain;
-        if odd(aData2) then
+        if not odd(aData2) then
           Data2 := 0 // Zug
         else
           Data2 := 1;
         Timestamp := t;
         MidiInBuffer.Put(rec);
         if @PRecordMidiIn <> nil then
-          PRecordMidiIn(aStatus, aData1, aData2, t);
+          PRecordMidiIn(aStatus, aData1, Data2, t);
       end;
     end;
     // MIDI Kanal anpassen
@@ -1522,9 +1522,9 @@ begin
       channel := 7
     else
     if ch = 123 then
-      channel := 6
+      channel := 5
     else
-      channel := 5;
+      channel := 6;
     aStatus := (aStatus and $f0) + channel;
   end;
   with rec do
@@ -1535,8 +1535,8 @@ begin
     Data2 := aData2;
     Timestamp := t; // ms
   {$ifdef CONSOLE}
-      if (Status shr 4) <> 11 then
-        writeln(Format('$%2.2x  $%2.2x  $%2.2x --' ,[Status, Data1, Data2]));
+    if (Status shr 4) <> 11 then
+      writeln(Format('$%2.2x  $%2.2x  $%2.2x --' ,[Status, Data1, Data2]));
   {$endif}
   end;
   MidiInBuffer.Put(rec);
