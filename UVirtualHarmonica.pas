@@ -457,6 +457,7 @@ begin
       cbxMidiOut.ItemIndex := TrueMicrosoftIndex+1;
 
     OpenMidiMicrosoft;
+    VolumeChange(127, [0..15]);
     frmAmpel.InitLastPush;
   end;
 end;
@@ -686,6 +687,7 @@ begin
   if Sender = sbVolDiscant then begin
     lbVolDiskant.Caption := s;
     VolumeDiscant := p;
+ //   VolumeChange(p, [0..7]);
   end else
   if Sender = sbBegleitung then begin
     lbBegleitung.Caption := s;

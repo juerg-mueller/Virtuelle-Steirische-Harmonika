@@ -167,7 +167,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Align = alTop
     Caption = 'Aufnahme'
     TabOrder = 4
-    ExplicitTop = 478
     DesignSize = (
       399
       99)
@@ -209,7 +208,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Align = alTop
     Caption = 'MIDI Instrument'
     TabOrder = 2
-    ExplicitTop = 225
     DesignSize = (
       399
       117)
@@ -473,7 +471,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Width = 256
       Height = 17
       Anchors = [akLeft, akTop, akRight]
-      Max = 140
       Min = 20
       PageSize = 0
       Position = 95
@@ -492,7 +489,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Align = alTop
     Caption = 'MIDI Bass'
     TabOrder = 3
-    ExplicitTop = 342
     DesignSize = (
       399
       136)
@@ -776,7 +772,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Width = 256
       Height = 17
       Anchors = [akLeft, akTop, akRight]
-      Max = 120
       Min = 20
       PageSize = 0
       Position = 95
@@ -795,7 +790,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Align = alTop
     Caption = 'Scene'
     TabOrder = 5
-    ExplicitTop = 761
     DesignSize = (
       399
       93)
@@ -844,7 +838,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Align = alTop
     Caption = 'Taktangaben'
     TabOrder = 6
-    ExplicitTop = 577
     DesignSize = (
       399
       184)

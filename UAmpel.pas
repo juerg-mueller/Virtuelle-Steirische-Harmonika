@@ -489,6 +489,7 @@ begin
           d := d*VolumeDiscant;
         if d > 120 then
           d := 120;
+        //d := 127; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         di := trunc(d);
         SendMidiOut($90 + Row_ , Event.SoundPitch, di);
         if idx in [1..9] then
@@ -1260,7 +1261,6 @@ var
   Event: TMouseEvent;
   Key: word;
   GriffEvent: TGriffEvent;
-  Tail: integer;
   Data: TMidiInData;
   BPM, mDiv: integer;
   sec: boolean;
@@ -1377,6 +1377,9 @@ begin
 //  MidiBufferTail := MidiBufferHead;
   while MidiInBuffer.Get(Data) do
   begin
+    if ((Data.Status shr 4) = 12) and (Data.Data2 = 0) then
+      MidiOutput.Send(MicrosoftIndex, Data.Status, Data.Data1, Data.Data2)
+    else
     if (Data.Status shr 4) in [8, 9, 11] then
     begin
       Event.Clear;
@@ -1396,7 +1399,13 @@ begin
         {$ifdef CONSOLE}
           writeln('balg: ', Data.Data2);
         {$endif}
-        end;
+        end
+        else
+        if Data.Data1 = 0 then // Program Change
+          MidiOutput.Send(MicrosoftIndex, Data.Status, Data.Data1, Data.Data2)
+//        else
+//        if (Data.Data1 = 11) {and IsLimex} then // Expression
+//          MidiOutput.Send(MicrosoftIndex, Data.Status, Data.Data1, Data.Data2)
       end else
       if ((Data.Status and $f) = 9) then
       begin
@@ -1471,6 +1480,10 @@ begin
   end;
 end;
 
+var
+  lastTime: Int64;
+  inCount: integer = 0;
+
 procedure TfrmAmpel.OnMidiInData(aDeviceIndex: integer; aStatus, aData1, aData2: byte; aTimestamp: Int64);
 var
   t: int64;
@@ -1478,8 +1491,13 @@ var
   rec: TMidiInData;
 begin
   t := trunc(Now*24000*3600);
+  if abs(t - lastTime) > 50 then
+    inCount := 0;
+  lastTime := t;
+
   channel := aStatus and 15;
   cmd := aStatus shr 4;
+  // $77 stossen $78 ziehen
   if IsLimex and
      (cmd in [8, 9]) and         // On and Off
      (channel in [0..2]) then    // Kanäle 1, 2, 3
@@ -1497,7 +1515,7 @@ begin
         DeviceIndex := aDeviceIndex;
         Status := $B7;
         Data1 := ControlSustain;
-        if not odd(aData2) then
+        if odd(aData2) then
           Data2 := 0 // Zug
         else
           Data2 := 1;
@@ -1508,23 +1526,31 @@ begin
       end;
     end;
     // MIDI Kanal anpassen
-    ch := aData2 or 1;
+    ch := aData2 and $7e;
     if channel = 0 then
     begin
       case ch of
-        127: channel := 1;
-        125: channel := 2;
-        123: channel := 3;
+        126: channel := 1; // 127
+        124: channel := 2;
+        122: channel := 3;
         else channel := 4;
       end;
     end else
     if channel = 1 then
-      channel := 7
-    else
-    if ch = 123 then
+    begin
+      if cmd = 8 then
+        inCount := 0;
+      if inCount = 0 then
+        channel := 6
+      else
+        channel := 7;
+      if  cmd = 9 then
+        inc(inCount);
+    end else
+    if ch = 120 then
       channel := 5
     else
-      channel := 6;
+      channel := 6;  // 122
     aStatus := (aStatus and $f0) + channel;
   end;
   with rec do
@@ -1535,8 +1561,8 @@ begin
     Data2 := aData2;
     Timestamp := t; // ms
   {$ifdef CONSOLE}
-    if (Status shr 4) <> 11 then
-      writeln(Format('$%2.2x  $%2.2x  $%2.2x --' ,[Status, Data1, Data2]));
+    if ((Status shr 4) <> 11) or ((Data1 <> 31) and (Data1 <> 11)) then
+      writeln(Format('$%2.2x  %d  $%2.2x --' ,[Status, Data1, Data2]));
   {$endif}
   end;
   MidiInBuffer.Put(rec);

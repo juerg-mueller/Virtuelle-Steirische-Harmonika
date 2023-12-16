@@ -102,6 +102,8 @@ type
     function GetSysDeviceIndex(name: string): TSysDeviceIndex; 
   end;
 
+  TChannels = set of 0..15;
+
   // MIDI input devices
   function MidiInput: TMidiInput;
   // MIDI output Devices
@@ -137,6 +139,7 @@ procedure OpenMidiMicrosoft;
 procedure SendSzene(Status, Data1, Data2: byte);
 procedure ChangeSzene(Index: integer; UseMasterAcc: boolean);
 procedure ChangeBank(Index, Channel, Bank, Instr: byte);
+procedure VolumeChange(vol: double; channels: TChannels);
 
 
 implementation
@@ -659,6 +662,26 @@ begin
   AccBass := ty;
 
   OpenMidiMicrosoft;
+end;
+
+procedure VolumeChange(vol: double; channels: TChannels);
+var
+  v: byte;
+  i: integer;
+begin
+  if MicrosoftIndex >= 0 then
+  begin
+    vol := 127*vol*0.75 + 32;
+    if vol > 127 then
+      vol := 127;
+    v := trunc(vol);
+    for i := 0 to 15 do
+      if i in channels then
+      begin
+        MidiOutput.Send(MicrosoftIndex, $B0 + i, 7, v);
+        MidiOutput.Send(MicrosoftIndex, $B0 + i, 11, 127);
+      end;
+  end;
 end;
 
 initialization
