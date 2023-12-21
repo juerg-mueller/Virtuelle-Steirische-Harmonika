@@ -66,9 +66,9 @@ type
     cbxViertel: TComboBox;
     cbxTakt: TComboBox;
     edtBPM: TEdit;
-    cbxBegleitung: TCheckBox;
+    cbxMetronom: TCheckBox;
     Label2: TLabel;
-    sbBegleitung: TScrollBar;
+    sbMetronom: TScrollBar;
     lbBegleitung: TLabel;
     cbxNurTakt: TCheckBox;
     Label10: TLabel;
@@ -97,7 +97,7 @@ type
     procedure btnResetClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnRecordOutClick(Sender: TObject);
-    procedure cbxBegleitungClick(Sender: TObject);
+    procedure cbxMetronomClick(Sender: TObject);
     procedure cbxTaktChange(Sender: TObject);
     procedure cbxViertelChange(Sender: TObject);
     procedure edtBPMExit(Sender: TObject);
@@ -363,9 +363,9 @@ begin
   cbxMidiDiskantChange(Sender);
 end;
 
-procedure TfrmVirtualHarmonica.cbxBegleitungClick(Sender: TObject);
+procedure TfrmVirtualHarmonica.cbxMetronomClick(Sender: TObject);
 begin
-  frmAmpel.Begleitung := cbxBegleitung.Checked;
+  frmAmpel.Metronom := cbxMetronom.Checked;
 end;
 
 function GetIndex(cbxMidi: TComboBox): integer;
@@ -400,11 +400,13 @@ begin
 end;
 
 procedure TfrmVirtualHarmonica.cbxDiskantBankChange(Sender: TObject);
+var
+  i: integer;
 begin
   BankChange(Sender as TComboBox);
   cbxMidiDiskantChange(Sender);
 
-  if MidiBankDiskant > 0 then
+{  if MidiBankDiskant > 0 then
   begin
     if pipChannel <> 10 then
     begin
@@ -414,10 +416,10 @@ begin
   end else begin
     if pipChannel <> 9 then
     begin
-      ChangeBank(MicrosoftIndex, 0, 0, 21);
+      ChangeBank(MicrosoftIndex, pipChannel, 0, 21);
       pipChannel := 9;
     end;
-  end;
+  end; }
 
 end;
 
@@ -614,7 +616,7 @@ begin
 {$ifdef JM}
   cbxBassDifferent.Checked := true;
   GetIndex(cbxMidiInput, 'Mobile Keys 49');
-  GetIndex(cbxMidiOut, 'UM-ONE');
+//  GetIndex(cbxMidiOut, 'UM-ONE');
 {$endif}
 //  cbAccordionMasterClick(nil);
 
@@ -689,9 +691,9 @@ begin
     VolumeDiscant := p;
  //   VolumeChange(p, [0..7]);
   end else
-  if Sender = sbBegleitung then begin
+  if Sender = sbMetronom then begin
     lbBegleitung.Caption := s;
-    VolumeBegleitung := p;
+    VolumeMetronom := p;
   end;
 
 

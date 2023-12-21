@@ -114,7 +114,7 @@ type
 
 const
   MicrosoftSync = 'Microsoft GS Wavetable Synth';
-  UM_ONE = 'UM-ONE';
+//  UM_ONE = 'UM-ONE';
   
 var
   MicrosoftIndex: integer = -1;
@@ -125,13 +125,13 @@ var
   MidiBankDiskant: byte = 0;
   MidiBankBass: byte = 0;
   Scene: integer = 0;
-  pipFirst: byte = 59;
-  pipSecond: byte = 69;
+  pipFirst: byte =  37;   // 59
+  pipSecond: byte = 69;       // 76
   pipChannel: byte = 9;
 
   VolumeDiscant: double = 0.9;
   VolumeBass: double = 0.9;
-  VolumeBegleitung: double = 0.8;
+  VolumeMetronom: double = 0.8;
   NurTakt: boolean = false;
   OhneBlinker: boolean = true;
 
@@ -411,8 +411,8 @@ begin
          (midiOutOpen(@lHandle, i, 0, 0, CALLBACK_NULL) = 0) then
       begin
         s := lOutCaps.szPname;                       
-        if (s = MicrosoftSync) or
-           (Pos(UM_ONE, s) > 0) then
+        if (s = MicrosoftSync){ or
+           (Pos(UM_ONE, s) > 0)} then
         begin
           MicrosoftIndex := fDeviceNames.Count;
           TrueMicrosoftIndex := MicrosoftIndex;
