@@ -178,7 +178,7 @@ type
     PRecordMidiIn: TRecordMidiIn;
     nextPip: TTime;
     pipDelay: TTime;
-    Begleitung: boolean;
+    Metronom: boolean;
     pipCount: integer;
     Header: TDetailHeader;
     UseTurboSound: boolean;
@@ -1321,7 +1321,7 @@ var
   end;
 
 begin
-  if Begleitung then
+  if Metronom then
   begin
     BPM := Header.beatsPerMin;
     mDiv := Header.measureDiv; // ist 4 oder 8
@@ -1342,7 +1342,7 @@ begin
       pip := pipSecond;
     if Now >= nextPip then
     begin
-      vol := 100*VolumeBegleitung;
+      vol := 100*VolumeMetronom;
       if vol > 126 then
         vol := 126;
       if pip > 0 then
@@ -1388,24 +1388,26 @@ begin
       Event.Index_ := -1;
       Event.Push_ := ShiftUsed;
       Event.Velocity := Data.Data2;
-
       if (Data.Status shr 4) = 11 then
       begin
         if(Data.Data1 = 64) or (Data.Data1 = ControlSustain) then
         begin
           Sustain_ := Data.Data2 > 0;
-          Key := 0;
-          frmAmpel.FormKeyDown(self, Key, []);
+          PaintBalg(Sustain_);
+//          Key := 0;
+ //         frmAmpel.FormKeyDown(self, Key, []);
         {$ifdef CONSOLE}
-          writeln('balg: ', Data.Data2);
+//          writeln('balg: ', Data.Data2);
         {$endif}
         end
         else
         if Data.Data1 = 0 then // Program Change
           MidiOutput.Send(MicrosoftIndex, Data.Status, Data.Data1, Data.Data2)
-//        else
-//        if (Data.Data1 = 11) {and IsLimex} then // Expression
-//          MidiOutput.Send(MicrosoftIndex, Data.Status, Data.Data1, Data.Data2)
+      {$ifndef CONSOLE}
+        else
+        if (Data.Data1 = 11) {and IsLimex} then // Expression
+          MidiOutput.Send(MicrosoftIndex, Data.Status, Data.Data1, Data.Data2)
+      {$endif}
       end else
       if ((Data.Status and $f) = 9) then
       begin
@@ -1561,8 +1563,8 @@ begin
     Data2 := aData2;
     Timestamp := t; // ms
   {$ifdef CONSOLE}
-    if ((Status shr 4) <> 11) or ((Data1 <> 31) and (Data1 <> 11)) then
-      writeln(Format('$%2.2x  %d  $%2.2x --' ,[Status, Data1, Data2]));
+  //  if ((Status shr 4) <> 11) or ((Data1 <> 31) and (Data1 <> 11)) then
+//      writeln(Format('$%2.2x  %d  $%2.2x --' ,[Status, Data1, Data2]));
   {$endif}
   end;
   MidiInBuffer.Put(rec);

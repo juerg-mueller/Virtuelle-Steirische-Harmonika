@@ -19,6 +19,10 @@ uses
   Ujson in 'Ujson.pas',
   UMidiSaveStream in 'UMidiSaveStream.pas';
 
+{$ifdef DEBUG}
+  {$APPTYPE CONSOLE}
+{$endif}
+
 {$R *.res}
 
 begin

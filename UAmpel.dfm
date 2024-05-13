@@ -2,8 +2,8 @@ object frmAmpel: TfrmAmpel
   Left = 400
   Top = 0
   Caption = 'Griff-Ampel'
-  ClientHeight = 561
-  ClientWidth = 610
+  ClientHeight = 560
+  ClientWidth = 606
   Color = clBtnFace
   Constraints.MinHeight = 400
   Constraints.MinWidth = 200
@@ -13,7 +13,6 @@ object frmAmpel: TfrmAmpel
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
-  OldCreateOrder = False
   Touch.InteractiveGestures = []
   Touch.InteractiveGestureOptions = []
   Touch.ParentTabletOptions = False
@@ -33,7 +32,6 @@ object frmAmpel: TfrmAmpel
   OnResize = FormResize
   OnShortCut = FormShortCut
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object lbUnten: TLabel
     Left = 310

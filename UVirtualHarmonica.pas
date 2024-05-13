@@ -174,7 +174,8 @@ end;
 procedure TfrmVirtualHarmonica.SaveMidi(var MidiRec: TMidiRecord);
 var
   Saved: boolean;
-  s: string;
+  s, n, ext: string;
+  j: integer;
   SaveStream: TMidiSaveStream;
 begin
   Saved := false;
@@ -182,15 +183,26 @@ begin
   FreeAndNil(MidiRec);
   if SaveStream <> nil then
   begin
+    s := SaveDialog1.FileName;
+    ext := ExtractFileExt(s);
+    if ext = '.mid' then
+      s := Copy(s, 1, length(s)-length(ext));
+    n := s + '.mid';
+    if FileExists(n) then
+    begin
+      j := 1;
+      repeat
+        n := s + '_' + IntToStr(j) + '.mid';
+        inc(j);
+      until not FileExists(n);
+    end;
+    SaveDialog1.FileName := n;
     while not Saved and SaveDialog1.Execute do
     begin
       s := SaveDialog1.FileName;
-      if ExtractFileExt(s) <> '.mid' then
-        s := s + '.mid';
       if not FileExists(s) or
         (Warning('Eine Datei mit diesem Namen existiert bereits! Überschreiben?') = IDYES) then
       begin
-
         SaveStream.SaveToFile(s);
         Saved := true;
       end;
@@ -459,7 +471,7 @@ begin
       cbxMidiOut.ItemIndex := TrueMicrosoftIndex+1;
 
     OpenMidiMicrosoft;
-    VolumeChange(127, [0..15]);
+//    VolumeChange(127, [0..15]);
     frmAmpel.InitLastPush;
   end;
 end;

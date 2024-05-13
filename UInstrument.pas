@@ -365,12 +365,12 @@ var
 
 begin
   max := Length(Node.List);
-  if max > 5 then
-    max := 5;
+  if max > 4 then
+    max := 4;
   for i := 1 to max do
     FillPitchArray(Col[i], Node.List[i-1]);
-  for i := max+1 to 5 do
-    FillPitchArray(Col[i], nil);
+//  for i := max+1 to 5 do
+//    FillPitchArray(Col[i], nil);
 end;
 
 function TVocalArray.SoundCount: integer; 
@@ -442,7 +442,7 @@ end;
 function GetPitchIndex(pitch: byte; const arr: TPitchArray): integer;
 begin
   result := 0;
-  while result >= 0 do
+  while (result >= 0) and (result <= High(arr)) do
   begin 
     if pitch = arr[result] then
       break;

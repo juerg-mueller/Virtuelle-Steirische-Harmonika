@@ -129,8 +129,8 @@ var
   pipSecond: byte = 69;       // 76
   pipChannel: byte = 9;
 
-  VolumeDiscant: double = 0.9;
-  VolumeBass: double = 0.9;
+  VolumeDiscant: double = 1.0;
+  VolumeBass: double = 1.0;
   VolumeMetronom: double = 0.8;
   NurTakt: boolean = false;
   OhneBlinker: boolean = true;
@@ -680,6 +680,7 @@ begin
       begin
         MidiOutput.Send(MicrosoftIndex, $B0 + i, 7, v);
         MidiOutput.Send(MicrosoftIndex, $B0 + i, 11, 127);
+        Sleep(10);
       end;
   end;
 end;
