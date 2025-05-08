@@ -9,21 +9,25 @@ interface
 {$define _JM}
 
 uses
-{$ifndef FPC}
-  Winapi.Windows, Winapi.Messages,
+{$ifdef mswindows}
+  {$ifndef FPC}
+    Winapi.Windows, Winapi.Messages, Vcl.ExtCtrls,
+  {$endif}
   Midi,
 {$else}
   Urtmidi,
 {$endif}
-  Forms, SyncObjs, SysUtils, Graphics, Controls, Dialogs,
+  UMidi, Forms, SyncObjs, SysUtils, Graphics, Controls, Dialogs,
   UInstrument, UMidiEvent, StdCtrls, UAmpel, Classes,
-  UMidiSaveStream, Vcl.ExtCtrls;
+  UMidiSaveStream;
 
 type
   TRecordEventArray = record
     TimeStamp: TDateTime;
     MidiEvent: TMidiEvent;
   end;
+
+  { TfrmVirtualHarmonica }
 
   TfrmVirtualHarmonica = class(TForm)
     gbMidi: TGroupBox;
@@ -53,10 +57,6 @@ type
     lbVolDiskant: TLabel;
     lbVolBass: TLabel;
     sbVolBass: TScrollBar;
-    gbSzene: TGroupBox;
-    cbxScene: TComboBox;
-    Label9: TLabel;
-    cbAccordionMaster: TCheckBox;
     btnReset: TButton;
     btnRecordOut: TButton;
     btnResetMidi: TButton;
@@ -77,6 +77,7 @@ type
     cbxLimex: TComboBox;
     Label13: TLabel;
     procedure cbTransInstrumentChange(Sender: TObject);
+    procedure cbxLimexChange(Sender: TObject);
     procedure cbxMidiInputChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -132,7 +133,7 @@ uses
 {$ifndef FPC}
   UVirtual,
 {$endif}
-  UFormHelper, UGriffEvent, UBanks;
+  UFormHelper, UBanks;
 
 {$ifdef FPC}
 const
@@ -147,7 +148,6 @@ procedure TfrmVirtualHarmonica.btnRecordInClick(Sender: TObject);
     gbMidi.Enabled := Ok;
     gbMidiInstrument.Enabled := Ok;
     gbMidiBass.Enabled := Ok;
-    gbSzene.Enabled := Ok;
     cbxMidiInput.Enabled := Ok;
   end;
 
@@ -219,7 +219,6 @@ procedure TfrmVirtualHarmonica.btnRecordOutClick(Sender: TObject);
     gbMidi.Enabled := Ok;
     gbMidiInstrument.Enabled := Ok;
     gbMidiBass.Enabled := Ok;
-    gbSzene.Enabled := Ok;
     cbxMidiOut.Enabled := Ok;
   end;
 
@@ -281,7 +280,7 @@ end;
 
 procedure TfrmVirtualHarmonica.cbAccordionMasterClick(Sender: TObject);
 begin
-  ChangeSzene(cbxScene.ItemIndex, cbAccordionMaster.Checked);
+//  ChangeSzene(cbxScene.ItemIndex, cbAccordionMaster.Checked);
 end;
 
 procedure TfrmVirtualHarmonica.cbTransInstrumentChange(Sender: TObject);
@@ -308,11 +307,16 @@ begin
   else
     s := 'Virtuelle Steirische Harmonika';
 {$if defined(CPUX86_64) or defined(WIN64)}
-//  s := s + ' (64)';
+  s := s + ' (64)';
 {$else}
   s := s + ' (32)';
 {$endif}
   Caption := s;
+end;
+
+procedure TfrmVirtualHarmonica.cbxLimexChange(Sender: TObject);
+begin
+  IsLimex := cbxLimex.ItemIndex = 1;
 end;
 
 procedure TfrmVirtualHarmonica.cbTransInstrumentKeyDown(Sender: TObject;
@@ -418,11 +422,11 @@ begin
   BankChange(Sender as TComboBox);
   cbxMidiDiskantChange(Sender);
 
-{  if MidiBankDiskant > 0 then
+  if MidiBankDiskant > 0 then
   begin
     if pipChannel <> 10 then
     begin
-      ChangeBank(MicrosoftIndex, 10, 21, 64);
+     ChangeBank(MicrosoftIndex, 10, 21, 64);
       pipChannel := 10;
     end;
   end else begin
@@ -431,7 +435,7 @@ begin
       ChangeBank(MicrosoftIndex, pipChannel, 0, 21);
       pipChannel := 9;
     end;
-  end; }
+  end;
 
 end;
 
@@ -466,12 +470,16 @@ begin
       MicrosoftIndex := -1
     else
     if iVirtualMidi <> cbxMidiOut.ItemIndex-1 then
+  {$ifdef mswindows}
       MicrosoftIndex := cbxMidiOut.ItemIndex-1
     else
       cbxMidiOut.ItemIndex := TrueMicrosoftIndex+1;
+  {$else}
+    MicrosoftIndex := cbxMidiOut.ItemIndex-1;
+  {$endif}
 
     OpenMidiMicrosoft;
-//    VolumeChange(127, [0..15]);
+    VolumeChange(127, [0..15]);
     frmAmpel.InitLastPush;
   end;
 end;
@@ -560,7 +568,6 @@ begin
 {$else}
   cbxDiskantBank.ItemIndex := 0;
   cbxBankBass.ItemIndex := 0;
-  gbSzene.Visible := false;
   gbRecord.Visible := true;
 {$endif}
 {
@@ -599,8 +606,10 @@ end;
 procedure TfrmVirtualHarmonica.FormResize(Sender: TObject);
 begin
   VertScrollBar.Visible := Height < VertScrollBar.Range;
+{$ifndef FPC}
   if VertScrollBar.Visible then
     VertScrollBar.Size := Height;
+{$endif}
 end;
 
 procedure TfrmVirtualHarmonica.FormShow(Sender: TObject);
@@ -638,7 +647,6 @@ begin
   frmAmpel.Show;
 end;
 
-{$ifdef FPC}
 procedure InsertList(Combo: TComboBox; const arr: array of string);
 var
   i: integer;
@@ -646,15 +654,6 @@ begin
   for i := 0 to Length(arr)-1 do
     Combo.AddItem(arr[i], nil);
 end;
-{$else}
-procedure InsertList(Combo: TComboBox; arr: TStringList);
-var
-  i: integer;
-begin
-  for i := 0 to arr.Count-1 do
-    Combo.AddItem(arr[i], nil);
-end;
-{$endif}
 
 procedure TfrmVirtualHarmonica.RegenerateMidi;
 begin
@@ -666,12 +665,6 @@ begin
   cbxMidiOut.Items.Insert(0, '');
   OpenMidiMicrosoft;
   cbxMidiOut.ItemIndex := MicrosoftIndex + 1;
-{$ifdef FPC}
-  cbxMidiInput.Visible := Length(MidiInput.DeviceNames) > 0;
-{$else}
-  cbxMidiInput.Visible := MidiInput.DeviceNames.Count > 0;
-{$endif}
-  lblKeyboard.Visible := cbxMidiInput.Visible;
   if cbxMidiInput.Visible then
   begin
     cbxMidiInput.Clear;
@@ -701,14 +694,12 @@ begin
   if Sender = sbVolDiscant then begin
     lbVolDiskant.Caption := s;
     VolumeDiscant := p;
- //   VolumeChange(p, [0..7]);
+    VolumeChange(p, [0..7]);
   end else
   if Sender = sbMetronom then begin
     lbBegleitung.Caption := s;
     VolumeMetronom := p;
   end;
-
-
 end;
 
 end.

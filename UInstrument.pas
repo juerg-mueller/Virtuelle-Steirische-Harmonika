@@ -215,7 +215,9 @@ function GetPitchIndex(Pitch: byte; const arr: TPitchArray): integer;
 implementation
 
 uses
-  AnsiStrings,
+  {$ifndef FPC}
+    AnsiStrings,
+  {$endif}
   UMyMemoryStream, UMyMidiStream, UFormHelper;
 
 
@@ -236,6 +238,7 @@ function TInstrument.GetMaxIndex(var Row: byte): integer;
 var
   i: integer;
 begin
+  row := 0;
   result := 6;
   for i := 1 to 4 do
     while Push.Col[i, result+1] > 0 do
@@ -249,6 +252,7 @@ function TInstrument.GetMinIndex(var Row: byte): integer;
 var
   i: integer;
 begin
+  row := 0;
   result := 6;
   for i := 1 to 4 do
     while (result > 0) and (Push.Col[i, result-1] > 0) do
@@ -314,7 +318,11 @@ var
   var
     i: integer;
   begin
+  {$ifdef FPC}
+    Note := LowerCase(Note);
+  {$else}
     Note := AnsiStrings.LowerCase(Note);
+  {$endif}
     if Note = '' then
     begin
       result := 0;
@@ -513,6 +521,8 @@ end;
 
 function TInstrument.SoundToGriff(const Pitch: byte; Push: boolean; var iCol, Index: integer): integer;
 begin
+  iCol := -1;
+  Index := -1;
   if Push then
     result := SoundToGriff(Pitch, self.Push, iCol, Index)
   else
@@ -887,7 +897,6 @@ var
   i: integer;
 begin
   SetLength(InstrumentsList_, 0);
-{$if defined(WIN32) or defined(WIN64)}
   DirList := TStringList.Create;
   if FindFirst(Path + '*.json', faNormal, SR) = 0 then
   begin
@@ -901,7 +910,7 @@ begin
     AddInstrument(Path + DirList[i]);
 
   DirList.Free;
-{$endif}
+
 {  if Length(InstrumentsList_) = 0 then
   begin
     Warning('No instruments found!'#10#13'The internal ones are therefore used.');
@@ -921,28 +930,6 @@ initialization
     ReadInstruments('instruments/');
 
 {$if defined(GenerateA_Oergeli)}
-  AddInstr(SteirischeBEsAsDes);
-  SteirischeADGC := SteirischeBEsAsDes;
-  SteirischeADGC.Transpose(-1);
-  SteirischeADGC.TransposedPrimes := 0;
-  SteirischeADGC.Sharp := true;
-  SteirischeADGC.Name := 'Steirische ADGC';
-  AddInstr(SteirischeADGC);
-
-  SteirischeGCFB := SteirischeBEsAsDes;
-  SteirischeGCFB.Transpose(-3);
-  SteirischeGCFB.TransposedPrimes := 0;
-  SteirischeGCFB.Sharp := true;
-  SteirischeGCFB.Name := 'Steirische GCFB';
-  AddInstr(SteirischeGCFB);
-
-  SteirischeCFBEs := SteirischeBEsAsDes;
-  SteirischeCFBEs.Transpose(2);
-  SteirischeCFBEs.TransposedPrimes := 0;
-  SteirischeCFBEs.Sharp := false;
-  SteirischeCFBEs.Name := 'Steirische CFBEs';
-  AddInstr(SteirischeCFBEs);
-
   SteirischeFBEsAs := SteirischeBEsAsDes;
   SteirischeFBEsAs.Transpose(-5);
   SteirischeFBEsAs.TransposedPrimes := 0;
@@ -957,12 +944,28 @@ initialization
   SteirischeFisHEA.Name := 'Steirische FisHEA';
   AddInstr(SteirischeFisHEA);
 
+  SteirischeGCFB := SteirischeBEsAsDes;
+  SteirischeGCFB.Transpose(-3);
+  SteirischeGCFB.TransposedPrimes := 0;
+  SteirischeGCFB.Sharp := true;
+  SteirischeGCFB.Name := 'Steirische GCFB';
+  AddInstr(SteirischeGCFB);
+
+  AddInstr(SteirischeBEsAsDes);
+
+  SteirischeADGC := SteirischeBEsAsDes;
+  SteirischeADGC.Transpose(-1);
+  SteirischeADGC.TransposedPrimes := 0;
+  SteirischeADGC.Sharp := true;
+  SteirischeADGC.Name := 'Steirische ADGC';
+  AddInstr(SteirischeADGC);
+
   SteirischeGisCisFisH := SteirischeBEsAsDes;
   SteirischeGisCisFisH.Transpose(-2);
   SteirischeGisCisFisH.TransposedPrimes := 0;
   SteirischeGisCisFisH.Sharp := false;
   SteirischeGisCisFisH.Name := 'Steirische GisCisFisH';
-  AddInstr(cis_Oergeli);
+  AddInstr(SteirischeGisCisFisH);
 
   SteirischeHEAD := SteirischeBEsAsDes;
   SteirischeHEAD.Transpose(1);
@@ -971,13 +974,33 @@ initialization
   SteirischeHEAD.Name := 'Steirische HEAD';
   AddInstr(SteirischeHEAD);
 
-  AddInstr(b_Oergeli);
-  a_Oergeli := b_Oergeli;
-  a_Oergeli.Transpose(-1);
-  a_Oergeli.TransposedPrimes := 0;
-  a_Oergeli.Sharp := true;
-  a_Oergeli.Name := 'a-Oergeli';
-  AddInstr(a_Oergeli);
+  SteirischeCFBEs := SteirischeBEsAsDes;
+  SteirischeCFBEs.Transpose(2);
+  SteirischeCFBEs.TransposedPrimes := 0;
+  SteirischeCFBEs.Sharp := false;
+  SteirischeCFBEs.Name := 'Steirische CFBEs';
+  AddInstr(SteirischeCFBEs);
+
+  gis_Oergeli := b_Oergeli;
+  gis_Oergeli.Transpose(-5);
+  gis_Oergeli.TransposedPrimes := 0;
+  gis_Oergeli.Sharp := true;
+  gis_Oergeli.Name := 'f-Oergeli';
+  AddInstr(gis_Oergeli);
+
+  gis_Oergeli := b_Oergeli;
+  gis_Oergeli.Transpose(-4);
+  gis_Oergeli.TransposedPrimes := 0;
+  gis_Oergeli.Sharp := true;
+  gis_Oergeli.Name := 'fis-Oergeli';
+  AddInstr(gis_Oergeli);
+
+  gis_Oergeli := b_Oergeli;
+  gis_Oergeli.Transpose(-3);
+  gis_Oergeli.TransposedPrimes := 0;
+  gis_Oergeli.Sharp := true;
+  gis_Oergeli.Name := 'g-Oergeli';
+  AddInstr(gis_Oergeli);
 
   gis_Oergeli := b_Oergeli;
   gis_Oergeli.Transpose(-2);
@@ -985,6 +1008,15 @@ initialization
   gis_Oergeli.Sharp := true;
   gis_Oergeli.Name := 'gis-Oergeli';
   AddInstr(gis_Oergeli);
+
+  a_Oergeli := b_Oergeli;
+  a_Oergeli.Transpose(-1);
+  a_Oergeli.TransposedPrimes := 0;
+  a_Oergeli.Sharp := true;
+  a_Oergeli.Name := 'a-Oergeli';
+  AddInstr(a_Oergeli);
+
+  AddInstr(b_Oergeli);
 
   h_Oergeli := b_Oergeli;
   h_Oergeli.Transpose(1);

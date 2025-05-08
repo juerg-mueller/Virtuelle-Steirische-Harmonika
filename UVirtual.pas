@@ -99,7 +99,7 @@ end;
 initialization
   MidiVersion := virtualMIDIGetVersion( dummy, dummy, dummy, dummy );
   MidiDriver := virtualMIDIGetDriverVersion( dummy, dummy, dummy, dummy );
-{$if defined(CONSOLE) and false}
+{$if defined(CONSOLE)}
   if MidiVersion = '' then
   begin
     writeln(virtualMIDIDllName, ' not installed!');

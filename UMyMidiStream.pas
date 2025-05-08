@@ -46,9 +46,6 @@ type
 
 implementation
 
-uses
-  UGriffEvent;
-
 procedure TMyMidiStream.MidiWait(Delay: integer);
 var
   NewTime: TDateTime;

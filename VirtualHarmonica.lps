@@ -7,34 +7,28 @@
       <Unit>
         <Filename Value="VirtualHarmonica.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
-        <CursorPos X="60" Y="12"/>
-        <UsageCount Value="24"/>
+        <EditorIndex Value="3"/>
+        <CursorPos X="32" Y="6"/>
+        <UsageCount Value="65"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="UInstrument.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
-        <WindowIndex Value="-1"/>
-        <TopLine Value="-1"/>
-        <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="24"/>
-      </Unit>
-      <Unit>
-        <Filename Value="urtmidi.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="Urtmidi"/>
-        <EditorIndex Value="-1"/>
-        <UsageCount Value="24"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="873"/>
+        <CursorPos X="49" Y="885"/>
+        <UsageCount Value="65"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="UMyMidiStream.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
-        <WindowIndex Value="-1"/>
-        <TopLine Value="-1"/>
-        <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="24"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="19"/>
+        <CursorPos Y="49"/>
+        <UsageCount Value="65"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="UMyMemoryStream.pas"/>
@@ -43,7 +37,7 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="24"/>
+        <UsageCount Value="65"/>
       </Unit>
       <Unit>
         <Filename Value="UMidiSaveStream.pas"/>
@@ -52,32 +46,23 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="24"/>
+        <UsageCount Value="65"/>
       </Unit>
       <Unit>
         <Filename Value="UMidiEvent.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
-        <WindowIndex Value="-1"/>
-        <TopLine Value="-1"/>
-        <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="24"/>
+        <TopLine Value="147"/>
+        <CursorPos X="77" Y="163"/>
+        <UsageCount Value="65"/>
       </Unit>
       <Unit>
         <Filename Value="UGriffEvent.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
-        <WindowIndex Value="-1"/>
-        <TopLine Value="-1"/>
-        <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="24"/>
-      </Unit>
-      <Unit>
-        <Filename Value="UFormHelper.pas"/>
-        <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
-        <CursorPos X="39" Y="7"/>
-        <UsageCount Value="24"/>
+        <TopLine Value="508"/>
+        <CursorPos X="34" Y="513"/>
+        <UsageCount Value="65"/>
       </Unit>
       <Unit>
         <Filename Value="UVirtualHarmonica.pas"/>
@@ -85,10 +70,12 @@
         <ComponentName Value="frmVirtualHarmonica"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="339"/>
-        <CursorPos X="20" Y="357"/>
-        <UsageCount Value="24"/>
+        <EditorIndex Value="8"/>
+        <TopLine Value="646"/>
+        <CursorPos Y="668"/>
+        <UsageCount Value="65"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="UBanks.pas"/>
@@ -97,7 +84,7 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="24"/>
+        <UsageCount Value="23"/>
       </Unit>
       <Unit>
         <Filename Value="UAmpel.pas"/>
@@ -105,17 +92,62 @@
         <ComponentName Value="frmAmpel"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <IsVisibleTab Value="True"/>
+        <TopLine Value="61"/>
+        <CursorPos X="37" Y="65"/>
+        <UsageCount Value="65"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="rtmidi.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="RtMidi"/>
+        <EditorIndex Value="7"/>
+        <CursorPos X="79" Y="11"/>
+        <UsageCount Value="46"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UFormHelper.pas"/>
+        <IsPartOfProject Value="True"/>
         <EditorIndex Value="-1"/>
-        <TopLine Value="389"/>
-        <CursorPos X="102" Y="408"/>
-        <UsageCount Value="24"/>
+        <CursorPos X="84" Y="12"/>
+        <UsageCount Value="62"/>
+      </Unit>
+      <Unit>
+        <Filename Value="umidi.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UMidi"/>
+        <EditorIndex Value="2"/>
+        <CursorPos X="51" Y="9"/>
+        <UsageCount Value="48"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Midi.pas"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="185"/>
+        <CursorPos Y="187"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="urtmidi.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Urtmidi"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="43"/>
+        <CursorPos Y="58"/>
+        <UsageCount Value="65"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="UVirtualHarmonica.lfm"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="356"/>
-        <UsageCount Value="20"/>
+        <UsageCount Value="19"/>
         <DefaultSyntaxHighlighter Value="LFM"/>
       </Unit>
       <Unit>
@@ -124,39 +156,269 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="20"/>
+        <UsageCount Value="19"/>
         <DefaultSyntaxHighlighter Value="LFM"/>
-      </Unit>
-      <Unit>
-        <Filename Value="Midi.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="60"/>
-        <CursorPos X="56" Y="84"/>
-        <UsageCount Value="12"/>
       </Unit>
       <Unit>
         <Filename Value="/usr/share/lazarus/2.2.0/lcl/include/customform.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="3108"/>
         <CursorPos X="22" Y="3125"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="10"/>
       </Unit>
       <Unit>
         <Filename Value="UVirtualHarmonica.dfm"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="133"/>
         <CursorPos X="3" Y="159"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <DefaultSyntaxHighlighter Value="LFM"/>
       </Unit>
+      <Unit>
+        <Filename Value="/usr/lib/lazarus/2.2.6/lcl/include/application.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="2151"/>
+        <CursorPos Y="2176"/>
+        <UsageCount Value="9"/>
+      </Unit>
+      <Unit>
+        <Filename Value="/usr/lib/lazarus/2.2.6/lcl/include/customform.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="2033"/>
+        <CursorPos Y="2040"/>
+        <UsageCount Value="9"/>
+      </Unit>
+      <Unit>
+        <Filename Value="/usr/lib/lazarus/2.2.6/lcl/lresources.pp"/>
+        <UnitName Value="LResources"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="3139"/>
+        <CursorPos Y="3155"/>
+        <UsageCount Value="9"/>
+      </Unit>
+      <Unit>
+        <Filename Value="/usr/lib/lazarus/2.2.6/lcl/include/control.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="3975"/>
+        <CursorPos Y="3993"/>
+        <UsageCount Value="9"/>
+      </Unit>
+      <Unit>
+        <Filename Value="/home/juerg/git/rtmidi/rtmidi_c.h"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="C++"/>
+      </Unit>
+      <Unit>
+        <Filename Value="/home/juerg/git/rtmidi/rtmidi_c.cpp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="94"/>
+        <UsageCount Value="9"/>
+        <DefaultSyntaxHighlighter Value="C++"/>
+      </Unit>
+      <Unit>
+        <Filename Value="/home/juerg/git/rtmidi/RtMidi.cpp"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="9"/>
+        <DefaultSyntaxHighlighter Value="C++"/>
+      </Unit>
+      <Unit>
+        <Filename Value="/usr/share/fpcsrc/3.2.2/rtl/wince/windows.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="25"/>
+        <CursorPos X="5" Y="44"/>
+        <UsageCount Value="9"/>
+      </Unit>
+      <Unit>
+        <Filename Value="D:/Downloads/Virtuelle-Steirische-Harmonika-main/urtmidi.pas"/>
+        <UnitName Value="Urtmidi"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="136"/>
+        <CursorPos Y="152"/>
+        <UsageCount Value="9"/>
+      </Unit>
+      <Unit>
+        <Filename Value="/home/juerg/Downloads/Virtuelle-Steirische-Harmonika-main/urtmidi.pas"/>
+        <UnitName Value="Urtmidi"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="188"/>
+        <CursorPos Y="219"/>
+        <UsageCount Value="10"/>
+      </Unit>
+      <Unit>
+        <Filename Value="/home/juerg/Downloads/Virtuelle-Steirische-Harmonika-main/UBanks.pas"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="20" Y="6"/>
+        <UsageCount Value="10"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../Akkordeon/uakkordeon.pas"/>
+        <ComponentName Value="Akkordeon"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="UAkkordeon"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="240"/>
+        <CursorPos X="21" Y="169"/>
+        <UsageCount Value="10"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../Akkordeon/Midi.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="280"/>
+        <UsageCount Value="10"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UVirtual.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="11"/>
+        <CursorPos X="3" Y="23"/>
+        <UsageCount Value="10"/>
+      </Unit>
+      <Unit>
+        <Filename Value="teVirtual/teVirtualMIDIdll.pas"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="20"/>
+      </Unit>
     </Units>
-    <General>
-      <ActiveWindowIndexAtStart Value="-1"/>
-    </General>
-    <JumpHistory HistoryIndex="-1"/>
+    <JumpHistory HistoryIndex="29">
+      <Position>
+        <Filename Value="umidi.pas"/>
+        <Caret Line="83" Column="11" TopLine="54"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="483" Column="5" TopLine="464"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="694" Column="88" TopLine="683"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Column="14"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="30" Column="16"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="32" Column="14"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="110" Column="25" TopLine="80"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="123" Column="35" TopLine="92"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="110" TopLine="87"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="703" Column="14" TopLine="675"/>
+      </Position>
+      <Position>
+        <Filename Value="umidi.pas"/>
+        <Caret Line="83" Column="11" TopLine="54"/>
+      </Position>
+      <Position>
+        <Filename Value="umidi.pas"/>
+        <Caret Line="103" Column="4" TopLine="69"/>
+      </Position>
+      <Position>
+        <Filename Value="umidi.pas"/>
+        <Caret Line="85" Column="3" TopLine="73"/>
+      </Position>
+      <Position>
+        <Filename Value="VirtualHarmonica.lpr"/>
+        <Caret Line="6" Column="32"/>
+      </Position>
+      <Position>
+        <Filename Value="VirtualHarmonica.lpr"/>
+        <Caret Line="6" Column="32"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="138" Column="86" TopLine="122"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="147" Column="98" TopLine="122"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="151" Column="14" TopLine="122"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="257" Column="19" TopLine="238"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="261" Column="22" TopLine="238"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="263" Column="19" TopLine="238"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="266" Column="16" TopLine="238"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="267" Column="16" TopLine="238"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="356" Column="41" TopLine="340"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="360" Column="15" TopLine="340"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="361" Column="29" TopLine="340"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="363" Column="35" TopLine="340"/>
+      </Position>
+      <Position>
+        <Filename Value="UVirtualHarmonica.pas"/>
+        <Caret Line="639" Column="21" TopLine="624"/>
+      </Position>
+      <Position>
+        <Filename Value="umidi.pas"/>
+        <Caret Line="85" Column="3" TopLine="72"/>
+      </Position>
+      <Position>
+        <Filename Value="Midi.pas"/>
+        <Caret Line="402" Column="29" TopLine="371"/>
+      </Position>
+    </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>
       <Modes ActiveMode=""/>
     </RunParams>
   </ProjectSession>
+  <Debugging>
+    <Watches>
+      <Item>
+        <Expression Value="begin"/>
+      </Item>
+      <Item>
+        <Expression Value="cbxMidiOut.ItemIndex"/>
+      </Item>
+      <Item>
+        <Expression Value="MicrosoftIndex"/>
+      </Item>
+    </Watches>
+  </Debugging>
 </CONFIG>

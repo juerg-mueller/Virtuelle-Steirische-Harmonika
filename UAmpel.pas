@@ -47,13 +47,18 @@ interface
 
 uses
 {$ifdef FPC}
-  urtmidi, lcltype, LCLIntf, lcl,
+  lcltype, LCLIntf, lcl,
 {$else}
+ // Vcl.ExtCtrls,
+{$endif}
+{$ifdef mswindows}
   Messages, Windows, Midi,
+{$else}
+  urtmidi,
 {$endif}
   Forms, SyncObjs, Graphics, Types, StdCtrls, Dialogs, Controls, SysUtils,
   Classes,
-  UMidiEvent, UInstrument, UGriffEvent, Menus, Vcl.ExtCtrls;
+  UMidiEvent, UInstrument, UGriffEvent, Menus, ExtCtrls;
 
 type
   TSoundGriff = procedure (Row: byte; index: byte; Push: boolean; On_:boolean) of object;
@@ -129,13 +134,15 @@ type
 
   PKeyDown = procedure (Sender: TObject; var Key: Word; Shift: TShiftState) of object;
 
+  { TfrmAmpel }
+
   TfrmAmpel = class(TForm)
     btnFlip: TButton;
     btnFlipHorz: TButton;
+    cbxNoteAnzeigen: TCheckBox;
     lbUnten: TLabel;
     cbxLinkshaender: TCheckBox;
     cbxVerkehrt: TCheckBox;
-    lbTastatur: TLabel;
     Timer1: TTimer;
     procedure FormPaint(Sender: TObject);
     procedure btnFlipClick(Sender: TObject);
@@ -160,8 +167,10 @@ type
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure Timer1Timer(Sender: TObject);
   private
+    KeyDown: PKeyDown;
     function MakeMouseDown(const P: TPoint; Push: boolean): TMouseEvent;
     function FlippedHorz: boolean;
+    procedure PaintNote(const rect: TRect; Pitch: byte);
   public
     Instrument: PInstrument;
     AmpelEvents: TAmpelEvents;
@@ -172,7 +181,6 @@ type
     KnopfGroesse: integer;
     MinIndex, MaxIndex: integer;
     PlayControl: PPlayControl;
-    KeyDown: PKeyDown;
     IsActive: boolean;
     MidiInBuffer: TMidiInBuffer;
     PRecordMidiIn: TRecordMidiIn;
@@ -222,7 +230,7 @@ uses
 {$if not defined(__VIRTUAL__) and defined(dcc)}
   UfrmGriff,
 {$endif}
-  UFormHelper, UVirtualHarmonica;
+  UFormHelper, UVirtualHarmonica, UMidi;
 
 procedure TMouseEvent.Clear;
 begin
@@ -267,7 +275,7 @@ end;
 
 procedure TAmpelEvents.SendMidiOut(const Status, Data1, Data2: byte);
 begin
-  SendSzene(Status, Data1, Data2);
+  SendMidi(Status, Data1, Data2);
   if @PRecordMidiOut <> nil then
     PRecordMidiOut(Status, Data1, Data2, trunc(24*3600*1000*now));
 end;
@@ -448,7 +456,7 @@ begin
       d := $40;
       if Event.Push_ and On_ then
         inc(d, $10);
-{$ifdef FPC}
+{$ifndef mswindows}
       MidiVirtual.Send(iVirtualMidi, c, b, d);
 {$else}
       MidiOutput.Send(iVirtualMidi, c, b, d);
@@ -489,7 +497,6 @@ begin
           d := d*VolumeDiscant;
         if d > 120 then
           d := 120;
-        //d := 127; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         di := trunc(d);
         SendMidiOut($90 + Row_ , Event.SoundPitch, di);
         if idx in [1..9] then
@@ -758,6 +765,7 @@ begin
   btnFlipClick(Sender);
   btnFlipHorzClick(Sender);
   Header.Clear;
+  Timer1.OnTimer := Timer1Timer;
 end;
 
 procedure TfrmAmpel.FormDeactivate(Sender: TObject);
@@ -847,10 +855,9 @@ var
   Push, Ctrl: boolean;
   Event: TMouseEvent;
 begin
-  if Key in [vk_Space] then
-  begin
+  if key = vk_Shift then begin
+    Sustain_ := ssShift in Shift;
     Key := 0;
-    exit;
   end;
   if Key in [vk_Left, vk_Right, vk_Up, vk_Down, vk_Tab,
              vk_Insert, vk_Delete] then
@@ -886,7 +893,7 @@ var
 begin
   if Key in [vk_Shift, vk_Control, vk_Capital] then
   begin
-    FormKeyDown(nil, Key, Shift);
+    FormKeyDown(Sender, Key, Shift);
     exit;
   end;
 
@@ -1177,12 +1184,40 @@ begin
   Height := lbUnten.Top + 100;
 end;
 
+procedure TfrmAmpel.PaintNote(const rect: TRect; Pitch: byte);
+const
+  Noten: array [0..11] of AnsiString =
+    ('C', 'Des', 'D', 'Es', 'E', 'F', 'Ges', 'G', 'As', 'A', 'B', 'H');
+var
+  s: string;
+  i, l, m: integer;
+begin
+  Canvas.Font.Color := $ffffff;
+  s := Noten[Pitch mod 12];
+  if Pitch >= 36 then
+  begin
+    if Pitch >= 48 then
+    begin
+      m := (Pitch div 12) - 3;
+      for i := 1 to m do
+        s := s + '''';
+    end;
+    inc(s[1], ord('a')-ord('A'));
+  end;
+  //s := IntToStr(Pitch);
+  l := Canvas.TextWidth(s);
+  Canvas.Font.Size := round(KnopfGroesse / 3.8);
+  m := KnopfGroesse - 2*Canvas.Font.Size;
+  Canvas.TextOut(rect.left + (KnopfGroesse-l) div 2, rect.Top + m div 2, s);
+end;
+
 procedure TfrmAmpel.PaintAmpel(Row: byte {1..6}; index: integer {0..12}; Push, On_: boolean);
 var
   rect: TRect;
+  Pitch: integer;
 begin
-
-  if (Instrument = nil) or (Instrument.GetPitch(Row, Index, Push) <= 0) then
+  Pitch := Instrument.GetPitch(Row, Index, Push);
+  if (Instrument = nil) or (Pitch <= 0) then
     exit;
 
   if (Row >= 5) and not Instrument.BassDiatonic then
@@ -1197,6 +1232,10 @@ begin
   else
     canvas.Brush.Color := $ffff00;
   canvas.Ellipse(rect);
+  if On_ and cbxNoteAnzeigen.Checked then
+  begin
+    PaintNote(rect, Pitch)
+  end;
 
   if ((index = 5) and (row = 2)) or
      ( Instrument.BassDiatonic and
@@ -1372,7 +1411,7 @@ begin
       if pipCount >= Header.measureFact then
         pipCount := 0;
     end;
-  end;
+  end; // Metronom
 
 //  MidiBufferTail := MidiBufferHead;
   while MidiInBuffer.Get(Data) do
@@ -1390,14 +1429,12 @@ begin
       Event.Velocity := Data.Data2;
       if (Data.Status shr 4) = 11 then
       begin
-        if(Data.Data1 = 64) or (Data.Data1 = ControlSustain) then
+        if {(Data.Data1 = 64) or} (Data.Data1 = ControlSustain) then
         begin
           Sustain_ := Data.Data2 > 0;
           PaintBalg(Sustain_);
-//          Key := 0;
- //         frmAmpel.FormKeyDown(self, Key, []);
         {$ifdef CONSOLE}
-//          writeln('balg: ', Data.Data2);
+      //    writeln('balg: ', Data.Status, '  ', Data.Data1, '  ', Data.Data2);
         {$endif}
         end
         else
@@ -1502,9 +1539,9 @@ begin
   // $77 stossen $78 ziehen
   if IsLimex and
      (cmd in [8, 9]) and         // On and Off
-     (channel in [0..2]) then    // Kanäle 1, 2, 3
+     (channel in [0..2]) then    // Kanäle 1, 2, 3 in die Kanäle 1 bis 6 umwandeln
   begin
-    // Der Limex-Code für MC-Score in den internen Code umwandeln.
+    // Den Limex-Code für MC-Score in den internen Code umwandeln.
     if (aData2 <= 100) and (cmd = 9) then
       inc(aData2, 27);
 
@@ -1554,7 +1591,8 @@ begin
     else
       channel := 6;  // 122
     aStatus := (aStatus and $f0) + channel;
-  end;
+  end; // IsLimex
+
   with rec do
   begin
     DeviceIndex := aDeviceIndex;

@@ -45,6 +45,7 @@ Const
 
 //  SustainPitch    = 26;
   ControlSustain  = $1f;   // + 3 für TRepeat
+  ControlPartiturStart = $1e;
 
 type
   TInt4 = array [0..3] of integer;

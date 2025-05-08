@@ -9,11 +9,15 @@ uses
   {$IFDEF HASAMIGA}
   athreads,
   {$ENDIF}
+  {$ifdef mswindows}
+  midi,
+  {$else}
+  RtMidi, Urtmidi,
+  {$endif}
   Interfaces, // this includes the LCL widgetset
-  Forms, UInstrument, Urtmidi, UMyMidiStream, UMyMemoryStream,
-  UMidiSaveStream, UMidiEvent, UGriffEvent, UFormHelper,
-  UBanks, UVirtualHarmonica, UAmpel
-  { you can add units after this };
+  Forms, UInstrument, UMyMidiStream, UMyMemoryStream,
+  UMidiSaveStream, UMidiEvent, UGriffEvent,
+  UVirtualHarmonica, UAmpel, UFormHelper, UBanks, UMidi;
 
 {$R *.res}
 

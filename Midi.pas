@@ -44,12 +44,13 @@ type
   // base class for MIDI devices
   TMidiDevices = class
   private
-    fDeviceNames: TStringList;
     fMidiResult: MMResult;
     procedure SetMidiResult(const Value: MMResult);
   protected
     property MidiResult: MMResult read fMidiResult write SetMidiResult;
   public
+    DeviceNames: array of string;
+    Handles: array of THandle;
     constructor Create; virtual;
     destructor Destroy; override;
     function GetHandle(const aDeviceIndex: TDeviceIndex): THandle;
@@ -58,8 +59,6 @@ type
     function IsOpen(const aDeviceIndex: integer) : boolean; virtual;
    // close all devices
     procedure CloseAll;
-    // the devices
-    property DeviceNames: TStringList read fDeviceNames;
   end;
 
   // MIDI input devices
@@ -99,6 +98,7 @@ type
     procedure Send(const aDeviceIndex: TDeviceIndex; const aStatus, aData1, aData2: byte);
     class procedure Free_Instance;
     procedure GenerateList;
+    Procedure Reset;
     function GetSysDeviceIndex(name: string): TSysDeviceIndex; 
   end;
 
@@ -109,38 +109,13 @@ type
   // MIDI output Devices
   function MidiOutput: TMidiOutput;
 
-//  procedure DoSoundPitch(Pitch: byte; On_: boolean);
-  procedure ResetMidiOut;
-
 const
   MicrosoftSync = 'Microsoft GS Wavetable Synth';
-//  UM_ONE = 'UM-ONE';
-  
+
+
 var
   MicrosoftIndex: integer = -1;
   TrueMicrosoftIndex: integer = -1;
-  MidiInstrDiskant: byte = $15; // Akkordeon
-  MidiInstrBass: byte = $15; // Akkordeon
-  BassBankActiv: boolean = false;
-  MidiBankDiskant: byte = 0;
-  MidiBankBass: byte = 0;
-  Scene: integer = 0;
-  pipFirst: byte =  37;   // 59
-  pipSecond: byte = 69;       // 76
-  pipChannel: byte = 9;
-
-  VolumeDiscant: double = 1.0;
-  VolumeBass: double = 1.0;
-  VolumeMetronom: double = 0.8;
-  NurTakt: boolean = false;
-  OhneBlinker: boolean = true;
-
-procedure OpenMidiMicrosoft;
-procedure SendSzene(Status, Data1, Data2: byte);
-procedure ChangeSzene(Index: integer; UseMasterAcc: boolean);
-procedure ChangeBank(Index, Channel, Bank, Instr: byte);
-procedure VolumeChange(vol: double; channels: TChannels);
-
 
 implementation
 
@@ -172,12 +147,12 @@ end;
 constructor TMidiDevices.Create;
 begin
   inherited;
-  fDeviceNames := TStringList.Create;
+  SetLength(DeviceNames, 0);
 end;
 
 destructor TMidiDevices.Destroy;
 begin
-  FreeAndNil(fDeviceNames);
+  SetLength(DeviceNames, 0);
   inherited;
 end;
 
@@ -193,10 +168,10 @@ end;
 
 function TMidiDevices.GetHandle(const aDeviceIndex: TDeviceIndex): THandle;
 begin
-  if not InRange(aDeviceIndex, 0, fDeviceNames.Count - 1) then
+  if (aDeviceIndex < 0) or (aDeviceIndex >= Length(DeviceNames)) then
     raise EMidiDevices.CreateFmt('%s: Device index out of bounds! (%d)', [ClassName,aDeviceIndex]);
 
-  Result := THandle(fDeviceNames.Objects[ aDeviceIndex ]);
+  Result := Handles[aDeviceIndex];
 end;
 
 
@@ -259,7 +234,7 @@ begin
     MidiResult := midiInReset(Handle);
     MidiResult := midiInUnprepareHeader(Handle, @TSysExData(fSysExData[aDeviceIndex]).SysExHeader, SizeOf(TMidiHdr));
     MidiResult := midiInClose(Handle);
-    fDeviceNames.Objects[aDeviceIndex] := nil;
+    Handles[aDeviceIndex] := 0;
   end;
 end;
                          
@@ -267,7 +242,7 @@ procedure TMidiDevices.CloseAll;
 var
   i: integer;
 begin
-  for i:= 0 to fDeviceNames.Count - 1 do
+  for i:= 0 to Length(DeviceNames) - 1 do
     Close(i);
 end;
 
@@ -280,10 +255,11 @@ procedure TMidiInput.GenerateList;
 var
   lInCaps: TMidiInCaps;
   lHandle: THandle;
-  i: integer;
+  i, l: integer;
 begin
   CloseAll;
-  fDeviceNames.Clear;
+  SetLength(DeviceNames, 0);
+  SetLength(Handles, 0);
   fSysExData.Clear;
 
  // midiInGetNumDevs does not update!!!
@@ -292,15 +268,18 @@ begin
     MidiResult := midiInGetDevCaps(i, @lInCaps, SizeOf(TMidiInCaps));
     if MidiResult = 0 then
     begin
-      if not IsCreativeSoundBlaster(lInCaps.szPname) and
+      if //not IsCreativeSoundBlaster(lInCaps.szPname) and
          (midiInOpen(@lHandle, i, 0, 0, CALLBACK_NULL) = 0) then
       begin
     {$if defined(CONSOLE)}
-        writeln('midi input ', fDeviceNames.Count, ': ', lInCaps.szPname);
+        writeln('midi input ', length(DeviceNames), ': ', lInCaps.szPname);
     {$endif}
-        midiInClose(lHandle);
-        fDeviceNames.Add(StrPas(lInCaps.szPname));
+        l := length(DeviceNames);
+        SetLength(DeviceNames, l+1);
+        SetLength(Handles, l+1);
+        DeviceNames[l] := lInCaps.szPname;
         fSysExData.Add(TSysExData.Create);
+        midiInClose(lHandle);
       end;
     end;
   end;
@@ -340,7 +319,7 @@ begin
   if Index >= 0 then
   begin
     MidiResult := midiInOpen(@lHandle, Index, cardinal(@midiInCallback), aDeviceIndex, CALLBACK_FUNCTION);
-    fDeviceNames.Objects[ aDeviceIndex ] := TObject(lHandle);
+    Handles[ aDeviceIndex ] := lHandle;
     lSysExData := TSysExData(fSysExData[aDeviceIndex]);
 
     lSysExData.SysExHeader.dwFlags := 0;
@@ -387,20 +366,21 @@ begin
   begin
     Handle := GetHandle(aDeviceIndex);
     MidiResult := midiOutClose(Handle);
-    fDeviceNames.Objects[ aDeviceIndex ] := nil;
+    Handles[ aDeviceIndex ] := 0;
   end;
 end;
 
 procedure TMidiOutput.GenerateList;
 var
-  i: integer;
+  i, l: integer;
   lOutCaps: TMidiOutCaps;
   lHandle: THandle;
   s: string;
 begin
   CloseAll;
-  fDeviceNames.Clear;
-  
+  SetLength(DeviceNames, 0);
+  SetLength(Handles, 0);
+
   // midiOutGetNumDevs does not update!!!
   for i := 0 to integer(midiOutGetNumDevs) - 1 do
   begin
@@ -410,16 +390,20 @@ begin
       if not IsCreativeSoundBlaster(lOutCaps.szPname) and
          (midiOutOpen(@lHandle, i, 0, 0, CALLBACK_NULL) = 0) then
       begin
-        s := lOutCaps.szPname;                       
+        l := length(DeviceNames);
+        SetLength(DeviceNames, l+1);
+        SetLength(Handles, l+1);
+        DeviceNames[l] := lOutCaps.szPname;
+        s := lOutCaps.szPname;
         if (s = MicrosoftSync){ or
            (Pos(UM_ONE, s) > 0)} then
         begin
-          MicrosoftIndex := fDeviceNames.Count;
+          MicrosoftIndex := l;
           TrueMicrosoftIndex := MicrosoftIndex;
 {$if defined(CONSOLE)}
           writeln('Index for ', MicrosoftSync, ' ', MicrosoftIndex);
         end else
-          writeln('midi output ', fDeviceNames.Count, ': ', s);
+          writeln('midi output ', length(DeviceNames), ': ', s);
 {$else}
         end;
 {$endif}
@@ -428,7 +412,6 @@ begin
        //  MIDICAPS_CACHE           = $0004;
        //  MIDICAPS_STREAM          = $0008;  { driver supports midiStreamOut directly }
        //  writeln(IntToHex(lOutCaps.dwSupport));
-        fDeviceNames.Add(lOutCaps.szPname);
         midiOutClose(lHandle);
       end;
     end;
@@ -472,7 +455,7 @@ begin
   if Index >= 0 then
   begin
     MidiResult := midiOutOpen(@lHandle, Index, 0, 0, CALLBACK_NULL);
-    fDeviceNames.Objects[ aDeviceIndex ] := TObject(lHandle);
+    Handles[ aDeviceIndex ] := lHandle;
   end;
 end;
 
@@ -480,8 +463,8 @@ procedure TMidiOutput.Send(const aDeviceIndex: TDeviceIndex; const aStatus, aDat
 var
   lMsg: cardinal;
 begin
-  if (aDeviceIndex < 0) or
-     not assigned(fDeviceNames.Objects[ aDeviceIndex ]) then
+  if (aDeviceIndex < 0) or (length(Handles) <= aDeviceIndex) or
+     (Handles[ aDeviceIndex ] = 0) then
     exit;
 
   lMsg := aStatus + (aData1 * $100) + (aData2 * $10000);
@@ -491,6 +474,17 @@ begin
 {$endif}
 end;
 
+procedure TMidiOutput.Reset;
+  var
+    i: integer;
+begin
+  for i := 0 to 15 do
+  begin
+    Sleep(5);
+    Send(MicrosoftIndex, $B0 + i, 120, 0);  // all sound off
+  end;
+  Sleep(5);
+end;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -520,170 +514,6 @@ begin
   end;
 end;
 }
-procedure ResetMidiOut;
-var
-  i: integer;
-begin
-  if MicrosoftIndex >= 0 then
-  begin
-    if MidiOutput.IsOpen(MicrosoftIndex) then
-      for i := 0 to 15 do
-      begin
-        MidiOutput.Send(MicrosoftIndex, $B0 + i, 120, 0);  // all sound off
-      end;
-  end;
-end;
-
-procedure ChangeBank(Index, Channel, Bank, Instr: byte);
-begin
-  MidiOutput.Send(Index, $b0 + Channel, 0, Bank);  // 0x32, LSB Bank);
-  MidiOutput.Send(Index, $c0 + Channel, Instr, 0);
-end;
-
-// Drum Kit: Channel 10
-// Program pp:  C9 pp
-
-// Trompete  Klarinette  Gitarre   Akkordeon
-// 12            16        07         41
-// 00            00        04         61
-// 0             -5         0          0
-type
-  Accord = record
-    Channel: byte;
-    Bank: byte;
-    Instr: byte;
-    Delta: integer;
-    Velo: integer;      // in %
-  end;
-
-  AccordArr = array [0..4] of Accord;
-
-const
-
-  tx : AccordArr =
-    (
-      (Channel: 1; Bank: 12; Instr: 0; Delta: 3; Velo: -5),
-      (Channel: 2; Bank: 17; Instr: 0; Delta: -5; Velo: -5),
-      (Channel: 3; Bank: 7; Instr: 4; Delta: 0; Velo: -5),
-      (Channel: 4; Bank: 41; Instr: 61; Delta: 0),
-      ()
-    );
-
-    tx0 : AccordArr =
-    (
-      (Channel: 1; Bank: 0; Instr: 56; Delta: 3; Velo: -5),
-      (Channel: 2; Bank: 0; Instr: 71; Delta: -5; Velo: -5),
-      (Channel: 3; Bank: 0; Instr: 24; Delta: 0; Velo: -5),
-      (Channel: 4; Bank: 0; Instr: 21; Delta: 0),
-      ()
-    );
-
-  ty : AccordArr =
-    (
-      (Channel: 5; Bank: 15; Instr: 27; Delta: 0),  // Bariton
-      (Channel: 6; Bank: 19; Instr: 7; Delta: 0),  // E-Bass
-      (Channel: 7; Bank: 7; Instr: 4; Delta: 0),   // Akkordenbass
-      (Channel: 8; Bank: 41; Instr: 61; Delta: 0),  // Gitarre
-      ()
-    );
-
-var
-  AccDiskant: AccordArr;
-  AccBass: AccordArr;
-
-procedure SendSzene(Status, Data1, Data2: byte);
-var
-  i: integer;
-
-   procedure Send(const Acc: Accord);
-   var
-     d1, d2: integer;
-   begin
-     if Acc.Channel > 0 then
-     begin
-       d1 := Data1 + Acc.Delta;
-       if not (d1 in [0 .. 127]) then
-         d1 := Data1;
-       d2 := round(Data2*(100 + Acc.Velo)/100.0) ;
-       if not (d2 in [0 .. 127]) then
-         d2 := Data2;
-       MidiOutput.Send(MicrosoftIndex, (Status and $f0) or Acc.Channel, d1, d2);
-     end;
-   end;
-
-begin
-  if (MicrosoftIndex >= 0) then
-  begin
-    if Scene <= 0 then
-      MidiOutput.Send(MicrosoftIndex, Status, Data1, Data2)
-    else begin
-      if (Status and $f) < 5 then
-      begin
-        for i := 0 to High(AccDiskant) do
-          Send(AccDiskant[i]);
-      end else begin
-        for i := 0 to High(AccBass) do
-          Send(AccBass[i]);
-      end;
-    end;
-  end;
-end;
-
-procedure OpenMidiMicrosoft;
-var
-  i: integer;
-begin
-  if MicrosoftIndex >= 0 then
-  begin
-    MidiOutput.Open(MicrosoftIndex);
-    try
-      for i := 0 to 9 do
-        if (i > 4) and BassBankActiv then
-          ChangeBank(MicrosoftIndex, i, MidiBankBass, MidiInstrBass)
-        else
-          ChangeBank(MicrosoftIndex, i, MidiBankDiskant, MidiInstrDiskant);
-    finally
-    end;
-  {$if defined(CONSOLE)}
-    writeln('Midi Port-', MicrosoftIndex, ' opend');
-  {$endif}
-  end;
-end;
-
-procedure ChangeSzene(Index: integer; UseMasterAcc: boolean);
-begin
-  Scene := Index;
-  if UseMasterAcc then
-  begin
-    AccDiskant := tx;
-  end else begin
-    AccDiskant := tx0;
-  end;
-  AccBass := ty;
-
-  OpenMidiMicrosoft;
-end;
-
-procedure VolumeChange(vol: double; channels: TChannels);
-var
-  v: byte;
-  i: integer;
-begin
-  if MicrosoftIndex >= 0 then
-  begin
-    vol := 127*vol*0.75 + 32;
-    if vol > 127 then
-      vol := 127;
-    v := trunc(vol);
-    for i := 0 to 15 do
-      if i in channels then
-      begin
-        MidiOutput.Send(MicrosoftIndex, $B0 + i, 7, v);
-        MidiOutput.Send(MicrosoftIndex, $B0 + i, 11, 127);
-        Sleep(10);
-      end;
-  end;
-end;
 
 initialization
   gMidiInput := nil;

@@ -14,7 +14,7 @@ uses
 
 type
 
-  TOnMidiInData = procedure (aDeviceIndex: LongInt; aStatus, aData1, aData2: byte; Timestamp: Int64) of object;
+  TOnMidiInData = procedure (aDeviceIndex: integer; aStatus, aData1, aData2: byte; Timestamp: Int64) of object;
   TOnSysExData = procedure (aDeviceIndex: integer; const aStream: TMemoryStream) of object;
 
   TMidiOutput = class
@@ -56,19 +56,20 @@ var
 
   MicrosoftIndex: integer = -1;
 
+procedure SendSzene(Status, Data1, Data2: byte);
+
+
 implementation
 
 constructor TMidiOutput.Create(Name: PChar);
 begin
-  if @rtmidi_out_create <> nil then
-    MidiOut := rtmidi_out_create(RTMIDI_API_LINUX_ALSA, Name);
+  MidiOut := rtmidi_out_create(RTMIDI_API_LINUX_ALSA, Name);
 end;
 
 destructor TMidiOutput.Destroy;
 begin
   CloseAll;
-  if MidiOut <> nil then
-    rtmidi_out_free(MidiOut);
+  rtmidi_out_free(MidiOut);
 
   inherited;
 end;
@@ -80,14 +81,12 @@ end;
 
 procedure TMidiOutput.Open(Index: integer);
 begin
-  if @rtmidi_open_port <> nil then
-    rtmidi_open_port(MidiOut, Index, '');
+  rtmidi_open_port(MidiOut, Index, '');
 end;
 
 procedure TMidiOutput.Close(Index: integer);
 begin
-  if @rtmidi_close_port <> nil then
-    rtmidi_close_port(MidiOut);
+  rtmidi_close_port(MidiOut);
 end;
 
 procedure TMidiOutput.GenerateList;
@@ -96,17 +95,15 @@ var
   c: array [0..255] of AnsiChar;
   len: integer;
 begin
-  if @rtmidi_get_port_count <> nil then
+  Count := rtmidi_get_port_count(MidiOut);
+  SetLength(DeviceNames, Count);
+  for i := 0 to count-1 do
   begin
-    Count := rtmidi_get_port_count(MidiOut);
-    SetLength(DeviceNames, Count);
-    for i := 0 to count-1 do
-    begin
-      len := 254;
-      rtmidi_get_port_name(MidiOut, i, c, len);
-      DeviceNames[i] := c;
-    end;
+    len := 254;
+    rtmidi_get_port_name(MidiOut, i, c, len);
+    DeviceNames[i] := c;
   end;
+
 end;
 
 procedure TMidiOutput.Send(Index: integer; command, d1, d2: byte);
@@ -123,7 +120,6 @@ begin
     dec(l);
   if MidiOut <> nil then
     rtmidi_out_send_message(MidiOut, @b, l);
-  writeln(IntToHex(command), '  ', d1, '  ', d2);
 end;
 
 procedure TMidiOutput.Reset;
@@ -143,16 +139,13 @@ end;
 
 constructor TMidiInput.Create(Name: PChar);
 begin
-  MidiIn := nil;
-  if @rtmidi_in_create <> nil then
-    MidiIn := rtmidi_in_create(RTMIDI_API_LINUX_ALSA, Name, 10240);
+  MidiIn := rtmidi_in_create(RTMIDI_API_LINUX_ALSA, Name, 10240);
 end;
 
 destructor TMidiInput.Destroy;
 begin
   CloseAll;
-  if MidiIn <> nil then
-    rtmidi_in_free(MidiIn);
+  rtmidi_in_free(MidiIn);
 end;
 
 procedure Callback(TimeStamp: double; const message: PChar; userData: pointer); cdecl;
@@ -163,20 +156,14 @@ end;
 
 procedure TMidiInput.Open(Index: integer);
 begin
-  if @rtmidi_open_port <> nil then
-  begin
-    rtmidi_open_port(MidiIn, Index, '');
-    rtmidi_in_set_callback(MidiIn, @Callback, self);
-  end;
+  rtmidi_open_port(MidiIn, Index, '');
+  rtmidi_in_set_callback(MidiIn, @Callback, self);
 end;
 
 procedure TMidiInput.Close(Index: integer);
 begin
-  if MidiIn <> nil then
-  begin
-    rtmidi_in_cancel_callback(MidiIn);
-    rtmidi_close_port(MidiIn);
-  end;
+  rtmidi_in_cancel_callback(MidiIn);
+  rtmidi_close_port(MidiIn);
 end;
 
 procedure TMidiInput.CloseAll;
@@ -190,28 +177,28 @@ var
   c: array [0..255] of char;
   len:integer;
 begin
-  Count := 0;
+  Count := rtmidi_get_port_count(MidiIn);
   SetLength(DeviceNames, Count);
-  if (@rtmidi_get_port_count <> nil) then
+  for i := 0 to count-1 do
   begin
-    Count := rtmidi_get_port_count(MidiIn);
-    SetLength(DeviceNames, Count);
-    for i := 0 to count-1 do
-    begin
-      len := 255;
-      rtmidi_get_port_name(MidiIn, i, c, len);
-      DeviceNames[i] := c;
-    end;
+    len := 255;
+    rtmidi_get_port_name(MidiIn, i, c, len);
+    DeviceNames[i] := c;
   end;
 end;
 
+procedure SendSzene(Status, Data1, Data2: byte);
+begin
+  if (MicrosoftIndex >= 0) then
+    MidiOutput.Send(MicrosoftIndex, Status, Data1, Data2);
+end;
 
 initialization
 
 
-  MidiOutput := TMidiOutput.Create;
-  MidiVirtual := TMidiOutput.Create;
-  MidiInput := TMidiInput.Create;
+    MidiOutput := TMidiOutput.Create;
+    MidiVirtual := TMidiOutput.Create;
+    MidiInput := TMidiInput.Create;
 
 
 finalization

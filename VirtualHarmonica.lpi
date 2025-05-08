@@ -11,7 +11,6 @@
       <XPManifest>
         <DpiAware Value="True"/>
       </XPManifest>
-      <Icon Value="0"/>
     </General>
     <BuildModes>
       <Item Name="Default" Default="True"/>
@@ -38,11 +37,6 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="urtmidi.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="Urtmidi"/>
-      </Unit>
-      <Unit>
         <Filename Value="UMyMidiStream.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
@@ -63,10 +57,6 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="UFormHelper.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
         <Filename Value="UVirtualHarmonica.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmVirtualHarmonica"/>
@@ -84,6 +74,29 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
+      <Unit>
+        <Filename Value="rtmidi.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="RtMidi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UFormHelper.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="umidi.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UMidi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Midi.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="urtmidi.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Urtmidi"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -93,10 +106,22 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="/home/juerg/Downloads/Virtuelle-Steirische-Harmonika-main"/>
+      <Libraries Value="."/>
+      <OtherUnitFiles Value="/home/juerg/Downloads/Virtuelle-Steirische-Harmonika-main/"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
+    <CodeGeneration>
+      <Checks>
+        <IOChecks Value="True"/>
+        <RangeChecks Value="True"/>
+        <OverflowChecks Value="True"/>
+        <StackChecks Value="True"/>
+      </Checks>
+    </CodeGeneration>
     <Linking>
+      <Debugging>
+        <DebugInfoType Value="dsDwarf3"/>
+      </Debugging>
       <Options>
         <Win32>
           <GraphicApplication Value="True"/>
