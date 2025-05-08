@@ -38,3 +38,12 @@ Das V3 Sound-Modul Accordion Master XXL lässt sich konfigurieren
 MIDI-Bank und -Programm können für Diskant- und Bassseite getrennt konfiguriert werden und ganz speziell für den Accordion Master XXL.
 
 https://www.youtube.com/watch?v=_RV61uIS8g4
+
+
+
+Erweiterung vom 8. 5. 2025:
+---------------------------
+
+Das Projekt kann mit Delphi oder mit Lazarus compiliert werden.
+
+Bei der Knopf-Abbildung gibt es neu: "Note anzeigen". 
