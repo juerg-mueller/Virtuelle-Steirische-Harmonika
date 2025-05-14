@@ -139,11 +139,11 @@ type
   TfrmAmpel = class(TForm)
     btnFlip: TButton;
     btnFlipHorz: TButton;
-    cbxNoteAnzeigen: TCheckBox;
     lbUnten: TLabel;
     cbxLinkshaender: TCheckBox;
     cbxVerkehrt: TCheckBox;
     Timer1: TTimer;
+    cbxNoteAnzeigen: TCheckBox;
     procedure FormPaint(Sender: TObject);
     procedure btnFlipClick(Sender: TObject);
     procedure btnFlipHorzClick(Sender: TObject);
@@ -1421,6 +1421,11 @@ begin
     else
     if (Data.Status shr 4) in [8, 9, 11] then
     begin
+      if ((Data.Status shr 4) = 9) and (Data.Data2 = 0) then
+      begin
+        dec(Data.Status, $10);
+        Data.Data2 := 64;
+      end;
       Event.Clear;
       Event.Pitch := Data.Data1;
       Event.Row_ := (Data.Status and $f);

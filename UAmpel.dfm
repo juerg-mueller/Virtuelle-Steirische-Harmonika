@@ -46,19 +46,6 @@ object frmAmpel: TfrmAmpel
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object lbTastatur: TLabel
-    Left = 8
-    Top = 5
-    Width = 64
-    Height = 14
-    Caption = 'PC-Tastatur'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -12
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
-  end
   object btnFlip: TButton
     Left = 300
     Top = 47
@@ -103,11 +90,23 @@ object frmAmpel: TfrmAmpel
   end
   object cbxVerkehrt: TCheckBox
     Left = 8
-    Top = 33
+    Top = 34
     Width = 64
     Height = 17
     Caption = 'verkehrt'
     TabOrder = 3
+    OnClick = cbxLinkshaenderClick
+    OnKeyDown = FormKeyDown
+    OnKeyPress = FormKeyPress
+    OnKeyUp = FormKeyUp
+  end
+  object cbxNoteAnzeigen: TCheckBox
+    Left = 8
+    Top = 2
+    Width = 94
+    Height = 17
+    Caption = 'Note anzeigen'
+    TabOrder = 4
     OnClick = cbxLinkshaenderClick
     OnKeyDown = FormKeyDown
     OnKeyPress = FormKeyPress
