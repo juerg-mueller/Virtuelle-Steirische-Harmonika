@@ -3,31 +3,23 @@
 interface
 
 type
-{$ifdef FPC}
   TArrayOfString = array of string;
-{$else}
-  TArrayOfString = TArray<string>;
-{$endif}
   PArrayOfString = ^TArrayOfString;
 
 
 const
   bank_list: TArrayOfString =
-  {$ifdef FPC}
     (
-  {$else}
-    [
-  {$endif}
-      '0 - General Midi',
-      '1 - Piano',
-      '2 - E-Piano',
-      '3 - Organ',
-      '4 - Organ - Drawbar Registrations',
-      '5 - Perc. Tuned Instr.',
-      '6 - String Instr.',
-      '7 - Guitar',
-      '8 - Harmonica and more',
-      '9 - Full Strings & Disco Strings',
+      '00 - General Midi',
+      '01 - Piano',
+      '02 - E-Piano',
+      '03 - Organ',
+      '04 - Organ - Drawbar Registrations',
+      '05 - Perc. Tuned Instr.',
+      '06 - String Instr.',
+      '07 - Guitar',
+      '08 - Harmonica and more',
+      '09 - Full Strings & Disco Strings',
       '10 - Solo Strings',
       '11 - Synth Strings',
       '12 - Brass Solo',
@@ -56,11 +48,8 @@ const
       '84 - Herzing Guitarr',
       '98 - Model Herzing',
       '99 - Herzing Organ'
-  {$ifdef FPC}
     );
-  {$else}
-    ];
-  {$endif}
+
 
 procedure GetBank(var Bank: TArrayOfString; BankNr: integer);
 procedure CopyBank(var Bank: TArrayOfString; Bank_: PArrayOfString);
@@ -74,12 +63,8 @@ type
   TBanks = array [0..99] of PArrayOfString;
 
 const
-  {$ifdef FPC}
-  s0: TArrayOfString = (
-  {$else}
-   s0: TArray<string> = [
-  {$endif}
-      '0 Acoustic Grand Piano (Fluegel)',
+  s0: TArrayOfString =
+    ( '0 Acoustic Grand Piano (Flügel)',
       '1 Bright Acoustic Piano (Klavier)',
       '2 Electric Grand Piano',
       '3 Honky-tonk',
@@ -93,7 +78,7 @@ const
       '11 Vibraphone',
       '12 Marimba',
       '13 Xylophone',
-      '14 Tubular Bells (Roehrenglocken)',
+      '14 Tubular Bells (Röhrenglocken)',
       '15 Dulcimer (Hackbrett)',
       '16 Drawbar Organ (Hammond)',
       '17 Percussive Organ',
@@ -107,8 +92,8 @@ const
       '25 Acoustic Guitar (Steel - Stahl)',
       '26 Electric Guitar (Jazz)',
       '27 Electric Guitar (clean - sauber)',
-      '28 Electric Guitar (muted - gedaempft)',
-      '29 Overdriven Guitar (uebersteuert)',
+      '28 Electric Guitar (muted - gedämpft)',
+      '29 Overdriven Guitar (übersteuert)',
       '30 Distortion Guitar (verzerrt)',
       '31 Guitar harmonics (Harmonien)',
       '32 Acoustic Bass',
@@ -138,9 +123,9 @@ const
       '56 Trumpet (Trompete)',
       '57 Trombone (Posaune)',
       '58 Tuba',
-      '59 Muted Trumpet (gedaempfe Trompete)',
-      '60 French Horn (franzoesisches Horn)',
-      '61 Brass Section (Blaesersatz)',
+      '59 Muted Trumpet (gedämpfe Trompete)',
+      '60 French Horn (französisches Horn)',
+      '61 Brass Section (Bläsersatz)',
       '62 SynthBrass 1',
       '63 SynthBrass 2',
       '64 Soprano Sax',
@@ -152,15 +137,15 @@ const
       '70 Bassoon (Fagott)',
       '71 Clarinet',
       '72 Piccolo',
-      '73 Flute (Floete)',
-      '74 Recorder (Blockfloete)',
+      '73 Flute (Flöte)',
+      '74 Recorder (Blockflöte)',
       '75 Pan Flute',
       '76 Blown Bottle',
       '77 Shakuhachi',
       '78 Whistle (Pfeifen)',
       '79 Ocarina',
       '80 Square (Rechteck)',
-      '81 Sawtooth (Saegezahn)',
+      '81 Sawtooth (Sägezahn)',
       '82 Calliop',
       '83 Chiff',
       '84 Charang',
@@ -198,7 +183,7 @@ const
       '116 Taiko Drum',
       '117 Melodic Tom',
       '118 Synth Drum',
-      '119 Reverse Cymbal (Becken rueckwaerts)',
+      '119 Reverse Cymbal (Becken rückwärts)',
       '120 Guitar Fret. Noise (Gitarrensaitenquitschen)',
       '121 Breath Noise (Atem)',
       '122 Seashore (Meeresbrandung)',
@@ -207,18 +192,10 @@ const
       '125 Helicopter',
       '126 Applause',
       '127 Gun Shot (Gewehrschuss)'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s1: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Grand Piano',
       '2 Rock Piano',
       '4 Classic Grand Piano',
@@ -232,19 +209,11 @@ const
       '100 Grand Piano - pp samples only',
       '101 Grand Piano - p samples only',
       '102 Grand Piano - mp samples only'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s2: TArrayOfString =
-   {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
-     '0 Electric Grand',
+      (
+      '0 Electric Grand',
       '1 Electric Grand & Mic. Attack',
       '2 Electric Grand MKS',
       '3 Electric Grand Mic. Attack - curved velocity - layer this sound',
@@ -272,19 +241,11 @@ const
       '25 E-Piano FM - Vibrato 2',
       '26 E-Piano FM - Layered Pad',
       '27 E-Piano FM - Layered Bell & Pad'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s3: TArrayOfString =
-   {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
-     '0 Organ 776555678 - slow Rotary',
+      (
+      '0 Organ 776555678 - slow Rotary',
       '1 Organ 776555678 - fast Rotary',
       '2 Organ 800000568 - slow Rotary',
       '3 Organ 800000568 - fast Rotary',
@@ -340,19 +301,11 @@ const
       '124 Theatre Organ Glocken Reiteration',
       '125 Theatre Organ Xylophone Reiteration',
       '126 Organ Click'
-  {$ifdef FPC}
     );
-  {$else}
-    ];
-  {$endif}
 
 
   s4: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Jimmy Smith',
       '1 Joey De Francesco',
       '2 Charles Earland',
@@ -426,18 +379,10 @@ const
       '70 Percussion 3',
       '71 Percussion 3 long',
       '72 Organ Click'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s5: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Music Box',
       '1 Music Box octave delay',
       '2 Music Box octave delay - soft Attack',
@@ -464,18 +409,10 @@ const
       '23 Alpin Bell Roll',
       '24 Alpin Bell Hit & Roll',
       '25 Bell'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s6: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Harpsichord',
       '1 Harpsichord & Octave',
       '2 Clavinet 1',
@@ -491,18 +428,10 @@ const
       '12 Dulcimer 5 strings bowed',
       '13 Harp',
       '14 Harp long'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s7: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Guitar Nylon',
       '1 Guitar Nylon soft',
       '2 Guitar Nylon Octave',
@@ -547,36 +476,20 @@ const
       '124 Guitar stroke',
       '125 Guitar noise',
       '126 Guitear Ghost Note'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s8: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Harmonica',
       '1 Harmonica Slide velo. 116-117',
       '2 Harmonica Vibrato',
       '3 Accordia',
       '4 Jew''s harp'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s9: TArrayOfString =
-   {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
-     '0 Full Strings 1 Chamber - velocity to Attack',
+      (
+      '0 Full Strings 1 Chamber - velocity to Attack',
       '1 Full Strings 1 Chamber - Release shot',
       '2 Full Strings 1 Chamber - Release medium',
       '3 Full Strings 1 Chamber - Release long',
@@ -592,18 +505,10 @@ const
       '13 Full Strings 3 Chamber - standard',
       '14 Full Strings Tremolo',
       '15 Full Strings Pizzicato'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s10: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Geige',
       '1 Geige - soft Attack',
       '5 Geige - velocity slide',
@@ -617,18 +522,10 @@ const
       '24 Classic Sollo Cello - marcato',
       '30 Classic Solo Contra Bass',
       '31 Classic Solo Contra Bass - marcato'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s11: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Strings PWM',
       '1 Strings PWM',
       '2 Strings PWM',
@@ -650,18 +547,10 @@ const
       '35 OB Strings II mono LPF',
       '36 OB Strings II mono BPF',
       '37 OB Strings II mono HPF'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s12: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Trumpet 1',
       '1 Trumpet 1',
       '2 Trumpet 1',
@@ -699,18 +588,10 @@ const
       '34 Baritone Horn Staccato',
       '35 Tuba',
       '36 Tuba soft'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s13: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 US Trumpet Section - dynamic split',
       '1 US Trumpet Section - forte',
       '2 US Trumpet Section - mezzo',
@@ -731,36 +612,19 @@ const
       '17 Alphorn Duett',
       '18 Alphorn Trio',
       '19 Alphorn Ensamble'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s14: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '6 Classic Horn Solo',
       '20 Horn Ensemble - velocity split',
       '21 Horn Ensemble - piano only',
       '22 Horn Ensemble - staccato',
       '23 Tuba Ensemble',
       '126 Horn Ensemble - Riff up'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
-
+      );
   s15: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Soprano Sax',
       '1 Soprano Sax softer',
       '2 Soprano Sax harder',
@@ -792,18 +656,10 @@ const
       '28 Sax Section 1',
       '29 Sax Section 2',
       '126 Sax Breath Noise only'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s16: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Clarinet',
       '1 Clarinet soft',
       '2 Clarinet Slide',
@@ -838,18 +694,10 @@ const
       '31 Border Pipe AV',
       '32 Border Pipe Slide ',
       '33 Border Pipe Drone'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s17: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Classic Flute',
       '1 Classic Flute - just piano',
       '2 Classic Flute - staccato',
@@ -865,18 +713,10 @@ const
       '12 Bassoon',
       '17 Flute Ensemble',
       '18 Clarinet Ensemble'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s18: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Classic Choir Aah',
       '1 Classic Choir Aah - Filter',
       '2 Classic Choir Ooh',
@@ -899,18 +739,10 @@ const
       '19 Girls Doo',
       '20 Girls Ooh',
       '126 Vice Kit - mapping like Drum Kit 58'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s19: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 E-Bass 1',
       '1 E-Bass 1 & Note off',
       '2 E-Bass 1 Slide',
@@ -947,18 +779,10 @@ const
       '33 Upright Bass DI long Release',
       '34 Bowed Upright Bass',
       '34 Bowed Upright Bass'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s20: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Bells & Pad',
       '1 Digital Pad',
       '2 OBX & Wavebell',
@@ -1063,18 +887,10 @@ const
       '124 MoBass ENV',
       '125 XBass 1',
       '126 XBass 2'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s21: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Orchestra Hit Major',
       '1 Orchestra Hit Minor',
       '62 Synth FX down',
@@ -1083,18 +899,10 @@ const
       '64 Percussion Kit - 56',
       '66 Classic Perkussion - 48',
       '67 Drumkit Accordion - 67'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s23: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '1 SQ Lead 1',
       '2 Lead Analog 1',
       '3 TB303 Lead',
@@ -1195,18 +1003,10 @@ const
       '117 Vibraphon Vibrato',
       '126 FX Plattler',
       '127 Fredy Pfister'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s24: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '1 Full Strings 2',
       '2 Full Strings 1 log Release',
       '3 Full Strings 2 slow',
@@ -1329,18 +1129,10 @@ const
       '125 Atmos',
       '126 Kalima',
       '127 Agogo'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s40: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Maugein - 88',
       '1 Maugein - 88',
       '2 Maugein - 88+16',
@@ -1464,18 +1256,10 @@ const
       '120 V3 8+8+8 tune 23',
       '121 V3 8+8+8 tune 29',
       '122 V3 8+8+8 tune 38'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s41: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Weltmeister Melodion Reed 8',
       '1 Weltmeister Melodion Reed 8',
       '2 V3 8+8+8 tune 0',
@@ -1487,17 +1271,17 @@ const
       '8 Weltmeister Melodion 888+8 Mega Tune',
       '9 Strasser - Steirisch II',
       '10 Alpengold Steirische',
-      '11 Kaertnerland Steirische',
-      '12 Kaertnerland Steirische Posch I',
-      '13 Mueller - Steirische',
+      '11 Kärtnerland Steirische',
+      '12 Kärtnerland Steirische Posch I',
+      '13 Müller - Steirische',
       '14 Hohner - Corona Vintage 888',
       '15 Brandolini Irish Melodeon',
       '16 Sernelli - Netherland Melodeon',
       '17 Victoria - Bandeon - Repetition',
       '18 Victoria - Bandeon - Repetition',
       '19 Concertina',
-      '20 Nussbaumer - Schwyzeroergeli III',
-      '21 Nussbaumer - Schwyzeroergeli II',
+      '20 Nussbaumer - Schwyzerörgeli III',
+      '21 Nussbaumer - Schwyzerörgeli II',
       '50 Scandalli - VI Bass',
       '51 Scandalli - VI Bass',
       '52 Victoria - Bass',
@@ -1531,9 +1315,9 @@ const
       '93 Weltmeister Melodion Chord',
       '94 Alpengold - Steirische Helikon',
       '95 Alpengold - Steirische Helikon soft off',
-      '96 Mueller - Steirische Bass',
-      '97 Mueller - Steirische Bass',
-      '98 Nussbaumer - Schwyzeroergeli Bass',
+      '96 Müller - Steirische Bass',
+      '97 Müller - Steirische Bass',
+      '98 Nussbaumer - Schwyzerörgeli Bass',
       '100 Attack Noise',
       '101 Finger Attak Noise - curve',
       '102 Attrack Bass',
@@ -1541,18 +1325,10 @@ const
       '104 Key off noise',
       '105 Reed off Musette',
       '106 Reed of Accordion'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s42: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '0 Cardovox Clar+Vib long',
       '1 Cardovox Clar+Vib medium',
       '2 Cardovox Clar+Vib short',
@@ -1573,18 +1349,10 @@ const
       '17 Cardovox 84 short',
       '60 Vox IV Hawaii',
       '61 Vox IV Hawaii long'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s71: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '1 Hohner Gol. 888',
       '2 Hohner Gol. 888+16',
       '5 Hohner Domino 888',
@@ -1618,18 +1386,10 @@ const
       '44 High Whistle - round robin grace notes',
       '45 High Whistle - slide up velocity 116-117',
       '46 High Whistle - grace notes'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s72: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '1 MQ French 88',
       '2 Hohner Tango',
       '10 Zupan Alpin 8 Reed (Cassotto)',
@@ -1669,44 +1429,20 @@ const
       '90 Weltmeister 888',
       '91 Weltmeister 888+8',
       '92 Weltmeister 8+16'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s74: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '1 77655678 slow'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s75: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '1 Manolin Tremolo'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s80: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '1 Morino VM Vinetage 888',
       '2 Morino VM Vinetage 888+16',
       '3 Morino VM Vinetage 4+888',
@@ -1757,18 +1493,10 @@ const
       '124 Attack Layer linear',
       '125 Attack Layer concave',
       '126 Attack Layer con offset 50'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s81: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '1 Trompete Ivan Presern',
       '2 Trompete Ivan Presern',
       '3 Trompete Ivan Presern 1/4 Note',
@@ -1780,8 +1508,8 @@ const
       '11 Trompeten Ens. Stereo LP',
       '12 Trompeten Ens. Stereo HP',
       '13 Trompeten Ens. Stereo',
-      '15 Fluegelhorn Ivan Presern',
-      '19 Trompete Daempfer',
+      '15 Flügelhorn Ivan Presern',
+      '19 Trompete Dämpfer',
       '21 Bariton Sepp Mattlschweiger Akzent',
       '23 Bariton Sepp Mattlschweiger Vibrato',
       '24 Bariton Sepp Mattlschweiger Staccato mezzo',
@@ -1825,18 +1553,10 @@ const
       '115 Geige Legato up',
       '116 Geige Legato down',
       '127 Maultrommel'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s82: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '1 E-Bass USA',
       '2 E-Bass USA',
       '3 E-Bass USA EQ1',
@@ -1868,19 +1588,11 @@ const
       '72 Kontrabass kurz gestichen - Ausklang',
       '73 Kontrabass kurz gestichen - Ausklang +',
       '74 Kontrabass kurz gestichen - Ausklang ++'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s83: TArrayOfString =
-   {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
-     '1 Bariton Sepp Mattlschweiger Akzent',
+      (
+      '1 Bariton Sepp Mattlschweiger Akzent',
       '3 Bariton Sepp Mattlschweiger Vibrato',
       '4 Bariton Sepp Mattlschweiger Staccato mezzo',
       '5 Bariton Sepp Mattlschweiger Staccato forte',
@@ -1906,48 +1618,32 @@ const
       '51 Jon Sass Solo Tuba',
       '52 Jon Sass Solo Tuba soft',
       '56 Ensamble Tuben'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s84: TArrayOfString =
-  {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
+      (
       '1 Gitarre Polka - Sabrina Klotz',
       '2 Gitarre Walzer - Sabrina Klotz',
       '3 Gitarre - Sabrina Klotz',
       '16 Gitarre Mikro Polka - Renato Verlic',
       '18 Gitarre Mikro Walzer - Renato Verlic',
       '19 Gitarre Mikro - Renato Verlic',
-      '39 Git. Jazz Amp & Mikro Polka - Edi Koehldorfer',
-      '40 Git. Jazz Amp & Mikro Walzer - Edi Koehldorfer',
-      '41 Git. Jazz Amp & Mikro - Edi Koehldorfer',
+      '39 Git. Jazz Amp & Mikro Polka - Edi Köhldorfer',
+      '40 Git. Jazz Amp & Mikro Walzer - Edi Köhldorfer',
+      '41 Git. Jazz Amp & Mikro - Edi Köhldorfer',
       '101 Nylon Gitarre solw Arpeggio',
       '102 Jazz Gitarre solw Arpeggio'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s98: TArrayOfString =
-   {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
-     '1 Xylophon',
+      (
+      '1 Xylophon',
       '2 Choir Ohh',
       '3 Choir Aah',
       '5 Cornet',
       '6 Super VI',
       '7 Reed 8',
-      '8 Mueller Steirische',
+      '8 Müller Steirische',
       '9 Alpengold Steirische',
       '10 Hohner Alpina',
       '11 Shand Musette',
@@ -1997,26 +1693,18 @@ const
       '55 Jazz Bass - Random & noise off',
       '56 Jazz Bass no Finger noise',
       '57 Jazz Bass noise',
-      '58 Fluegelhorn',
+      '58 Flügelhorn',
       '59 Trombone Damper',
-      '60 Nussbaumer Schwyzeroergeli',
+      '60 Nussbaumer Schwyzerörgeli',
       '61 Swiss gestrichen CB',
       '101 Castello short',
       '102 Castello medium',
       '103 Castello long'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
   s99: TArrayOfString =
-   {$ifdef FPC}
-    (
-  {$else}
-    [
-  {$endif}
-     '1 Jimmy Smith',
+      (
+      '1 Jimmy Smith',
       '2 Joey De Francesco',
       '3 Charles Earland',
       '4 Brian Auger',
@@ -2056,15 +1744,11 @@ const
       '38 Standard',
       '39 Standard',
       '40 Standard'
-  {$ifdef FPC}
-    );
-  {$else}
-    ];
-  {$endif}
+      );
 
-var
+
   Banks: TBanks =
-    (
+      (
         @s0, @s1, @s2, @s3, @s4, @s5, @s6, @s7,
         @s8, @s9, @s10, @s11, @s12, @s13, @s14, @s15,
         @s16, @s17, @s18, @s19, @s20, @s21, nil, @s23,
@@ -2078,7 +1762,8 @@ var
         @s80, @s81, @s82, @s83, @s84, nil, nil, nil,
         nil, nil, nil, nil, nil, nil, nil, nil,
         nil, nil, @s98, @s99
-    );
+      );
+
 
 procedure CopyBank(var Bank: TArrayOfString; Bank_: PArrayOfString);
 var
@@ -2109,6 +1794,7 @@ begin
       SetLength(Bank, Length(Bank)+1);
       Bank[High(Bank)] := IntToStr(i);
     end;
+
 end;
 
 procedure GetBank(var Bank: TArrayOfString; BankNr: integer);
@@ -2125,5 +1811,4 @@ end.
 
 // BOR
 // Weltmeister Melodion
-
 
