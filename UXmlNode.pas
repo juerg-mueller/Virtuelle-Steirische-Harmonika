@@ -1,41 +1,62 @@
+//
+// Copyright (C) 2022 Jürg Müller, CH-5524
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation version 3 of the License.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program. If not, see http://www.gnu.org/licenses/ .
+//
 unit UXmlNode;
+
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}
 
 interface
 
 uses
-  SysUtils, Classes, System.Zip,
+  SysUtils, Classes, Zip,
   UMyMemoryStream;
 
 type
 
   KXmlAttr = class
     Name: string;
-    Value: string;
+    Value: WideString;
   end;
 
 
   KXmlNode = class
     ChildNodes: array of KXmlNode;
     Attrs: array of KXmlAttr;
-    Value: string;
+    Value: WideString;
     Name: string;   // = '': Text
 
     destructor Destroy; override;
 
 
-    function AppendChildNode(Name_: string; Value_: string = ''): KXmlNode; overload;
+    function AppendChildNode(Name_: string; Value_: WideString = ''): KXmlNode; overload;
     function AppendChildNode(Name_: string; Value_: integer): KXmlNode; overload;
-    function AddChild(Name_: string; Value_: string = ''): KXmlNode;
+    function AddChild(Name_: string; Value_: WideString = ''): KXmlNode;
 
     procedure InsertChildNode(Index: integer; Child_: KXmlNode);
     procedure AppendChildNode(Child_: KXmlNode); Overload;
     function ChildNodesCount: integer;
 
-    procedure AppendAttr(Name_, Value_: string); overload;
+    procedure AppendAttr(Name_: string; Value_: WideString); overload;
     procedure AppendAttr(Name_: string; Value_: integer); overload;
     function SaveToXmlFile(const FileName: string; Header: string = ''): boolean;
     function SaveToStream(const Header: string): TMyMemoryStream;
+  {$ifdef dcc}
     function SaveToMsczFile(FileName: string): boolean;
+  {$endif}
     procedure BuildStream(Stream: TMyMemoryStream; Level: integer; Wln: boolean);
     procedure RemoveChild(Child: KXmlNode);
     function GetChildIndex(Child: KXmlNode): integer;
@@ -44,11 +65,14 @@ type
     function DeleteAttribute(Attribute: string): boolean;
     function AttributeIdx(Attribute: string): integer;
     function HasAttribute(Attribute: string): boolean;
-    function GetAttribute(const Idx: string): string;
-    procedure SetAttributes(const Idx: string; const Value: string);
+    function GetAttribute(const Idx: string): WideString;
+    procedure SetAttributes(const Idx: string; const Value: WideString);
     function LastNode: KXmlNode;
     function GetXmlValue: AnsiString;
     function GetChild(Name: string; var Child: KXmlNode): boolean;
+    function GetChildNode(Idx: integer): KXmlNode;
+    function CopyTree: KXmlNode;
+    function GetFirstIndex(Nam: string): integer;
 
     //MuseScore
     procedure MergeStaff(var Staff3: KXmlNode);
@@ -57,9 +81,10 @@ type
     class function BuildMemoryStream(Root: KXmlNode): TMyMemoryStream;
 
 
-    property Attributes[const Name: string]: string read GetAttribute write SetAttributes;
+    property Attributes[const Name: string]: WideString read GetAttribute write SetAttributes;
     property Count: integer read ChildNodesCount;
     property XmlValue: AnsiString read GetXmlValue;
+    property Child[Idx: integer]: KXmlNode read GetChildNode; default;
   end;
 
 const
@@ -76,13 +101,13 @@ const
   halfNoteHead =    119127;
   quarterNoteHead = 119128;
 
-  function NewXmlAttr(Name_: string; Value_: string = ''): KXmlAttr;
-  function NewXmlNode(Name_: string; Value_: string = ''): KXmlNode;
+  function NewXmlAttr(Name_: string; Value_: WideString = ''): KXmlAttr;
+  function NewXmlNode(Name_: string; Value_: WideString = ''): KXmlNode;
 
 implementation
 
 
-function NewXmlAttr(Name_: string; Value_: string = ''): KXmlAttr;
+function NewXmlAttr(Name_: string; Value_: WideString = ''): KXmlAttr;
 begin
   result := KXmlAttr.Create;
   result.Name := Name_;
@@ -101,7 +126,7 @@ begin
   inherited;
 end;
 
-function NewXmlNode(Name_: string; Value_: string = ''): KXmlNode;
+function NewXmlNode(Name_: string; Value_: WideString = ''): KXmlNode;
 begin
   result := KXmlNode.Create;
   SetLength(result.ChildNodes, 0);
@@ -133,7 +158,7 @@ begin
   result := Length(ChildNodes);
 end;
 
-function KXmlNode.AppendChildNode(Name_: string; Value_: string = ''): KXmlNode;
+function KXmlNode.AppendChildNode(Name_: string; Value_: WideString = ''): KXmlNode;
 begin
   result := NewXmlNode(Name_, Value_);
   SetLength(ChildNodes, Length(ChildNodes) + 1);
@@ -145,12 +170,12 @@ begin
   result := AppendChildNode(Name_, IntToStr(Value_));
 end;
 
-function KXmlNode.AddChild(Name_: string; Value_: string = ''): KXmlNode;
+function KXmlNode.AddChild(Name_: string; Value_: WideString = ''): KXmlNode;
 begin
   result := AppendChildNode(Name_, Value_);
 end;
 
-procedure KXmlNode.AppendAttr(Name_, Value_: string);
+procedure KXmlNode.AppendAttr(Name_: string; Value_: WideString);
 var
   Attr_: KXmlAttr;
 begin
@@ -221,7 +246,7 @@ begin
   result := AttributeIdx(Attribute) >= 0;
 end;
 
-function KXmlNode.GetAttribute(const Idx: string): string;
+function KXmlNode.GetAttribute(const Idx: string): WideString;
 var
   i: integer;
 begin
@@ -252,7 +277,7 @@ begin
       inc(i);
 end;
 
-procedure KXmlNode.SetAttributes(const Idx: string; const Value: string);
+procedure KXmlNode.SetAttributes(const Idx: string; const Value: WideString);
 var
   i: integer;
 begin
@@ -377,17 +402,7 @@ begin
   end;
 end;
 
-{
-<?xml version="1.0" encoding="UTF-8"?>
-<container>
-  <rootfiles>
-    <rootfile full-path="%s.mscx">
-      </rootfile>
-    </rootfiles>
-  </container>
-
-}
-
+{$ifdef dcc}
 function KXmlNode.SaveToMsczFile(FileName: string): boolean;
 var
   container, child: KXmlNode;
@@ -406,18 +421,17 @@ begin
     child := child.AppendChildNode('rootfile');
     child.AppendAttr('full-path', ExtractFileName(FileName) + '.mscx');
     conStr := container.SaveToStream('<?xml version="1.0" encoding="UTF-8"?>'#13#10);
-
     Zip := TZipFile.Create;
     Zip.Open(FileName + '.mscz', zmWrite);
     Zip.Add(Stream.MakeBytes, ExtractFileName(FileName) + '.mscx');
     Zip.Add(conStr.MakeBytes, 'META-INF/container.xml');
     Zip.Free;
-
     Stream.Free;
     conStr.Free;
     result := true;
   end;
 end;
+{$endif}
 
 function KXmlNode.GetXmlValue: AnsiString;
 var
@@ -461,6 +475,38 @@ begin
   end;
 end;
 
+function KXmlNode.GetChildNode(Idx: integer): KXmlNode;
+begin
+  result := nil;
+  if (Idx >= 0) and (Idx < Count) then
+    result := ChildNodes[Idx];
+end;
+
+function KXmlNode.CopyTree: KXmlNode;
+var
+  i: integer;
+begin
+  result := KXmlNode.Create;
+  result.Name := Name;
+  result.Value := Value;
+  for i := 0 to Length(Attrs)-1 do
+    result.AppendAttr(Attrs[i].Name, Attrs[i].Value);
+  for i := 0 to Count-1 do
+    result.AppendChildNode(ChildNodes[i].CopyTree)
+end;
+
+function KXmlNode.GetFirstIndex(Nam: string): integer;
+var
+  i: integer;
+begin
+  result := -1;
+  for i := 0 to Count-1 do
+    if Child[i].Name = Nam then
+    begin
+      result := i;
+      break;
+    end;
+end;
 
 ///////////////////////////// MuseScore ////////////////////////////////////////
 
@@ -485,7 +531,7 @@ begin
     if (mea1 < Count) and (mea3 < Staff3.Count) then
     begin
       Child := Staff3.ChildNodes[mea3]; // measure
-      // startRepeat und endRepeat �berspringen
+      // startRepeat und endRepeat überspringen
       p := Child.Count-1;
       while (p > 0) and (Child.ChildNodes[p].Name <> 'voice') do
         dec(p);
