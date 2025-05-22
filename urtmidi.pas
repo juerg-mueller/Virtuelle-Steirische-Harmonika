@@ -123,7 +123,6 @@ begin
     dec(l);
   if MidiOut <> nil then
     rtmidi_out_send_message(MidiOut, @b, l);
-  writeln(IntToHex(command), '  ', d1, '  ', d2);
 end;
 
 procedure TMidiOutput.Reset;
