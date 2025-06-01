@@ -227,7 +227,6 @@ begin
   begin
     Deactivate(false);
     MidiRecOut := TMidiRecord.Create(string(Instrument.Name), ShiftUsed);
-    //writeln('push ', ord(MidiRecOut.Push));
     MidiRecOut.Header := frmAmpel.Header;
     frmAmpel.AmpelEvents.PRecordMidiOut := MidiRecOut.OnMidiInData;
     btnRecordOut.Caption := 'Stopp';
@@ -306,10 +305,18 @@ begin
     s := 'Virtuelles Aargauerörgeli'
   else
     s := 'Virtuelle Steirische Harmonika';
-{$if defined(CPUX86_64) or defined(WIN64)}
-  s := s + ' (64)';
+{$if defined(CPUX86_64) or defined(WIN64) or defined(darwin)}
+  {$ifdef fpc}
+    s := s + ' (Lazarus 64)';
+  {$else}
+    s := s + ' (64)';
+  {$endif}
 {$else}
-  s := s + ' (32)';
+  {$ifdef fpc}
+    s := s + ' (Lazarus 32)';
+  {$else}
+    s := s + ' (32)';
+  {$endif}
 {$endif}
   Caption := s;
 end;
@@ -370,7 +377,6 @@ begin
   Checked := cbxBassDifferent.Checked;
   cbxBankBass.Enabled := Checked;
   cbxInstrBass.Enabled := Checked;
-  BassBankActiv := Checked;
   if Checked then
     gbMidiInstrument.Caption := 'MIDI Diskant'
   else
@@ -381,7 +387,7 @@ end;
 
 procedure TfrmVirtualHarmonica.cbxMetronomClick(Sender: TObject);
 begin
-  frmAmpel.Metronom := cbxMetronom.Checked;
+  frmAmpel.Metronom.On_ := cbxMetronom.Checked;
 end;
 
 function GetIndex(cbxMidi: TComboBox): integer;
@@ -479,7 +485,6 @@ begin
   {$endif}
 
     OpenMidiMicrosoft;
-    VolumeChange(127, [0..15]);
     frmAmpel.InitLastPush;
   end;
 end;
@@ -694,7 +699,6 @@ begin
   if Sender = sbVolDiscant then begin
     lbVolDiskant.Caption := s;
     VolumeDiscant := p;
-    VolumeChange(p, [0..7]);
   end else
   if Sender = sbMetronom then begin
     lbBegleitung.Caption := s;

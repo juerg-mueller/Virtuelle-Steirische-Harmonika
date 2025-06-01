@@ -100,7 +100,7 @@ begin
     begin
       Event.Clear;
       Event.command := $b0;
-      Event.d1 := ControlSustain;
+      Event.d1 := ControlPushPull;
       Event.d2 := ord(ShiftUsed);
       MidiEvents[eventCount] := Event;
       inc(eventCount);
@@ -246,7 +246,7 @@ begin
   // Balg- und Metronom-Angaben überspringen
   i := newCount;
   while (i < MidiRec.eventCount-2) and
-        MidiRec.MidiEvents[i].IsSustain or (MidiRec.MidiEvents[i].Channel in [9, 10]) do
+        MidiRec.MidiEvents[i].IsPushPull or (MidiRec.MidiEvents[i].Channel in [9, 10]) do
   begin
     if MidiRec.MidiEvents[i].Channel in [9, 10] then
       lastTakt := i;
@@ -255,16 +255,16 @@ begin
 
   // Am Ende des Stücks kürzen
   while (i < MidiRec.eventCount) and
-        (MidiRec.MidiEvents[MidiRec.eventCount-1].IsSustain or
+        (MidiRec.MidiEvents[MidiRec.eventCount-1].IsPushPull or
           (MidiRec.MidiEvents[MidiRec.eventCount-1].Channel in [9, 10])) do
     dec(MidiRec.eventCount);
 
   for k := newCount to i-1 do
-    if MidiRec.MidiEvents[i].IsSustain then
+    if MidiRec.MidiEvents[i].IsPushPull then
       inpush := (MidiRec.MidiEvents[k].d2 <> 0);
   startEvent.Clear;
   startEvent.command := $B0;
-  startEvent.d1 := ControlSustain;
+  startEvent.d1 := ControlPushPull;
   startEvent.d2 := ord(inpush);
   MidiRec.MidiEvents[newCount] := startEvent;
   inc(newCount);
@@ -287,7 +287,7 @@ begin
       inc(i);
       continue;
     end;
-    isEvent := MidiRec.MidiEvents[i].IsSustain;
+    isEvent := MidiRec.MidiEvents[i].IsPushPull;
     if not isEvent or (inpush <> (MidiRec.MidiEvents[i].d2 <> 0)) then
     begin
       if isEvent then

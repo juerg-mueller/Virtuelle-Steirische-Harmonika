@@ -23,7 +23,7 @@ unit UMidiEvent;
 interface
 
 uses
-  SysUtils, Classes, Types, UMyMemoryStream;
+  SysUtils, Classes, Types;
 
 Const
   cSimpleHeader = AnsiString('Header');
@@ -43,8 +43,21 @@ Const
 
   Dur: array [-6..6] of string = ('Ges', 'Des','As', 'Es', 'B', 'F', 'C', 'G', 'D', 'A', 'E', 'H', 'Fis');
 
-//  SustainPitch    = 26;
-  ControlSustain  = $1f;   // + 3 für TRepeat
+  // Zusatzinformationen im MIDI-File mit der Copyright-Notiz: 'Griffschrift - Copyright'
+  //
+  // Balg Angabe mit Midi-Event: $b0 $1f xx  (xx: 0 oder 127)
+  //
+  // Griff-Note:                 $b0 $20 xx  (xx: Griff-Note)
+  // Griff-Note mit Kreuz:       $b0 $21 xx  (xx: Griff-Note)
+  // Repeat-Angabe:              $b0 $22 yy
+  //
+  // Wenn die Griff-Note gleich der Klang-Note und ohne Kreuz ist,
+  // dann wird keine Griff-Note ausgegeben.
+  //
+  // Mit der Copyright-Notiz 'real Griffschrift - Copyright' sind Giff- und
+  // Sound-Angaben vertauscht.
+  //
+  ControlPushPull  = $1f;
   ControlPartiturStart = $1e;
 
 type
@@ -65,7 +78,7 @@ type
     procedure Clear;
     function Event: byte;
     function Channel: byte;
-    function IsSustain: boolean;
+    function IsPushPull: boolean;
     function MakeNewSustain: boolean;
     function IsPush: boolean;
     procedure MakeSustain(Push: boolean);
@@ -184,11 +197,8 @@ begin
       Insert('&gt;', s, p);
     end;
   until p = 0;
-{$ifdef FPC}
-  result := '';
-{$else}
+
   result := UTF8ToString(AnsiString(s));
-{$endif}
 end;
 
 function TMidiEvent.GetInt: cardinal;
@@ -515,21 +525,21 @@ begin
   SetLength(bytes, 0);
 end;
   
-function TMidiEvent.IsSustain: boolean;
+function TMidiEvent.IsPushPull: boolean;
 begin
-  result := ((Event = 11) and (d1 in [64, ControlSustain]));
+  result := ((Event = 11) and (d1 = ControlPushPull));
 end;
 
 function TMidiEvent.MakeNewSustain: boolean;
 var
   Push: boolean;
 begin
-  result := IsSustain;
+  result := IsPushPull;
   if not result then
     exit;
   Push := IsPush;
   command := $b0;
-  d1 := ControlSustain;
+  d1 := ControlPushPull;
   if Push then
     d2 := 127
   else
@@ -538,7 +548,7 @@ end;
 
 function TMidiEvent.IsPush: boolean;
 begin
-  result := IsSustain and (d2 > 0);
+  result := IsPushPull and (d2 > 0);
 end;
 
 procedure TMidiEvent.SetEvent(c, d1_, d2_: integer);
@@ -557,7 +567,7 @@ end;
 procedure TMidiEvent.MakeSustain(Push: boolean);
 begin
   command := $b0;
-  d1 := ControlSustain;
+  d1 := ControlPushPull;
   if Push then
     d2 := 127
   else

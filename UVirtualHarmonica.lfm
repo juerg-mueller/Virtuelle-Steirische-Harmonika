@@ -1,7 +1,7 @@
 object frmVirtualHarmonica: TfrmVirtualHarmonica
-  Left = 653
+  Left = 729
   Height = 884
-  Top = 142
+  Top = 242
   Width = 537
   Caption = 'Virtuelle Harmonika / Virtuelles Örgeli'
   ClientHeight = 884
@@ -13,7 +13,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
-  LCLVersion = '2.2.6.0'
+  LCLVersion = '3.6.0.0'
   object gbMidi: TGroupBox
     Left = 0
     Height = 208
@@ -23,6 +23,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Caption = 'MIDI I/O'
     ClientHeight = 191
     ClientWidth = 535
+    ParentBackground = False
     TabOrder = 1
     object lblKeyboard: TLabel
       Left = 24
@@ -55,12 +56,12 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Width = 398
       Anchors = [akTop, akLeft, akRight]
       ItemHeight = 0
+      Style = csDropDownList
+      TabOrder = 2
       OnChange = cbxMidiOutChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      Style = csDropDownList
-      TabOrder = 2
     end
     object cbxMidiInput: TComboBox
       Left = 122
@@ -69,12 +70,12 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Width = 398
       Anchors = [akTop, akLeft, akRight]
       ItemHeight = 0
+      Style = csDropDownList
+      TabOrder = 0
       OnChange = cbxMidiInputChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      Style = csDropDownList
-      TabOrder = 0
     end
     object btnReset: TButton
       Left = 122
@@ -83,11 +84,11 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Width = 398
       Anchors = [akTop, akLeft, akRight]
       Caption = 'MIDI OUT zurücksetzen'
+      TabOrder = 3
       OnClick = btnResetClick
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      TabOrder = 3
     end
     object btnResetMidi: TButton
       Left = 122
@@ -96,11 +97,11 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Width = 398
       Anchors = [akTop, akLeft, akRight]
       Caption = 'MIDI Konfiguration neu laden'
+      TabOrder = 4
       OnClick = btnResetMidiClick
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      TabOrder = 4
     end
     object cbxLimex: TComboBox
       Left = 122
@@ -114,14 +115,14 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         'Standard'
         'Limex'
       )
+      Style = csDropDownList
+      TabOrder = 1
+      Text = 'Standard'
       OnChange = cbxLimexChange
       OnClick = cbxLimexClick
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      Style = csDropDownList
-      TabOrder = 1
-      Text = 'Standard'
     end
   end
   object gbInstrument: TGroupBox
@@ -133,6 +134,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Caption = 'Steirische Harmonika / Aargauerörgeli'
     ClientHeight = 79
     ClientWidth = 535
+    ParentBackground = False
     TabOrder = 0
     object Label1: TLabel
       Left = 24
@@ -149,12 +151,12 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Width = 398
       Anchors = [akTop, akLeft, akRight]
       ItemHeight = 0
+      Style = csDropDownList
+      TabOrder = 0
       OnChange = cbTransInstrumentChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      Style = csDropDownList
-      TabOrder = 0
     end
   end
   object gbRecord: TGroupBox
@@ -166,6 +168,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Caption = 'Aufnahme'
     ClientHeight = 90
     ClientWidth = 535
+    ParentBackground = False
     TabOrder = 4
     object btnRecordIn: TButton
       Left = 122
@@ -176,11 +179,11 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Caption = 'MIDI IN Aufnahme starten'
       Enabled = False
       ParentBidiMode = False
+      TabOrder = 0
       OnClick = btnRecordInClick
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      TabOrder = 0
     end
     object btnRecordOut: TButton
       Left = 122
@@ -189,12 +192,12 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Width = 398
       Anchors = [akTop, akLeft, akRight]
       Caption = 'MIDI OUT Aufnahme starten'
+      TabOrder = 1
+      Visible = False
       OnClick = btnRecordOutClick
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      TabOrder = 1
-      Visible = False
     end
   end
   object gbMidiInstrument: TGroupBox
@@ -206,6 +209,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Caption = 'MIDI Instrument'
     ClientHeight = 108
     ClientWidth = 535
+    ParentBackground = False
     TabOrder = 2
     object Label3: TLabel
       Left = 24
@@ -370,13 +374,13 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         '127 Applause'
         '128 Gun Shot (Gewehrschuss)'
       )
+      Style = csDropDownList
+      TabOrder = 1
+      Text = '22 Accordion'
       OnChange = cbxMidiDiskantChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      Style = csDropDownList
-      TabOrder = 1
-      Text = '22 Accordion'
     end
     object cbxDiskantBank: TComboBox
       Left = 122
@@ -460,13 +464,13 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         '69'
         '70'
       )
+      Style = csDropDownList
+      TabOrder = 0
+      Text = '00 - General Midi'
       OnChange = cbxDiskantBankChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      Style = csDropDownList
-      TabOrder = 0
-      Text = '00 - General Midi'
     end
     object sbVolDiscant: TScrollBar
       Left = 122
@@ -494,6 +498,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Caption = 'MIDI Bass'
     ClientHeight = 125
     ClientWidth = 535
+    ParentBackground = False
     TabOrder = 3
     object Label5: TLabel
       Left = 24
@@ -667,13 +672,13 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         '127 Applause'
         '128 Gun Shot (Gewehrschuss)'
       )
+      Style = csDropDownList
+      TabOrder = 2
+      Text = '22 Accordion'
       OnChange = cbxMidiDiskantChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      Style = csDropDownList
-      TabOrder = 2
-      Text = '22 Accordion'
     end
     object cbxBankBass: TComboBox
       Left = 122
@@ -758,24 +763,24 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         '69'
         '70'
       )
+      Style = csDropDownList
+      TabOrder = 1
+      Text = '00 - General Midi'
       OnChange = cbxDiskantBankChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      Style = csDropDownList
-      TabOrder = 1
-      Text = '00 - General Midi'
     end
     object cbxBassDifferent: TCheckBox
       Left = 122
       Height = 21
       Top = 20
       Width = 21
+      TabOrder = 0
       OnClick = cbxBassDifferentClick
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyUp = cbTransInstrumentKeyUp
-      TabOrder = 0
     end
     object sbVolBass: TScrollBar
       Left = 122
@@ -802,6 +807,7 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
     Caption = 'Taktangaben'
     ClientHeight = 183
     ClientWidth = 535
+    ParentBackground = False
     TabOrder = 5
     object Label8: TLabel
       Left = 24
@@ -862,13 +868,13 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         'Viertel'
         'Achtel'
       )
+      Style = csDropDownList
+      TabOrder = 1
+      Text = 'Viertel'
       OnChange = cbxViertelChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      Style = csDropDownList
-      TabOrder = 1
-      Text = 'Viertel'
     end
     object cbxTakt: TComboBox
       Left = 122
@@ -890,13 +896,13 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
         '11'
         '12'
       )
+      Style = csDropDownList
+      TabOrder = 0
+      Text = '4'
       OnChange = cbxTaktChange
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyUp = cbTransInstrumentKeyUp
-      Style = csDropDownList
-      TabOrder = 0
-      Text = '4'
     end
     object edtBPM: TEdit
       Left = 122
@@ -904,21 +910,21 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Top = 56
       Width = 70
       Alignment = taRightJustify
-      OnExit = edtBPMExit
-      OnKeyPress = edtBPMKeyPress
       TabOrder = 2
       Text = '120'
+      OnExit = edtBPMExit
+      OnKeyPress = edtBPMKeyPress
     end
     object cbxMetronom: TCheckBox
       Left = 122
       Height = 21
       Top = 114
       Width = 21
+      TabOrder = 4
       OnClick = cbxMetronomClick
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyUp = cbTransInstrumentKeyUp
-      TabOrder = 4
     end
     object sbMetronom: TScrollBar
       Left = 122
@@ -941,11 +947,11 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Height = 21
       Top = 134
       Width = 21
+      TabOrder = 5
       OnClick = cbxNurTaktClick
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyUp = cbTransInstrumentKeyUp
-      TabOrder = 5
     end
     object cbxOhneBlinker: TCheckBox
       Left = 122
@@ -953,12 +959,12 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Top = 154
       Width = 21
       Checked = True
+      State = cbChecked
+      TabOrder = 6
       OnClick = cbxOhneBlinkerClick
       OnKeyPress = cbTransInstrumentKeyPress
       OnKeyDown = cbTransInstrumentKeyDown
       OnKeyUp = cbTransInstrumentKeyUp
-      State = cbChecked
-      TabOrder = 6
     end
   end
   object SaveDialog1: TSaveDialog

@@ -47,18 +47,19 @@ interface
 
 uses
 {$ifdef FPC}
-  lcltype, LCLIntf, lcl,
+  lcltype, LCLIntf, lcl, lMessages,
 {$else}
- // Vcl.ExtCtrls,
+  Windows,
 {$endif}
+  umidi,
 {$ifdef mswindows}
-  Messages, Windows, Midi,
+  Midi,
 {$else}
   urtmidi,
 {$endif}
-  Forms, SyncObjs, Graphics, Types, StdCtrls, Dialogs, Controls, SysUtils,
+  Messages, Forms, SyncObjs, Graphics, Types, StdCtrls, Dialogs, Controls, SysUtils,
   Classes,
-  UMidiEvent, UInstrument, UGriffEvent, Menus, ExtCtrls;
+  UInstrument, UMidiEvent, UGriffEvent, Menus, ExtCtrls;
 
 type
   TSoundGriff = procedure (Row: byte; index: byte; Push: boolean; On_:boolean) of object;
@@ -96,6 +97,10 @@ type
     MouseEvents: array [0..64] of TMouseEvent;
     FUsedEvents: integer;
     LastPush: TLastPush;
+    AmpelOn: array [1..6, Low(TPitchArray) .. High(TPitchArray)] of record
+      On_: boolean;
+      Push: boolean;
+    end;
 
     procedure DoAmpel(Index: integer; On_: boolean);
     procedure SendPush(Push: boolean);
@@ -114,20 +119,35 @@ type
     procedure SendMidiOut(const Status, Data1, Data2: byte);
     function  Paint(Row, Index: integer): boolean;
     procedure AllEventsOff;
+    procedure SetAmpelOn(Row: byte; Index: integer; Push: boolean; On_: boolean);
+    procedure SetAmpel(Row: byte; Index: integer; Push: boolean; On_: boolean);
 
     property UsedEvents : integer read FUsedEvents;
   end;
 
   TMidiInBuffer = class
+  private
     Critical: syncobjs.TCriticalSection;
     Head, Tail: word;
     Buffer: array [0..1023] of TMidiInData;
-    public
-      constructor Create;
-      destructor Destroy; override;
-      function Empty: boolean;
-      function Get(var rec: TMidiInData): boolean;
-      function Put(const rec: TMidiInData): boolean;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function Empty: boolean;
+    function Get(var rec: TMidiInData): boolean;
+    function Put(const rec: TMidiInData): boolean;
+  end;
+
+  TMetronom = record
+    On_: boolean;
+    StartPip: boolean;
+    nextPip: TTime;
+    pipDelay: TTime;
+    pipCount: integer;
+    sec: boolean;
+    pip: byte;
+    vol: double;
+    function DoPip(const Header: TDetailHeader): boolean;
   end;
 
   PPlayControl = function(CharCode: word; KeyData: Longint): boolean of object;
@@ -142,6 +162,7 @@ type
     lbUnten: TLabel;
     cbxLinkshaender: TCheckBox;
     cbxVerkehrt: TCheckBox;
+    lbTastatur: TLabel;
     Timer1: TTimer;
     cbxNoteAnzeigen: TCheckBox;
     procedure FormPaint(Sender: TObject);
@@ -160,14 +181,17 @@ type
     procedure FormResize(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+  {$ifdef fpc}
+    procedure FormShortCut(var Msg: TLMKey; var Handled: Boolean);
+  {$else}
     procedure FormShortCut(var Msg: TWMKey; var Handled: Boolean);
+  {$endif}
     procedure FormActivate(Sender: TObject);
     procedure FormDeactivate(Sender: TObject);
     procedure cbxLinkshaenderClick(Sender: TObject);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure Timer1Timer(Sender: TObject);
   private
-    KeyDown: PKeyDown;
     function MakeMouseDown(const P: TPoint; Push: boolean): TMouseEvent;
     function FlippedHorz: boolean;
     procedure PaintNote(const rect: TRect; Pitch: byte);
@@ -176,18 +200,14 @@ type
     AmpelEvents: TAmpelEvents;
     FlippedVert: boolean;
     FlippedHorz_: boolean;
-    //SoundGriff: TSoundGriff;
-//    SelectedChanges: PSelectedProc;
     KnopfGroesse: integer;
     MinIndex, MaxIndex: integer;
     PlayControl: PPlayControl;
+    KeyDown: PKeyDown;
     IsActive: boolean;
     MidiInBuffer: TMidiInBuffer;
     PRecordMidiIn: TRecordMidiIn;
-    nextPip: TTime;
-    pipDelay: TTime;
-    Metronom: boolean;
-    pipCount: integer;
+    Metronom: TMetronom;
     Header: TDetailHeader;
     UseTurboSound: boolean;
 
@@ -197,10 +217,8 @@ type
     procedure PaintBalg(Push: boolean);
     function GetKeyIndex(var Event: TMouseEvent; Key: word): boolean;
     procedure InitLastPush;
-{$ifdef dcc}
-    procedure KeyMessageEvent(var Msg: TMsg; var Handled: Boolean);
-{$endif}
     procedure OnMidiInData(aDeviceIndex: integer; aStatus, aData1, aData2: byte; aTimestamp: Int64);
+    procedure KeyMessageEvent(var Msg: TMsg; var Handled: Boolean);
   end;
 
   TKeys = array [0..11] of AnsiChar;
@@ -227,10 +245,7 @@ implementation
 {$endif}
 
 uses
-{$if not defined(__VIRTUAL__) and defined(dcc)}
-  UfrmGriff,
-{$endif}
-  UFormHelper, UVirtualHarmonica, UMidi;
+  UFormHelper;
 
 procedure TMouseEvent.Clear;
 begin
@@ -249,11 +264,19 @@ begin
 end;
 
 constructor TAmpelEvents.Create(Ampel: TfrmAmpel);
+var
+  i, k: integer;
 begin
   frmAmpel := Ampel;
   CriticalAmpel := TCriticalSection.Create;
   FUsedEvents := 0;
   LastPush := unknown;
+  for i := 1 to 6 do
+    for k := Low(TPitchArray) to High(TPitchArray) do
+    begin
+      AmpelOn[i, k].On_ := false;
+      AmpelOn[i, k].Push := false;
+    end;
 end;
 
 destructor TAmpelEvents.Destroy;
@@ -289,7 +312,7 @@ begin
     else
       LastPush := LastPull_;
 
-    SendMidiOut($B0, ControlSustain, ord(Push));
+    SendMidiOut($B0, ControlPushPull, ord(Push));
   end;
 
 end;
@@ -456,11 +479,7 @@ begin
       d := $40;
       if Event.Push_ and On_ then
         inc(d, $10);
-{$ifndef mswindows}
-      MidiVirtual.Send(iVirtualMidi, c, b, d);
-{$else}
       MidiOutput.Send(iVirtualMidi, c, b, d);
-{$endif}
 //      write(Format('$%2.2x $%2.2x $%2.2x', [c, b, d]));
 //      writeln(Format('  (%d  %d  %d)', [c, b, d]));
     end;
@@ -513,7 +532,7 @@ begin
         end;
       end;
     end;
-    frmAmpel.PaintAmpel(Row_, Index_, Push_, On_);
+    SetAmpel(Row_, Index_, Push_, On_);
     UseVirtualMidi(MouseEvents[Index], On_);
 
  {   if assigned(frmAmpel.SelectedChanges) then
@@ -634,25 +653,33 @@ begin
     frmAmpel.MakeMouseDown(P, ShiftUsed);
 end;
 
+procedure TAmpelEvents.SetAmpelOn(Row: byte; Index: integer; Push: boolean; On_: boolean);
+begin
+  if (Row in [1..6]) and (Index in [Low(TPitchArray) .. High(TPitchArray)]) then
+  begin
+    AmpelOn[Row, Index].On_ := On_;
+    AmpelOn[Row, Index].Push := Push;
+  end;
+end;
+
 function TAmpelEvents.Paint(Row, Index: integer): boolean;
-var
-  i: integer;
 begin
   result := false;
-  i := 0;
-  while i < UsedEvents do
+  if (Row in [1..6]) and (Index in [Low(TPitchArray) .. High(TPitchArray)]) then
   begin
-    if (MouseEvents[i].Row_ = Row) and (MouseEvents[i].Index_ = Index) then
-    begin
-      result := true;
-      break;
-    end;
-    inc(i);
+    result := AmpelOn[Row, Index].On_;
+    if result then
+      frmAmpel.PaintAmpel(Row, Index, AmpelOn[Row, Index].Push, true)
+    else
+      frmAmpel.PaintAmpel(Row, Index, false, false);
   end;
-  if result then
-    frmAmpel.PaintAmpel(Row, Index, MouseEvents[i].Push_, true)
-  else
-    frmAmpel.PaintAmpel(Row, Index, false, false);
+
+end;
+
+procedure TAmpelEvents.SetAmpel(Row: byte; Index: integer; Push: boolean; On_: boolean);
+begin
+  SetAmpelOn(Row, Index, Push, On_);
+  Paint(Row, Index);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -727,15 +754,6 @@ begin
   lbUnten.Top := rectMax.Bottom + 10;
   lbUnten.Left := Mitte - lbUnten.Width div 2;
 
- { if FlippedVert then
-    rect2.Offset(-rect2.Width, 0);
-  lbTastatur.Left := rect2.Left;
-  cbxVerkehrt.Left := rect2.Left;
-  cbxLinkshaender.Left := rect2.Left;
-  d := btnFlip.Top - lbTastatur.Top;
-  lbTastatur.Top := lbTastatur.Top + d;
-  cbxLinkshaender.Top := cbxLinkshaender.Top + d;
-  cbxVerkehrt.Top := cbxVerkehrt.Top + d;     }
   Invalidate;
 end;
 
@@ -753,7 +771,6 @@ end;
 procedure TfrmAmpel.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   CanClose := true;
-//  WindowState := wsMinimized;
 end;
 
 procedure TfrmAmpel.FormCreate(Sender: TObject);
@@ -764,8 +781,6 @@ begin
   FlippedHorz_ := true;
   btnFlipClick(Sender);
   btnFlipHorzClick(Sender);
-  Header.Clear;
-  Timer1.OnTimer := Timer1Timer;
 end;
 
 procedure TfrmAmpel.FormDeactivate(Sender: TObject);
@@ -910,13 +925,6 @@ begin
   P.X := X;
   P.Y := Y;
   Event := MakeMouseDown(P, ShiftUsed);
-
-{$if not defined(__VIRTUAL__) and defined(dcc)}
-  if (@KeyDown <> nil) and
-     ((GetKeyState(vk_scroll) = 1) or //   numlock pause scroll
-      (GetKeyState(vk_RMenu) < 0)) then // AltGr
-    frmGriff.GenerateNewNote(Event);
-{$endif}
 end;
 
 function TfrmAmpel.MakeMouseDown(const P: TPoint; Push: boolean): TMouseEvent;
@@ -995,6 +1003,8 @@ begin
 end;
 
 function TfrmAmpel.KnopfRect(Row: byte {1..6}; index: byte {0..12}): TRect;
+const
+  yOffset = 40;
 var
   y: integer;
   Knopf, kDelta: integer;
@@ -1084,6 +1094,7 @@ begin
       result.Offset((Instrument.Columns+2)*Knopf +
                     KnopfGroesse*(Row-5), y);
   end;
+  result.Offset(0, yOffset);
 end;
 
 
@@ -1147,11 +1158,14 @@ begin
   cbSizeChange(nil);
 end;
 
-procedure TfrmAmpel.FormShortCut(var Msg: TWMKey; var Handled: Boolean);
+{$ifdef fpc}
+  procedure TfrmAmpel.FormShortCut(var Msg: TLMKey; var Handled: Boolean);
+{$else}
+  procedure TfrmAmpel.FormShortCut(var Msg: TWMKey; var Handled: Boolean);
+{$endif}
 var
   KeyCode: word;
 begin
-{$ifdef dcc}
   if (Msg.KeyData and $40000000) <> 0 then // auto repeat
   begin
     Handled := true;
@@ -1167,7 +1181,6 @@ begin
   end;
   if (KeyCode and $fff) = vk_Return then
     Handled := true;
-{$endif}
 end;
 
 procedure TfrmAmpel.FormShow(Sender: TObject);
@@ -1301,9 +1314,6 @@ var
   Key: word;
   GriffEvent: TGriffEvent;
   Data: TMidiInData;
-  BPM, mDiv: integer;
-  sec: boolean;
-  pip: byte;
   vol: double;
 
   function GetInstr(var Event: TMouseEvent): boolean;
@@ -1360,60 +1370,22 @@ var
   end;
 
 begin
-  if Metronom then
+  if Metronom.DoPip(Header) then
   begin
-    BPM := Header.beatsPerMin;
-    mDiv := Header.measureDiv; // ist 4 oder 8
-    if NurTakt then
-      sec := false
-    else
-    if mDiv = 8 then
-    begin
-      BPM := 2*BPM;
-      sec := (Header.measureFact = 6) and (pipCount = 3);
-    end else
-      sec := true;
-    pip := 0;
-    if pipCount = 0 then
-      pip := pipFirst
-    else
-    if sec then
-      pip := pipSecond;
-    if Now >= nextPip then
+    if Metronom.StartPip then
     begin
       vol := 100*VolumeMetronom;
       if vol > 126 then
         vol := 126;
-      if pip > 0 then
-      begin
-        SendMidiOut($90, pip, trunc(vol));
-        if pipCount = 0 then
-        begin
-          pipPaint(true);
-        end;
-      end;
-      nextPip := Now + 1/(24.0*60.0)/BPM;
-      pipDelay := Now + 0.1/(24*3600);
-    end else
-    if (Now >= pipDelay) and (pipDelay > 0) then
-    begin
-      pipDelay := 0;
-      if pip > 0 then
-      begin
-        if pip > 0 then
-          SendMidiOut($80, pip, 64);
-        if pipCount = 0 then
-        begin
-          pipPaint(false);
-        end;
-      end;
-      inc(pipCount);
-      if pipCount >= Header.measureFact then
-        pipCount := 0;
+      SendMidiOut($90, Metronom.pip, trunc(vol));
+      if Metronom.pipCount = 0 then
+        pipPaint(true);
+    end else begin
+      SendMidiOut($80, Metronom.pip, 64);
+      pipPaint(false);
     end;
-  end; // Metronom
+  end;
 
-//  MidiBufferTail := MidiBufferHead;
   while MidiInBuffer.Get(Data) do
   begin
     if ((Data.Status shr 4) = 12) and (Data.Data2 = 0) then
@@ -1432,24 +1404,15 @@ begin
       Event.Index_ := -1;
       Event.Push_ := ShiftUsed;
       Event.Velocity := Data.Data2;
+
       if (Data.Status shr 4) = 11 then
       begin
-        if {(Data.Data1 = 64) or} (Data.Data1 = ControlSustain) then
+        if (Data.Data1 = ControlPushPull) then
         begin
           Sustain_ := Data.Data2 > 0;
-          PaintBalg(Sustain_);
-        {$ifdef CONSOLE}
-      //    writeln('balg: ', Data.Status, '  ', Data.Data1, '  ', Data.Data2);
-        {$endif}
-        end
-        else
-        if Data.Data1 = 0 then // Program Change
-          MidiOutput.Send(MicrosoftIndex, Data.Status, Data.Data1, Data.Data2)
-      {$ifndef CONSOLE}
-        else
-        if (Data.Data1 = 11) {and IsLimex} then // Expression
-          MidiOutput.Send(MicrosoftIndex, Data.Status, Data.Data1, Data.Data2)
-      {$endif}
+          Key := 0;
+          frmAmpel.FormKeyDown(self, Key, []);
+        end;
       end else
       if ((Data.Status and $f) = 9) then
       begin
@@ -1516,9 +1479,6 @@ begin
             AmpelEvents.EventOff(Event);
         end;
       end else begin
-    {$ifdef CONSOLE}
-    //    writeln(Format('MIDI IN: $%2.2x %3d  $%2.2x' ,[Data.Status, Data.Data1, Data.Data2]));
-    {$endif}
       end;
     end;
   end;
@@ -1532,7 +1492,7 @@ procedure TfrmAmpel.OnMidiInData(aDeviceIndex: integer; aStatus, aData1, aData2:
 var
   t: int64;
   channel, ch, cmd: byte;
-  rec: TMidiInData;
+  Data: TMidiInData;
 begin
   t := trunc(Now*24000*3600);
   if abs(t - lastTime) > 50 then
@@ -1554,17 +1514,17 @@ begin
     if ((channel = 0) or ((channel = 2) and Instrument.BassDiatonic)) and  // is diatonic
        (cmd = 9) then                                                      // and On
     begin
-      with rec do
+      with Data do
       begin
         DeviceIndex := aDeviceIndex;
         Status := $B7;
-        Data1 := ControlSustain;
+        Data1 := ControlPushPull;
         if odd(aData2) then
           Data2 := 0 // Zug
         else
           Data2 := 1;
         Timestamp := t;
-        MidiInBuffer.Put(rec);
+        MidiInBuffer.Put(Data);
         if @PRecordMidiIn <> nil then
           PRecordMidiIn(aStatus, aData1, Data2, t);
       end;
@@ -1598,32 +1558,20 @@ begin
     aStatus := (aStatus and $f0) + channel;
   end; // IsLimex
 
-  with rec do
-  begin
-    DeviceIndex := aDeviceIndex;
-    Status := aStatus;
-    Data1 := aData1;
-    Data2 := aData2;
-    Timestamp := t; // ms
-  {$ifdef CONSOLE}
-  //  if ((Status shr 4) <> 11) or ((Data1 <> 31) and (Data1 <> 11)) then
-//      writeln(Format('$%2.2x  %d  $%2.2x --' ,[Status, Data1, Data2]));
-  {$endif}
-  end;
-  MidiInBuffer.Put(rec);
+  Data.Status := aStatus;
+  Data.Data1 := aData1;
+  Data.Data2 := aData2;
+  Data.Timestamp := t; // ms
+  MidiInBuffer.Put(Data);
   if @PRecordMidiIn <> nil then
     PRecordMidiIn(aStatus, aData1, aData2, t);
 end;
 
-
-{$ifdef dcc}
+// Keys vom Hauptfenster
 procedure TfrmAmpel.KeyMessageEvent(var Msg: TMsg; var Handled: Boolean);
 begin
   if ((Msg.message = WM_KEYDOWN) or (Msg.message = WM_KEYUP)) then
   begin
-{$ifdef CONSOLE}
-//    writeln(Msg.wParam, '  ', IntToHex(Msg.lParam));
-{$endif}
     if frmAmpel.IsActive then
     begin
       if (Msg.lParam and $fff0000) = $0150000 then    // Z
@@ -1679,7 +1627,6 @@ begin
     end;
   end;
 end;
-{$endif}
 
 constructor TMidiInBuffer.Create;
 begin
@@ -1731,6 +1678,58 @@ begin
     result := true;
   finally
     Critical.Release;
+  end;
+end;
+
+function TMetronom.DoPip(const Header: TDetailHeader): boolean;
+var
+  BPM, mDiv: integer;
+begin
+  result := false;
+  if not On_ then
+    exit;
+
+  BPM := Header.beatsPerMin;
+  mDiv := Header.measureDiv; // ist 4 oder 8
+  if NurTakt then
+    sec := false
+  else
+  if mDiv = 8 then
+  begin
+    BPM := 2*BPM;
+    sec := (Header.measureFact = 6) and (pipCount = 3);
+  end else
+    sec := true;
+  pip := 0;
+  if pipCount = 0 then
+    pip := pipFirst
+  else
+  if sec then
+    pip := pipSecond;
+  if Now >= nextPip then
+  begin
+    vol := 100*VolumeMetronom;
+    if vol > 126 then
+      vol := 126;
+    if pip > 0 then
+    begin
+      StartPip := true;
+      result := true;
+    end;
+    nextPip := Now + 1/(24.0*60.0)/BPM;
+    pipDelay := Now + 0.1/(24*3600);
+  end else
+  if (Now >= pipDelay) and (pipDelay > 0) then
+  begin
+    pipDelay := 0;
+    if pip > 0 then
+    begin
+      StartPip := false;
+      result := true;
+    end;
+    inc(pipCount);
+    if pipCount >= Header.measureFact then
+      pipCount := 0;
   end;
 end;
 

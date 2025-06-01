@@ -6,6 +6,10 @@
 //
 unit UVirtual;
 
+{$IFDEF FPC}
+  {$MODE Delphi}
+{$ENDIF}
+
 interface
 
 var
@@ -19,9 +23,9 @@ implementation
 
 
 uses
-  SysUtils,
   teVirtualMIDIdll,
-  Midi;
+  Midi,
+  SysUtils;
 
 var
   dummy: word;
@@ -49,7 +53,7 @@ begin
       exit;
     end;
 
-{$if defined(CONSOLE) and false}
+{$if defined(CONSOLE)}
   for i := 0 to DataLength-1 do
   begin
     b := MidiDataBytes[i];

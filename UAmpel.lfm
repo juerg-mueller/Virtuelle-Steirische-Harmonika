@@ -28,7 +28,7 @@ object frmAmpel: TfrmAmpel
   OnResize = FormResize
   OnShortCut = FormShortCut
   OnShow = FormShow
-  LCLVersion = '2.2.6.0'
+  LCLVersion = '3.6.0.0'
   object lbUnten: TLabel
     Left = 310
     Height = 27
@@ -48,10 +48,10 @@ object frmAmpel: TfrmAmpel
     Top = 47
     Width = 46
     Caption = 'Flip'
+    TabOrder = 0
     OnClick = btnFlipClick
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp
-    TabOrder = 0
   end
   object btnFlipHorz: TButton
     Left = 310
@@ -62,11 +62,11 @@ object frmAmpel: TfrmAmpel
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'Tahoma'
+    ParentFont = False
+    TabOrder = 1
     OnClick = btnFlipHorzClick
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp
-    ParentFont = False
-    TabOrder = 1
   end
   object cbxLinkshaender: TCheckBox
     Left = 8
@@ -74,10 +74,10 @@ object frmAmpel: TfrmAmpel
     Top = 20
     Width = 108
     Caption = 'für Linkshänder'
+    TabOrder = 2
     OnClick = cbxLinkshaenderClick
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp
-    TabOrder = 2
   end
   object cbxVerkehrt: TCheckBox
     Left = 8
@@ -85,10 +85,10 @@ object frmAmpel: TfrmAmpel
     Top = 40
     Width = 69
     Caption = 'verkehrt'
+    TabOrder = 3
     OnClick = cbxLinkshaenderClick
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp
-    TabOrder = 3
   end
   object cbxNoteAnzeigen: TCheckBox
     Left = 8
@@ -96,10 +96,10 @@ object frmAmpel: TfrmAmpel
     Top = 0
     Width = 99
     Caption = 'Note anzeigen'
+    TabOrder = 4
     OnClick = cbxLinkshaenderClick
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp
-    TabOrder = 4
   end
   object Timer1: TTimer
     Interval = 1

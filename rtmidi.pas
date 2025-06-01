@@ -14,7 +14,7 @@ const
   libName =
 	{$IFDEF MSWINDOWS} 'rtmidi.dll';     {$ENDIF}
 	{$IFDEF LINUX}     'librtmidi.so';   {$ENDIF}
-	{$IFDEF MACOS}     'librtmidi.dylib';{$ENDIF}
+	{$IFDEF darwin}     'librtmidi.dylib';{$ENDIF}
 
 type
 	// Wraps an RtMidi object for C function return statuses.
@@ -85,7 +85,8 @@ type
 // A negative return value indicates an error.
 // See RtMidi::getCompiledApi().
 //
-Trtmidi_get_compiled_api = function (var apis: RtMidiApi; apis_size: UInt): Integer;
+PRtMidiApi = ^RtMidiApi;
+Trtmidi_get_compiled_api = function (apis: PRtMidiApi; apis_size: UInt): Integer;
   cdecl;
 
 // Return the name of a specified compiled MIDI API.
@@ -241,6 +242,8 @@ Trtmidi_out_send_message = function (device: RtMidiOutPtr; msg: PAnsiChar; lengt
   cdecl;
 
 var
+  rtmidi_get_compiled_api: Trtmidi_get_compiled_api = nil;
+
   rtmidi_in_create: Trtmidi_in_create = nil;
   rtmidi_in_free: Trtmidi_in_free = nil;
   rtmidi_in_set_callback: Trtmidi_in_set_callback = nil;
@@ -261,13 +264,13 @@ implementation
 var
   hndLib: TLibHandle = 0;
 
-
-
 initialization
 
   hndLib := LoadLibrary(libName);
   if hndLib <> NilHandle then
   begin
+    rtmidi_get_compiled_api :=  Trtmidi_get_compiled_api (GetProcedureAddress(hndLib, 'rtmidi_get_compiled_api'));
+
     rtmidi_open_port :=  Trtmidi_open_port (GetProcedureAddress(hndLib, 'rtmidi_open_port'));
     rtmidi_close_port :=  Trtmidi_close_port(GetProcedureAddress(hndLib, 'rtmidi_close_port'));
     rtmidi_open_virtual_port :=  Trtmidi_open_virtual_port(GetProcedureAddress(hndLib, 'rtmidi_open_virtual_port'));
@@ -283,8 +286,11 @@ initialization
     rtmidi_out_free :=  Trtmidi_out_free(GetProcedureAddress(hndLib, 'rtmidi_out_free'));
     rtmidi_out_send_message :=  Trtmidi_out_send_message(GetProcedureAddress(hndLib, 'rtmidi_out_send_message'));
   end else begin
+{$ifdef CONSOLE}
+    writeln('rtmidi library "' + libName + '" not found');
+{$else}
     ErrMessage('rtmidi library "' + libName + '" not found');
-//    halt;
+{$endif}
   end;
 
 finalization

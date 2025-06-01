@@ -19,9 +19,8 @@ type
 
 var
   MidiInstrDiskant: byte = $15; // Akkordeon
-  MidiInstrBass: byte = $15; // Akkordeon
-  BassBankActiv: boolean = false;
   MidiBankDiskant: byte = 0;
+  MidiInstrBass: byte = $15;
   MidiBankBass: byte = 0;
   pipFirst: byte =  37;   // 59
   pipSecond: byte = 69;       // 76
@@ -30,17 +29,29 @@ var
   VolumeDiscant: double = 1.0;
   VolumeBass: double = 1.0;
   VolumeMetronom: double = 0.8;
+  VolumeOut: double = 0.8;
   NurTakt: boolean = false;
   OhneBlinker: boolean = true;
 
 
 procedure ChangeBank(Index, Channel, Bank, Instr: byte);
-procedure VolumeChange(vol: double; channels: TChannels);
 procedure ResetMidiOut;
 procedure OpenMidiMicrosoft;
 procedure SendMidi(Status, Data1, Data2: byte);
+procedure DoSoundPitch(Pitch: byte; On_: boolean);
 
 implementation
+
+procedure DoSoundPitch(Pitch: byte; On_: boolean);
+begin
+  if MicrosoftIndex >= 0 then
+  begin
+    if On_ then
+      MidiOutput.Send(MicrosoftIndex, $90, Pitch, $4f)
+    else
+      MidiOutput.Send(MicrosoftIndex, $80, Pitch, 64)
+  end;
+end;
 
 procedure ResetMidiOut;
 begin
@@ -61,7 +72,7 @@ begin
   begin
     MidiOutput.Open(MicrosoftIndex);
     try
-//      ResetMidi;
+      ResetMidiOut;
       ChangeBank(MicrosoftIndex, 0, MidiBankDiskant, MidiInstrDiskant);
       ChangeBank(MicrosoftIndex, 1, MidiBankDiskant, MidiInstrDiskant);
       ChangeBank(MicrosoftIndex, 2, MidiBankDiskant, MidiInstrDiskant);
@@ -80,30 +91,6 @@ begin
   if (MicrosoftIndex >= 0) then
     MidiOutput.Send(MicrosoftIndex, Status, Data1, Data2);
 end;
-
-procedure VolumeChange(vol: double; channels: TChannels);
-var
-  v: byte;
-  i: integer;
-begin
-  {
-  if MicrosoftIndex >= 0 then
-  begin
-    vol := 127*vol*0.75 + 32;
-    if vol > 127 then
-      vol := 127;
-    v := trunc(vol);
-    for i := 0 to 15 do
-      if i in channels then
-      begin
-        MidiOutput.Send(MicrosoftIndex, $B0 + i, 7, v);
-        MidiOutput.Send(MicrosoftIndex, $B0 + i, 11, 127);
-        Sleep(10);
-      end;
-  end;
-  }
-end;
-
 
 end.
 

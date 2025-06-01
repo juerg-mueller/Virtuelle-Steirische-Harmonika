@@ -86,7 +86,7 @@ end;
 
 procedure TMidiOutput.Close(Index: integer);
 begin
-  if @rtmidi_close_port <> nil then
+  if (Index >= 0) and (@rtmidi_close_port <> nil) then
     rtmidi_close_port(MidiOut);
 end;
 
@@ -121,7 +121,7 @@ begin
   l := 3;
   if (command shr 4) = 12 then
     dec(l);
-  if MidiOut <> nil then
+  if (Index >= 0) and (MidiOut <> nil) then
     rtmidi_out_send_message(MidiOut, @b, l);
 end;
 

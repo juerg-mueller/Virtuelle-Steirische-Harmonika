@@ -16,8 +16,8 @@ uses
   {$endif}
   Interfaces, // this includes the LCL widgetset
   Forms, UInstrument, UMyMidiStream, UMyMemoryStream,
-  UMidiSaveStream, UMidiEvent, UGriffEvent,
-  UVirtualHarmonica, UAmpel, UFormHelper, UBanks, UMidi;
+  UMidiSaveStream, UMidiEvent,
+  UVirtualHarmonica, UAmpel, UBanks, UMidi;
 
 {$R *.res}
 

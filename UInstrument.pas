@@ -108,14 +108,14 @@ const
   OergeliBassZusatz : array [1..9, 0..1] of integer =
     (
       (63-71, 66-71),
-      (70-66, 61-66),
+      (61-66, 70-66),
       (65-61, 68-61),
       (60-68, 63-68),
       (67-63, 70-63),
       (62-70, 65-70),
       (60-65, 69-65),
       (64-60, 67-60),
-      (71-67, 62-67)
+      (62-67, 71-67)
     );
 
                                 // e ist die tiefste Diskant-Note
@@ -146,7 +146,6 @@ const
       // doubles: 58 (B3: 3 - 3), 70 (B4: 6 - 6), 82 (B5: 9 - 9),   oben/Kopf                                            unten/Fuss
       Col: (( 0,50,53,58,62,65,70,74,77,82,86, 0, 0, 0, 0, 0),  //   D3   F3   B3   D4   F4   B4   D5   F5   B5   D6
             (64,55,58,63,67,70,75,79,82,87,91, 0, 0, 0, 0, 0),  //   E4   G3   B3  Es4   G4   B4  Es5   G5   B5  Es6   G6
-//            ( 0,54,71,61,72,68,73,80,84,85,83, 0, 0, 0, 0, 0),  // Ges3   H4 Des4   C5  As4 Des5  As5   C6 Des6   H5
             ( 0,66,71,61,72,68,73,80,84,85,83, 0, 0, 0, 0, 0),  // Ges3   H4 Des4   C5  As4 Des5  As5   C6 Des6   H5
             ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
            );
@@ -155,7 +154,6 @@ const
       // doubles: 72 (C5: 7 - 6),
       Col: (( 0,53,57,60,63,67,69,72,75,79,81, 0, 0, 0, 0, 0),  //   F3   A3   C4  Es4   G4   A4   C5  Es5   G5   A5
             (64,58,62,65,68,72,74,77,80,84,86, 0, 0, 0, 0, 0),  //   E4   B3   D4   F4  As4   C5   D5   F5  As5   C6   D6
-//            ( 0,61,71,56,66,73,70,78,82,85,87, 0, 0, 0, 0, 0),  // Des3   H4  As3 Ges4 Des5   B4 Ges5   B5 Des6   E6
               ( 0,61,71,56,66,73,70,78,82,85,76, 0, 0, 0, 0, 0),  // Des3   H4  As3 Ges4 Des5   B4 Ges5   B5 Des6   E6
           ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
            );
@@ -646,12 +644,12 @@ end;
 function SoundToGriff_(Pitch: byte; const Bass: TBassArray; var Sixth: boolean): integer;
 begin
   result := GetPitchIndex(Pitch, Bass[Sixth]);
-  if result > 0 then
+ { if result > 0 then
     exit;
 
   result := GetPitchIndex(Pitch, Bass[not Sixth]);
   if result > 0 then
-    Sixth := not Sixth;
+    Sixth := not Sixth;}
 end;
 {
 function TInstrument._SoundToGriffBass(Pitch: byte; var InPush, Sixth: boolean): integer;
@@ -910,20 +908,12 @@ begin
     AddInstrument(Path + DirList[i]);
 
   DirList.Free;
-
-{  if Length(InstrumentsList_) = 0 then
-  begin
-    Warning('No instruments found!'#10#13'The internal ones are therefore used.');
-    SetLength(InstrumentsList_, Length(InstrumentsList));
-    for i := 0 to Length(InstrumentsList)-1 do
-    begin
-      InstrumentsList_[i] := InstrumentsList[i]^;
-    end;
-  end;  }
 end;
+
 
 initialization
 
+  // Json Files
   if DirectoryExists('../../instruments') then
     ReadInstruments('../../instruments/')
   else
