@@ -72,3 +72,5 @@ Vorteile
 
 - Ebenso kann die virtuelle Steirische Harmonika oder das Örgeli auch für Linux und für den MAC generiert werden. Dazu ist für die MIDI-Schnittstelle jeweils
 eine Dynamische Library notwendig (https://github.com/thestk/rtmidi).
+
+Hinweis zur Istallation von Lazarus: https://wiki.freepascal.org/fpcupdeluxe/de
