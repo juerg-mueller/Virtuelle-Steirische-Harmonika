@@ -154,10 +154,10 @@ begin
     rtmidi_in_free(MidiIn);
 end;
 
-procedure Callback(TimeStamp: double; const message: PChar; userData: pointer); cdecl;
+procedure Callback(TimeStamp: double; const message: PByte; userData: pointer); cdecl;
 begin
   if @MidiInput.OnMidiData <> nil then
-    MidiInput.OnMidiData(0, byte(message[0]), byte(message[1]), byte(message[2]), 0);
+    MidiInput.OnMidiData(0, message[0], message[1], message[2], 0);
 end;
 
 procedure TMidiInput.Open(Index: integer);
@@ -165,7 +165,8 @@ begin
   if @rtmidi_open_port <> nil then
   begin
     rtmidi_open_port(MidiIn, Index, '');
-    rtmidi_in_set_callback(MidiIn, @Callback, self);
+    if @rtmidi_in_set_callback <> nil then
+      rtmidi_in_set_callback(MidiIn, @Callback, self);
   end;
 end;
 
@@ -173,7 +174,8 @@ procedure TMidiInput.Close(Index: integer);
 begin
   if MidiIn <> nil then
   begin
-    rtmidi_in_cancel_callback(MidiIn);
+    if @rtmidi_in_cancel_callback <> nil then
+      rtmidi_in_cancel_callback(MidiIn);
     rtmidi_close_port(MidiIn);
   end;
 end;

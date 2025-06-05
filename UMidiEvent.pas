@@ -100,12 +100,14 @@ type
   end;
   PMidiEvent = ^TMidiEvent;
 
+  TMidiEventArray = array of TMidiEvent;
+
   TDetailHeader = record
     IsSet: boolean;
     // delta-time ticks pro Viertelnote
-    DeltaTimeTicks: word;
+    TicksPerQuarter: word;
     // Beats/min.  Viertelnoten/Min.
-    beatsPerMin: integer;
+    QuarterPerMin: integer;
     smallestFraction: integer;
     measureFact: integer;
     measureDiv: integer;
@@ -123,7 +125,7 @@ type
     function TicksToMs(Ticks: integer): double;
     function TicksToString(Ticks: integer): string;
     function SetTimeSignature(const Event: TMidiEvent; const Bytes: array of byte): boolean;
-    function SetBeatsPerMin(const Event: TMidiEvent; const Bytes: array of byte): boolean;
+    function SetQuarterPerMin(const Event: TMidiEvent; const Bytes: array of byte): boolean;
     function SetDurMinor(const Event: TMidiEvent; const Bytes: array of byte): boolean;
     function SetParams(const Event: TMidiEvent; const Bytes: array of byte): boolean;
     function GetMetaBeats51: AnsiString;
@@ -155,10 +157,15 @@ function Max(a, b: integer): integer; inline;
 
 function BytesToAnsiString(const Bytes: array of byte): AnsiString;
 
-implementation
+const
+  NoteNames: array [0..7] of string =
+    ('whole', 'half', 'quarter', 'eighth', '16th', '32nd', '64th', '128th');
 
-uses
-  UGriffEvent;
+function GetFraction_(const sLen: string): integer; overload;
+function GetFraction_(const sLen: integer): string; overload;
+
+
+implementation
 
 function TMidiEvent.GetAnsi: AnsiString;
 begin
@@ -244,14 +251,14 @@ end;
 
 function TDetailHeader.TicksPerMeasure: integer;
 begin
-  result := 4*DeltaTimeTicks*measureFact div measureDiv;
+  result := 4*TicksPerQuarter*measureFact div measureDiv;
 end;
 
 function TDetailHeader.TicksToMs(Ticks: integer): double;
 begin
-  if DeltaTimeTicks = 0 then
-    DeltaTimeTicks := 192;
-  result := Ticks*60000.0 / (DeltaTimeTicks*beatsPerMin);
+  if TicksPerQuarter = 0 then
+    Clear;
+  result := (Ticks*60000.0) / (TicksPerQuarter*QuarterPerMin);
 end;
 
 function TDetailHeader.TicksToString(Ticks: integer): string;
@@ -293,7 +300,7 @@ begin
   end;
 end;
 
-function TDetailHeader.SetBeatsPerMin(const Event: TMidiEvent; const Bytes: array of byte): boolean;
+function TDetailHeader.SetQuarterPerMin(const Event: TMidiEvent; const Bytes: array of byte): boolean;
 var
   bpm: double;
 begin
@@ -302,7 +309,7 @@ begin
      not IsSet then // Cornelia Walzer
   begin
     bpm := (Bytes[0] shl 16) + (Bytes[1] shl 8) + Bytes[2];
-    beatsPerMin := round(6e7 / bpm);
+    QuarterPerMin := round(6e7 / bpm);
     IsSet := true;
   end;
 end;
@@ -311,7 +318,7 @@ function TDetailHeader.SetParams(const Event: TMidiEvent; const Bytes: array of 
 begin
   result := SetTimeSignature(Event, Bytes);
   if not result then
-    result := SetBeatsPerMin(Event, Bytes);
+    result := SetQuarterPerMin(Event, Bytes);
   if not result then
     result := SetDurMinor(Event, Bytes);
 end;
@@ -320,7 +327,7 @@ function TDetailHeader.GetSmallestTicks: integer;
 begin
   if (smallestFraction < 1) then
     smallestFraction := 2;
-  result := 4*DeltaTimeTicks div smallestFraction;
+  result := 4*TicksPerQuarter div smallestFraction;
 end;
 
 function TDetailHeader.GetTicks: double;
@@ -330,15 +337,15 @@ var
 begin
   d := now;
   d := 24.0*3600*(d - trunc(d)); // sek.
-  if beatsPerMin < 20 then
-    beatsPerMin := 20;
-  q := d*DeltaTimeTicks*beatsPerMin / 60.0;
+  if QuarterPerMin < 20 then
+    QuarterPerMin := 20;
+  q := d*TicksPerQuarter*QuarterPerMin / 60.0;
   result := q;
 end;
 
 function TDetailHeader.MsDelayToTicks(MsDelay: integer): integer;
 begin
-  result := round(MsDelay*DeltaTimeTicks*beatsPerMin / 60000.0); // MsDelay in ms
+  result := round(MsDelay*TicksPerQuarter*QuarterPerMin / 60000.0); // MsDelay in ms
 end;
 
 function TDetailHeader.GetRaster(p: integer): integer;
@@ -348,8 +355,8 @@ begin
   if p < 0 then
     result := -GetRaster(-p)
   else
-  if p = DeltaTimeTicks  div 8 - 1 then
-    result := DeltaTimeTicks  div 8
+  if p = TicksPerQuarter  div 8 - 1 then
+    result := TicksPerQuarter  div 8
   else begin
     s := GetSmallestTicks;
     result := s*((p + 2*s div 3) div s);
@@ -379,7 +386,7 @@ end;
 
 function TDetailHeader.GetMeasureDiv: double;
 begin
-  result := DeltaTimeTicks;
+  result := TicksPerQuarter;
   if measureDiv >= 8 then
     result := result / (measureDiv div 4) ;
 end;
@@ -388,8 +395,8 @@ end;
 procedure TDetailHeader.Clear;
 begin
   IsSet := false;
-  DeltaTimeTicks := 192;
-  beatsPerMin := 120;
+  TicksPerQuarter := 192;
+  QuarterPerMin := 120;
   smallestFraction := 32;  // 32nd
   measureFact := 4;
   measureDiv := 4;
@@ -404,8 +411,8 @@ var
   beats: integer;
 begin
   beats := 30;
-  if beatsPerMin > beats then
-    beats := beatsPerMin;
+  if QuarterPerMin > beats then
+    beats := QuarterPerMin;
   bpm := trunc(6e7 / beats);
   c := round(bpm);
   result := AnsiChar(c shr 16) + AnsiChar((c shr 8) and $ff) + AnsiChar(c and $ff);
@@ -443,14 +450,14 @@ begin
   result := GetFraction_(duration);
   if result > 0 then   // 128th
   begin
-    result := 4*DeltaTimeTicks div result;
+    result := 4*TicksPerQuarter div result;
   end else begin
     p := Pos('/', duration);
     if p > 0 then
     begin
       n := Copy(Duration, 1, p-1);
       f := Copy(Duration, p+1, length(duration));
-      result := 4*DeltaTimeTicks*StrToInt(n) div StrToInt(f);
+      result := 4*TicksPerQuarter*StrToInt(n) div StrToInt(f);
     end;
   end;
   d := StrToIntDef(dots, 0);
@@ -556,6 +563,7 @@ begin
   command := c;
   d1 := d1_;
   d2 := d2_;
+  var_len := 0;
 end;
 
 procedure TMidiEvent.AppendByte(b: byte);
@@ -599,6 +607,106 @@ begin
   result := (command = Event.command) and (d1 = Event.d1) and (d2 = Event.d2);
 end;
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+function GetFraction_(const sLen: string): integer; overload;
+var
+  idx: integer;
+begin
+  result := 128;
+  for idx := High(NoteNames) downto 1 do
+    if sLen = NoteNames[idx] then
+      break
+    else
+      result := result shr 1;
+end;
+
+function GetFraction_(const sLen: integer): string; overload;
+var
+  idx, i: integer;
+begin
+  result := '?';
+  idx := 128;
+  for i := High(NoteNames) downto 1 do
+    if sLen = idx then
+    begin
+      result := NoteNames[i];
+      break
+    end else
+      idx := idx shr 1;
+end;
+
+function GetLen_(var t32: integer; var dot: boolean; t32Takt: integer): integer;
+// at most one dot
+var
+  t: integer;
+
+  function Check: boolean;
+  begin
+    result := (t32 and t) <> 0;
+  end;
+
+  procedure DoCheck;
+  begin
+    while (result = 0) and (t <= 32) do
+    begin
+      if Check then
+        result := t;
+      t := t shl 1;
+    end;
+  end;
+
+
+  procedure DoCheckBig;
+  begin
+    while (result = 0) and (t > 0) do
+    begin
+      if Check then
+        result := t;
+      t := t shr 1;
+    end;
+  end;
+
+begin
+  dot := false;
+  result := 0;
+
+  // als eine Note
+  t := $20;
+  while t >= 1 do
+  begin
+    if ((t and t32) <> 0) and
+       ((t32 and not (t + t shr 1)) = 0) then
+    begin
+      result := t;
+      dot := (t32 and (t shr 1)) <> 0;
+      break;
+    end else
+      t := t shr 1;
+  end;
+
+  if (result = 0) and ((t32Takt mod 8) = 0) then
+  begin
+    t := 32;
+    DoCheckBig;
+  end;
+  // whole   32
+  // halfe   16
+  // quarter: 8
+  // eighth:  4
+  // 16th:    2
+  // 32nd:    1
+  t := 1;
+  if result = 0 then
+  begin
+    t := 1;
+    DoCheck;
+  end;
+  dec(t32, result);
+  if dot then
+    dec(t32, result div 2);
+end;
 
 
 

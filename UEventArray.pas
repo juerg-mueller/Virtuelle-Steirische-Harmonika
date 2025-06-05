@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2021 Jürg Müller, CH-5524
+// Copyright (C) 2021 JÃ¼rg MÃ¼ller, CH-5524
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -26,17 +26,19 @@ uses
 
 const
   CopyrightGriff = AnsiString('Griffschrift - Copyright by juerg5524.ch');
+  CopyrightNewGriff = AnsiString('new Griffschrift - Copyright by juerg5524.ch');
   Copyrightreal  = AnsiString('real Griffschrift Noten - Copyright by juerg5524.ch');
 
 
 type
-  TCopyright = (noCopy, prepCopy, griffCopy, realCopy);
+  TCopyright = (noCopy, prepCopy, griffCopy, realCopy, newCopy);
 
   TMidiEventArray = array of TMidiEvent;
   PMidiEventArray = ^TMidiEventArray;
   TChannelEventArray = array [0..15] of TMidiEventArray;
   TTrackEventArray = array of TMidiEventArray;
   TAnsiStringArray = array of AnsiString;
+
 
   TEventArray = class
   protected
@@ -45,6 +47,7 @@ type
   public
     Text_: AnsiString;     // 01
     Copyright: AnsiString; // 02
+                           // Melodie / Bass
     Instrument: AnsiString;// 04
     DetailHeader: TDetailHeader;
     SingleTrack: TMidiEventArray;
@@ -53,7 +56,12 @@ type
     constructor Create;
     destructor Destroy; override;
     function LoadMidiFromFile(FileName: string; Lyrics: boolean): boolean;
-    function SaveMidiToFile(FileName: string; Lyrics: boolean): boolean;
+    function LoadMidiFromSimpleFile(FileName: string; Lyrics: boolean): boolean;
+    function LoadMidiFromDataStream(Midi: TMyMidiStream; Lyrics: boolean): boolean;
+    function SaveMidiToStream(Lyrics: boolean): TMemoryStream; overload;
+    class function SaveMidiToStream(
+      const TrackArr: TTrackEventArray; const DetailHeader: TDetailHeader;
+      Lyrics: boolean): TMemoryStream; overload;
     function SaveSimpleMidiToFile(FileName: string; Lyrics: boolean = false): boolean; overload;
     class function SaveSimpleMidiToFile(FileName: string;
       const TrackArr: TTrackEventArray; const DetailHeader: TDetailHeader;
@@ -64,6 +72,9 @@ type
     function GetCopyright: TCopyright;
     procedure SetNewTrackCount(Count: integer);
     function TrackCount: integer;
+    function CheckMysOergeli: boolean;
+    function MakeNewSingleTrack: boolean;
+    procedure Repair;
 
     property TrackName: TAnsiStringArray read TrackName_;
     property TrackArr: TTrackEventArray read TrackArr_;
@@ -91,6 +102,10 @@ type
     class function MakeSingleTrack(var MidiEventArray: TMidiEventArray; const TrackArr: TTrackEventArray): boolean; overload;
     class function GetDelayEvent(const EventTrack: TMidiEventArray; iEvent: integer): integer;
     class procedure MoveLyrics(var Events: TMidiEventArray);
+    class function EraseFirst(var MidiEventArray: TMidiEventArray): boolean;
+
+    class procedure MakeNice(var MidiEvents: TMidiEventArray);
+    class procedure RemoveIndex(Index: integer; var MidiEvents: TMidiEventArray);
   end;
 
   PSetEvent = procedure (const Event: TMidiEvent) of object;
@@ -123,12 +138,16 @@ type
 implementation
 
 uses
-{$ifdef FPC}
-  Urtmidi;
+  umidi,
+{$ifndef mswindows}
+  urtmidi,
 {$else}
-  AnsiStrings,
-  Midi;
+  Midi,
 {$endif}
+{$ifdef dcc}
+  AnsiStrings,
+{$endif}
+  UMidiDataStream, UInstrument;
 
 constructor TEventArray.Create;
 begin
@@ -181,16 +200,44 @@ begin
   Midi := TMidiDataStream.Create;
   try
     Midi.LoadFromFile(FileName);
-    result := Midi.MakeEventArray(self, Lyrics);
-    MakeSingleTrack(SingleTrack, TrackArr);
-    SplitEventArray(ChannelArray, SingleTrack, Length(SingleTrack));
+    result := LoadMidiFromDataStream(Midi, Lyrics);
   finally
     Midi.Free;
+  end;
+end;
+
+function TEventArray.LoadMidiFromSimpleFile(FileName: string; Lyrics: boolean): boolean;
+var
+  Midi: TMidiDataStream;
+  SimpleFile: TSimpleDataStream;
+begin
+  result := false;
+  try
+    Midi := TMidiDataStream.Create;
+    SimpleFile := TSimpleDataStream.Create;
+    SimpleFile.LoadFromFile(FileName);
+    Midi := SimpleFile.MakeMidiFromSimpleStream;
+    if Midi <> nil then
+      result := LoadMidiFromDataStream(Midi, Lyrics);
+  finally
+    SimpleFile.Free;
+    Midi.Free;
+  end;
+end;
+
+function TEventArray.LoadMidiFromDataStream(Midi: TMyMidiStream; Lyrics: boolean): boolean;
+begin
+  result := false;
+  try
+    result := (Midi as TMidiDataStream).MakeEventArray(self, Lyrics);
+    MakeSingleTrack(SingleTrack, TrackArr);
+    EraseFirst(SingleTrack);
+    SplitEventArray(ChannelArray, SingleTrack, Length(SingleTrack));
+  finally
     if not result then
       Clear;
   end;
 end;
-
 
 class function TEventArray.SaveSimpleMidiToFile(FileName: string;
   const TrackArr: TTrackEventArray; const DetailHeader: TDetailHeader; Lyrics: boolean): boolean;
@@ -243,9 +290,9 @@ begin
       if not Lyrics then
       begin
         WriteTrackHeader(0);
-        if DetailHeader.beatsPerMin > 0 then
+        if DetailHeader.QuarterPerMin > 0 then
         begin
-          bpm := 6e7 / DetailHeader.beatsPerMin;
+          bpm := 6e7 / DetailHeader.QuarterPerMin;
           l := round(bpm);
           WriteString('    0 ' + cSimpleMetaEvent + ' 255 81 3 '); // beats
           WritelnString(IntToStr(l shr 16) + ' ' + IntToStr((l shr 8) and $ff) + ' ' +
@@ -287,7 +334,7 @@ begin
           end;
           if Event.Event = 9 then
           begin
-            takt := Offset div MidiHeader.Details.DeltaTimeTicks;
+            takt := Offset div MidiHeader.Details.TicksPerQuarter;
             if MidiHeader.Details.measureDiv = 8 then
               takt := 2*takt;
             d := MidiHeader.Details.measureFact;
@@ -311,29 +358,33 @@ begin
   result := SaveSimpleMidiToFile(FileName, TrackArr, DetailHeader, Lyrics);
 end;
 
-function TEventArray.SaveMidiToFile(FileName: string; Lyrics: boolean): boolean;
+function TEventArray.SaveMidiToStream(Lyrics: boolean): TMemoryStream;
+begin
+  result := SaveMidiToStream(TrackArr_, DetailHeader, Lyrics);
+end;
+
+class function TEventArray.SaveMidiToStream(
+  const TrackArr: TTrackEventArray; const DetailHeader: TDetailHeader;
+  Lyrics: boolean): TMemoryStream;
 var
   i: integer;
   SaveStream: TMidiSaveStream;
 begin
   SaveStream := TMidiSaveStream.Create;
-  try
-    SaveStream.SetHead(DetailHeader.DeltaTimeTicks);
+
+    SaveStream.SetHead(DetailHeader.TicksPerQuarter);
+  SaveStream.AppendTrackHead;
+  SaveStream.AppendHeaderMetaEvents(DetailHeader);
+  SaveStream.AppendTrackEnd(false);
+  for i := 0 to Length(TrackArr)-1 do
+  begin
     SaveStream.AppendTrackHead;
-    SaveStream.AppendHeaderMetaEvents(DetailHeader);
+    SaveStream.AppendEvents(TrackArr[i]);
     SaveStream.AppendTrackEnd(false);
-    for i := 0 to Length(TrackArr)-1 do
-    begin
-      SaveStream.AppendTrackHead;
-      SaveStream.AppendEvents(TrackArr[i]);
-      SaveStream.AppendTrackEnd(false);
-    end;
-    SaveStream.Size := SaveStream.Position;
-    SaveStream.SaveToFile(FileName);
-  finally
-    SaveStream.Free;
   end;
-  result := true;
+  SaveStream.Size := SaveStream.Position;
+
+  result := SaveStream;
 end;
 
 procedure TEventArray.Move_var_len;
@@ -349,14 +400,29 @@ var
   i: integer;
 begin
   result := true;
-  for i := 0 to Length(TrackArr)-1 do
-    if not TEventArray.Transpose(TrackArr[i], Delta) then
-      result := false;
+  if Delta <> 0 then
+    for i := 0 to Length(TrackArr)-1 do
+      if not TEventArray.Transpose(TrackArr[i], Delta) then
+        result := false;
 end;
 
 
 function TEventArray.GetCopyright: TCopyright;
 begin
+{$ifdef fpc}
+  result := noCopy;
+  if AnsiStrLComp(PAnsiChar(Copyright), PAnsiChar(Copyrightreal), Length('real Griffschrift - Copyright')) = 0 then
+    result := realCopy
+  else
+  if AnsiStrLComp(PAnsiChar(Copyright), PAnsiChar(CopyrightGriff), Length('Griffschrift - Copyright')) = 0 then
+    result := griffCopy
+  else
+  if AnsiStrLComp(PAnsiChar(Copyright), PAnsiChar(CopyrightNewGriff), Length('Griffschrift - Copyright')) = 0 then
+    result := newCopy
+  else
+  if Copyright = CopyPrep then
+    result := prepCopy;
+{$else}
   result := noCopy;
   if AnsiStrings.AnsiStrLComp(PAnsiChar(Copyright), PAnsiChar(Copyrightreal), Length('real Griffschrift - Copyright')) = 0 then
     result := realCopy
@@ -364,11 +430,44 @@ begin
   if AnsiStrings.AnsiStrLComp(PAnsiChar(Copyright), PAnsiChar(CopyrightGriff), Length('Griffschrift - Copyright')) = 0 then
     result := griffCopy
   else
-  if Copyright = CopyPrep then
-    result := prepCopy
+  if AnsiStrings.AnsiStrLComp(PAnsiChar(Copyright), PAnsiChar(CopyrightNewGriff), Length('Griffschrift - Copyright')) = 0 then
+    result := newCopy
   else
-  if (Length(TrackName_) = 2) {and ((LowerCase(TrackName[0]) = 'melodie') or (LowerCase(TrackName[1]) = 'bass'))} then
+  if Copyright = CopyPrep then
     result := prepCopy;
+{$endif}
+end;
+
+function TEventArray.CheckMysOergeli: boolean;
+var
+  event: TMidiEvent;
+  i, k: integer;
+  count: array [0..15] of integer;
+begin
+  result := Copyright = 'VirtualHarmonica';
+  if not result then
+  begin
+    for i := 0 to 15 do
+      count[i] := 0;
+    for i := 0 to Length(TrackArr_)-1 do
+      for k := 0 to Length(TrackArr_[i])-1 do
+      begin
+        event := TrackArr_[i][k];
+        case (event.command shr 4) of
+          8, 9: inc(count[event.command and $f]);
+          11:   if (event.command = $b7) and (event.d1 = $1f) then
+                  inc(count[7]);
+          else begin
+
+          end;
+        end;
+      end;
+    result := true; //count[7] > 0;
+    for i := 0 to 15 do
+      if (i in [0, 8..10, 12..15]) and (count[i] > 0) then
+        result := false;
+  end;
+
 end;
 
 
@@ -418,7 +517,8 @@ var
 begin
   SetLength(MidiEventArray, 0);
   for i := 0 to Length(TrackArr)-1 do
-    TEventArray.MergeTracks(MidiEventArray, TrackArr[i]);
+    if Length(TrackArr[i]) > 0 then
+      TEventArray.MergeTracks(MidiEventArray, TrackArr[i]);
   result := true;
 end;
 
@@ -507,12 +607,12 @@ var
   event: TMidiEvent;
   add: integer;
 begin
-  // Kanäle 0 und 3: diskant
-  // Kanäle 1 und 4: 3-Klang Bass
-  // Kanal 2:        Bass (monophon) / Grundton von Kanal 1 liegt eine Oktave höher
-  // Kanal 5:        Kanal 2 genau eine Oktave höher
+  // KanÃ¤le 0 und 3: diskant
+  // KanÃ¤le 1 und 4: 3-Klang Bass
+  // Kanal 2:        Bass (monophon) / Grundton von Kanal 1 liegt eine Oktave hÃ¶her
+  // Kanal 5:        Kanal 2 genau eine Oktave hÃ¶her
 
-  // kurze Töne entfernen
+  // kurze TÃ¶ne entfernen
   max := Length(ChannelEvents[Diskant]);
   i := 0;
   k := i;
@@ -770,6 +870,9 @@ var
   end;
 
 begin
+  if Length(Events2) = 0 then
+    exit;
+
   if not TEventArray.HasSound(Events1) then
   begin
     SetLength(Events1, 0);
@@ -1033,6 +1136,36 @@ begin
   end;
 end;
 
+// LÃ¶scht alle MIDI-Events bis zum ersten Push/Pull
+class function TEventArray.EraseFirst(var MidiEventArray: TMidiEventArray): boolean;
+var
+  i, k, j: integer;
+begin
+  result := false;
+  i := 0;
+  while (i < Length(MidiEventArray)) and not result do
+  begin
+    result := MidiEventArray[i].IsPushPull;
+    inc(i);
+  end;
+  if result then
+  begin
+    dec(i);
+    k := 0;
+    while (k < i) do
+      if MidiEventArray[k].Event = 9 then
+        break
+      else
+        inc(k);
+    if k < i then
+    begin
+      for j := 0 to Length(MidiEventArray)-1-i do
+        MidiEventArray[k+j] := MidiEventArray[i+j];
+      SetLength(MidiEventArray, Length(MidiEventArray)-i+k);
+    end;
+  end;
+end;
+
 procedure CopyEventArray(var OutArr: TMidiEventArray; const InArr: TMidiEventArray);
 var
   i: integer;
@@ -1043,6 +1176,53 @@ begin
 
 end;
 
+
+class procedure TEventArray.MakeNice(var MidiEvents: TMidiEventArray);
+var
+  k, q: integer;
+begin
+  // unnÃ¶tige Push/Pull entfernen
+  k := 0;
+  while k < Length(MidiEvents)-1 do
+  begin
+    if MidiEvents[k].IsPushPull and MidiEvents[k+1].IsPushPull then
+      RemoveIndex(k, MidiEvents)
+    else
+      inc(k);
+  end;
+
+  // erste On-Note finden
+  q := 0;
+  while q < Length(MidiEvents)-1 do
+  begin
+    if MidiEvents[q].Event = 9 then
+      break;
+    inc(q);
+  end;
+  // var_len an den Anfang schieben
+  k := q-1;
+  while k > 0 do begin
+    inc(MidiEvents[k-1].var_len, MidiEvents[k].var_len);
+    MidiEvents[k].var_len := 0;
+    dec(k);
+  end;
+end;
+
+class procedure TEventArray.RemoveIndex(Index: integer; var MidiEvents: TMidiEventArray);
+var
+  i: integer;
+begin
+  if (Index < 0) or (Index >= Length(MidiEvents)) then
+    exit;
+
+  if Index > 0 then
+    inc(MidiEvents[Index-1].var_len, MidiEvents[Index].var_len);
+
+  for i := Index+1 to Length(MidiEvents)-1 do
+    MidiEvents[i-1] := MidiEvents[i];
+
+  SetLength(MidiEvents, Length(MidiEvents)-1);
+end;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1092,7 +1272,7 @@ begin
                   ' of ' + DetailHeader.TicksToString(len);
       sleep(4);
     {$ifdef LINUX}
-      UfrmSelector.Channel_Selection.lbPlayLength.Caption := Pos^;
+//      UfrmSelector.Channel_Selection.lbPlayLength.Caption := Pos^;
 //      Application.ProcessMessages;
     {$endif}
     end;
@@ -1107,11 +1287,8 @@ begin
       SetPlayEvent(Event);
     end;
 
-{$ifdef LINUX}
-  MidiOutput.Reset
-{$else}
-  ResetMidi;
-
+  ResetMidiOut;
+{$ifndef LINUX}
   Terminate;
   while not Terminated_ do
     Sleep(1);
@@ -1130,6 +1307,252 @@ begin
   result := Terminated;
 end;
 {$endif}
+
+function TEventArray.MakeNewSingleTrack: boolean;
+var
+  iEvent, iTrack: integer;
+  MidiEvents: array [0..1] of TMidiEventArray;
+  Event: TMidiEvent;
+  GriffPitch: integer;
+  Cross: boolean;
+  channel: byte;
+  InstrName: boolean;
+  idx: integer;
+  Instr: TInstrument;
+  PitchArray: PPitchArray;
+  InPush_: boolean;
+  channels: array [0..255] of byte;
+
+  procedure AddEvent;
+  var
+    l: integer;
+  begin
+    l := Length(MidiEvents[iTrack]);
+    SetLength(MidiEvents[iTrack],l+1);
+    MidiEvents[iTrack][l] := Event;
+  end;
+
+  function PitchInArray(Pitch: byte): integer;
+  begin
+    result := High(TPitchArray);
+    while result >= 0 do
+    begin
+      if Pitch = PitchArray[result] then
+        break;
+      dec(result);
+    end;
+  end;
+
+begin
+  result := false;
+  SetLength(SingleTrack, 0);
+  InstrName := false;
+
+  if GetCopyright = newCopy then
+  begin
+    if Length(TrackArr_) = 1 then
+    begin
+      SingleTrack := Track[0];
+      result := true;
+    end;
+    exit;
+  end;
+
+  if GetCopyright <> griffCopy then
+    exit;
+
+  for iTrack := 0 to 1 do
+  begin
+    SetLength(MidiEvents[iTrack], 0);
+    GriffPitch := -1;
+    for iEvent := 0 to Length(Track[iTrack])-1 do
+    begin
+      Event := Track[iTrack][iEvent];
+      if Event.command = $ff then
+      begin
+        if Event.d1 = 3 then
+          continue;
+        if Event.d1 = 4 then
+        begin
+          if InstrName then
+            continue;
+          InstrName := true;
+        end;
+      end else
+      if Event.Event = 12 then
+      begin
+        continue;
+      end else
+      if (Event.d1 = ControlPushPull+1) or (Event.d1 = ControlPushPull+2) then
+      begin
+        Cross := Event.d1 = ControlPushPull+2;
+        GriffPitch := Event.d2;
+        continue;
+      end else
+      if Event.Event = 9 then begin
+        if iTrack = 1 then
+        begin
+          if Cross then
+            channel := 6
+          else
+            channel := 5;
+        end else begin
+          if GriffPitch = 0 then
+            GriffPitch := Event.d1;
+          channel := 1;
+          if not odd(cDurLine(GriffPitch, false)) then
+            inc(channel);
+          if Cross then
+            inc(channel, 2);
+        end;
+        Event.command := (Event.Event << 4) + channel;
+        Cross := false;
+        GriffPitch := 0;
+        channels[Event.d1] := channel;
+      end else
+      if Event.Event = 8 then begin
+        // Beim Off gleichen Kanal wie beim On verwenden.
+        Event.command := (Event.Event << 4) + channels[Event.d1];
+      end;
+      AddEvent;
+    end;
+  end;
+
+  SingleTrack := MidiEvents[0];
+
+  // Midi-Instrumente pro Kanal einfÃ¼gen.
+  // Dazu 8+1 MidiEvent verschieben.
+  SetLength(SingleTrack, Length(SingleTrack)+9);
+  for iEvent := Length(SingleTrack)-10 downto 2 do
+    SingleTrack[iEvent+9] := SingleTrack[iEvent];
+
+  Event.Clear;
+  Event.command := $C0;
+  Event.d1 := 21; // Akkordeon
+  for iEvent := 3 to 10 do begin
+    SingleTrack[iEvent] := Event;
+    inc(Event.Command);
+  end;
+  SingleTrack[2] := SingleTrack[1];
+
+  // Copyright einfÃ¼gen
+  Event.Clear;
+  Event.MakeMetaEvent(2, CopyrightNewGriff);
+  SingleTrack[1] := Event;
+
+  MergeTracks(SingleTrack, MidiEvents[1]);
+
+  result := true;
+  idx := InstrumentIndex(Instrument);
+  if idx >= 0 then
+  begin
+    InPush_ := false;
+    Instr := InstrumentsList_[idx];
+    for iEvent := 0 to Length(SingleTrack)-1 do
+      with SingleTrack[iEvent] do
+        if (Event = 11) and (d1 = ControlPushPull) then
+          InPush_ := (d2 <> 0)
+        else
+        if Event = 9 then
+        begin
+          PitchArray := nil;
+          if Channel in [1..4] then
+          begin
+            if InPush_ then
+              PitchArray := @Instr.Push.Col[Channel]
+            else
+              PitchArray := @Instr.Pull.Col[Channel];
+          end else
+          if (Command and $f) in [5..6] then
+            if not Instr.BassDiatonic or InPush_ then
+              PitchArray := @Instr.Bass[Channel = 6]
+            else
+              PitchArray := @Instr.PullBass[Channel = 6];
+          if PitchArray <> nil then
+          begin
+            if PitchInArray(d1) < 0 then
+            begin
+              result := false;
+          {$ifdef CONSOLE}
+              writeln('error Pitch ', d1, '  row ', Channel);
+          {$endif}
+            end;
+          end;
+        end;
+  end;
+end;
+
+
+procedure TEventArray.Repair;
+var
+  Instrument_: TInstrument;
+  idx: integer;
+  iTrack: integer;
+
+  procedure RepairTrack(var MidiEvents: TMidiEventArray; Bass: boolean);
+  var
+    iEvent, iOff: integer;
+    Event, NextEvent: TMidiEvent;
+    InPush: boolean;
+    Sound: integer;
+    Cross: boolean;
+    BassArr: TPitchArray;
+  begin
+    InPush := false;
+    for iEvent := 0 to Length(MidiEvents)-2 do
+    begin
+      Event := MidiEvents[iEvent];
+      if Event.IsPushPull then
+      begin
+        InPush := Event.IsPush;
+        continue;
+      end;
+
+      if (Event.Event = 11) and (Event.d1 in [32, 33]) then
+      begin
+        NextEvent := MidiEvents[iEvent+1];
+        Cross := Event.d1 = 33;
+        if Bass then
+        begin
+          If not Instrument_.BassDiatonic or InPush then
+            BassArr := Instrument_.Bass[Cross]
+          else
+            BassArr := Instrument_.PullBass[Cross];
+          Sound := -1;
+          if Event.d2 in [1..High(TPitchArray)] then
+            Sound := BassArr[Event.d2];
+        end else
+          Sound := Instrument_.GriffToSound(Event.d2, InPush, Cross);
+        if (Sound > 0) and (Sound <> NextEvent.d1) then
+        begin
+          iOff := iEvent+2;
+          while (iOff < Length(MidiEvents)) do
+            if (MidiEvents[iOff].command + 16 = NextEvent.command) and
+               (MidiEvents[iOff].d1 = NextEvent.d1) then
+            begin
+              MidiEvents[iEvent+1].d1 := Sound;
+              MidiEvents[iOff].d1 := Sound;
+              break;
+            end else
+              inc(iOff);
+        end;
+      end;
+    end;
+  end;
+
+begin
+  if (GetCopyright <> griffCopy) or (Length(TrackArr_) <> 2) then
+    exit;
+
+  idx := InstrumentIndex(Instrument);
+  if idx >= 0 then
+    Instrument_ := InstrumentsList_[idx]
+  else
+    exit;
+
+  for iTrack := 0 to 1 do
+    RepairTrack(TrackArr_[iTrack], iTrack=1);
+end;
 
 end.
 

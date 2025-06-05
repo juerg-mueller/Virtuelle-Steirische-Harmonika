@@ -3,21 +3,20 @@ program VirtualHarmonica;
 {$mode objfpc}{$H+}
 
 uses
-  {$IFDEF UNIX}
+  {$ifdef unix}
   cthreads,
-  {$ENDIF}
-  {$IFDEF HASAMIGA}
-  athreads,
-  {$ENDIF}
+  pthreads,
+  {$endif}
+  UMidi in 'umidi.pas',
   {$ifdef mswindows}
   midi,
   {$else}
   RtMidi, Urtmidi,
   {$endif}
   Interfaces, // this includes the LCL widgetset
-  Forms, UInstrument, UMyMidiStream, UMyMemoryStream,
-  UMidiSaveStream, UMidiEvent,
-  UVirtualHarmonica, UAmpel, UBanks, UMidi;
+  Forms, UInstrument, UMyMidiStream, UMyMemoryStream, UMidiEvent,
+  UVirtualHarmonica, UAmpel, UBanks, UMidiDataIn, UEventArray,
+  UMidiDataStream;
 
 {$R *.res}
 

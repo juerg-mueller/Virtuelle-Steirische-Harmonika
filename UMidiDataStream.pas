@@ -92,7 +92,7 @@ type
       Titel: string;
       trackOffset: cardinal;
       constructor Create;
-      procedure SetHead(DeltaTimeTicks: integer = 192);
+      procedure SetHead(TicksPerQuarter: integer = 192);
       procedure AppendTrackHead(delay: integer = 0);
       procedure AppendHeaderMetaEvents(const Details: TDetailHeader);
       procedure AppendTrackEnd(IsLastTrack: boolean);
@@ -113,7 +113,7 @@ type
 var
   RunningWine: boolean = false;
 
-{$if defined(CONSOLE)}
+{$if false}
 procedure MidiConverterTest(const FileName: string; var Text: System.Text);
 procedure MidiConverterDirTest(const DirName: string; var Text: System.Text);
 {$endif}
@@ -151,7 +151,7 @@ begin
   WriteCardinal(6);     
   WriteWord(Header.FileFormat);   
   WriteWord(Header.TrackCount);
-  WriteWord(Header.Details.DeltaTimeTicks);
+  WriteWord(Header.Details.TicksPerQuarter);
 end;
 
 function TMidiDataStream.ReadVariableLen: cardinal;
@@ -220,7 +220,7 @@ begin
   MidiHeader.Clear;
   MidiHeader.FileFormat := ReadWord;             
   MidiHeader.TrackCount := ReadWord;
-  MidiHeader.Details.DeltaTimeTicks := ReadWord;
+  MidiHeader.Details.TicksPerQuarter := ReadWord;
 
   result := ChunkSize = 6;
 end;
@@ -673,8 +673,8 @@ begin
   with Header do
   begin
     WritelnString(cSimpleHeader + ' ' + IntToStr(ord(FileFormat)) + ' ' + 
-                  IntToStr(TrackCount) + ' ' + IntToStr(Details.DeltaTimeTicks) +
-                  ' ' + IntToStr(Details.beatsPerMin));
+                  IntToStr(TrackCount) + ' ' + IntToStr(Details.TicksPerQuarter) +
+                  ' ' + IntToStr(Details.QuarterPerMin));
   end;
 end;
 
@@ -705,7 +705,7 @@ begin
       exit;
       
     result.WriteHeader(MidiDataStream.MidiHeader);
-    result.MidiHeader.Details.DeltaTimeTicks := MidiDataStream.MidiHeader.Details.DeltaTimeTicks;
+    result.MidiHeader.Details.TicksPerQuarter := MidiDataStream.MidiHeader.Details.TicksPerQuarter;
     MidiDataStream.MidiHeader := result.MidiHeader;
     Offset := 0;
 
@@ -749,7 +749,7 @@ begin
                     result.WriteString('.');
               end;
               result.MidiHeader.Details.SetTimeSignature(event, ba);
-              result.MidiHeader.Details.SetBeatsPerMin(event, ba);
+              result.MidiHeader.Details.SetQuarterPerMin(event, ba);
               result.MidiHeader.Details.SetDurMinor(event, ba);
             end;
           8..14: begin
@@ -761,7 +761,7 @@ begin
                                    [event.var_len, event.command, event.d1, event.d2]));
               if event.Event = 9 then
               begin
-                takt := Offset div result.MidiHeader.Details.DeltaTimeTicks;
+                takt := Offset div result.MidiHeader.Details.TicksPerQuarter;
                 if result.MidiHeader.Details.measureDiv = 8 then
                   takt := 2*takt;
                 d := result.MidiHeader.Details.measureFact;
@@ -823,8 +823,8 @@ begin
 
     MidiHeader.FileFormat := ReadNumber;
     MidiHeader.TrackCount := ReadNumber;
-    MidiHeader.Details.DeltaTimeTicks := ReadNumber;
-    MidiHeader.Details.beatsPerMin := ReadNumber;
+    MidiHeader.Details.TicksPerQuarter := ReadNumber;
+    MidiHeader.Details.QuarterPerMin := ReadNumber;
   end;
   ReadLine;
 end;
@@ -919,7 +919,7 @@ begin
   end;
 end;
 
-procedure TMidiSaveStream.SetHead(DeltaTimeTicks: integer = 192);
+procedure TMidiSaveStream.SetHead(TicksPerQuarter: integer = 192);
 begin
   SetSize(1000000);
   Position := 0;
@@ -927,7 +927,7 @@ begin
   WriteCardinal(6);
   WriteWord(1);              // file format                          + 8
   WriteWord(0);              // track count                          + 10
-  WriteWord(DeltaTimeTicks); // delta time ticks per quarter note    + 12
+  WriteWord(TicksPerQuarter); // delta time ticks per quarter note    + 12
 end;
 
 procedure TMidiSaveStream.AppendHeaderMetaEvents(const Details: TDetailHeader);
@@ -1134,7 +1134,7 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-{$if defined(CONSOLE)}
+{$if false}
 procedure MidiConverterTest(const FileName: string; var Text: System.Text);
 var
   SimpleFile: TSimpleDataStream;

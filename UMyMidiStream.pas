@@ -50,9 +50,9 @@ procedure TMyMidiStream.MidiWait(Delay: integer);
 var
   NewTime: TDateTime;
 begin
-  if (Delay > 0) and (MidiHeader.Details.DeltaTimeTicks > 0) then
+  if (Delay > 0) and (MidiHeader.Details.TicksPerQuarter > 0) then
   begin
-    Delay := trunc(2*Delay*192.0 / MidiHeader.Details.DeltaTimeTicks);
+    Delay := trunc(2*Delay*192.0 / MidiHeader.Details.TicksPerQuarter);
     if Delay > 2000 then
       Delay := 1000;
 {$if false}
@@ -73,7 +73,7 @@ end;
 
 procedure TMyMidiStream.StartMidi;
 begin
-  time := now;
+  time := GetTickCount64;
 end;
 
 function TMyMidiStream.ReadByte: byte;

@@ -51,7 +51,7 @@ uses
 {$else}
   Windows,
 {$endif}
-  umidi,
+  umidi, UMidiDataIn,
 {$ifdef mswindows}
   Midi,
 {$else}
@@ -65,12 +65,6 @@ type
   TSoundGriff = procedure (Row: byte; index: byte; Push: boolean; On_:boolean) of object;
   TRecordMidiIn = procedure (const Status, Data1, Data2: byte; Timestamp: Int64) of object;
   TRecordMidiOut = procedure (const Status, Data1, Data2: byte) of object;
-
-  TMidiInData = record
-    DeviceIndex: integer;
-    Status, Data1, Data2: byte;
-    Timestamp: Int64;
-  end;
 
   TMouseEvent = record
     P: TPoint;
@@ -125,30 +119,6 @@ type
     property UsedEvents : integer read FUsedEvents;
   end;
 
-  TMidiInBuffer = class
-  private
-    Critical: syncobjs.TCriticalSection;
-    Head, Tail: word;
-    Buffer: array [0..1023] of TMidiInData;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    function Empty: boolean;
-    function Get(var rec: TMidiInData): boolean;
-    function Put(const rec: TMidiInData): boolean;
-  end;
-
-  TMetronom = record
-    On_: boolean;
-    StartPip: boolean;
-    nextPip: TTime;
-    pipDelay: TTime;
-    pipCount: integer;
-    sec: boolean;
-    pip: byte;
-    vol: double;
-    function DoPip(const Header: TDetailHeader): boolean;
-  end;
 
   PPlayControl = function(CharCode: word; KeyData: Longint): boolean of object;
 
@@ -205,8 +175,6 @@ type
     PlayControl: PPlayControl;
     KeyDown: PKeyDown;
     IsActive: boolean;
-    MidiInBuffer: TMidiInBuffer;
-    PRecordMidiIn: TRecordMidiIn;
     Metronom: TMetronom;
     Header: TDetailHeader;
     UseTurboSound: boolean;
@@ -235,6 +203,11 @@ const
 var
   frmAmpel: TfrmAmpel;
   IsLimex: boolean = false;
+
+  MidiInBuffer: TMidiInRingBuffer;
+  InRecorder: TMidiEventRecorder;
+  InRecord: boolean;
+
 
 implementation
 
@@ -775,7 +748,8 @@ end;
 
 procedure TfrmAmpel.FormCreate(Sender: TObject);
 begin
-  MidiInBuffer := TMidiInBuffer.Create;
+  Header.Clear;
+  MidiInBuffer := TMidiInRingBuffer.Create(Header);
   AmpelEvents := TAmpelEvents.Create(self);
   KnopfGroesse := 52;
   FlippedHorz_ := true;
@@ -1315,6 +1289,7 @@ var
   GriffEvent: TGriffEvent;
   Data: TMidiInData;
   vol: double;
+  rec: TMidiInData;
 
   function GetInstr(var Event: TMouseEvent): boolean;
   var
@@ -1343,8 +1318,7 @@ var
   procedure SendMidiOut(Status, Data1, Data2: byte);
   begin
     Status := Status + pipChannel;
-    OnMidiInData(MicrosoftIndex, Status, Data1, Data2, 0);
-    MidiOutput.Send(MicrosoftIndex, Status, Data1, Data2);
+    SendMidi(Status, Data1, Data2);
     if @AmpelEvents.PRecordMidiOut <> nil then
       AmpelEvents.PRecordMidiOut(Status, Data1, Data2, trunc(24*3600*1000*now));
   end;
@@ -1372,28 +1346,44 @@ var
 begin
   if Metronom.DoPip(Header) then
   begin
-    if Metronom.StartPip then
+    if Metronom.OnPip then
     begin
       vol := 100*VolumeMetronom;
       if vol > 126 then
         vol := 126;
-      SendMidiOut($90, Metronom.pip, trunc(vol));
-      if Metronom.pipCount = 0 then
+      rec.Init($90 + pipChannel, Metronom.pip, trunc(vol));
+      if Metronom.IsFirst then
+      begin
+        MidiInBuffer.Put(rec);
         pipPaint(true);
+      end else
+        SendMidiEvent(rec.GetMidiEvent);
     end else begin
-      SendMidiOut($80, Metronom.pip, 64);
-      pipPaint(false);
+      rec.Init($80 + pipChannel, Metronom.pip, 64);
+      if Metronom.IsFirst then
+      begin
+        MidiInBuffer.Put(rec);
+        pipPaint(false);
+      end else
+        SendMidiEvent(rec.GetMidiEvent);
     end;
   end;
 
   while MidiInBuffer.Get(Data) do
   begin
+    if InRecord then
+      InRecorder.Append(Data.GetMidiEvent);
     if ((Data.Status shr 4) = 12) and (Data.Data2 = 0) then
-      MidiOutput.Send(MicrosoftIndex, Data.Status, Data.Data1, Data.Data2)
+      SendMidiEvent(Data.GetMidiEvent)
     else
+    if ((Data.Status and $f) = 9) and ((Data.Status shr 4) in [8, 9]) then
+    begin
+      // Drum Kit / Metronom
+      SendMidiEvent(Data.GetMidiEvent);
+    end else
     if (Data.Status shr 4) in [8, 9, 11] then
     begin
-      if ((Data.Status shr 4) = 9) and (Data.Data2 = 0) then
+      if ((Data.Status shr 4) = 9) and (Data.Data2 = 0) then // running Status
       begin
         dec(Data.Status, $10);
         Data.Data2 := 64;
@@ -1413,11 +1403,6 @@ begin
           Key := 0;
           frmAmpel.FormKeyDown(self, Key, []);
         end;
-      end else
-      if ((Data.Status and $f) = 9) then
-      begin
-        // Drum Kit
-        MidiOutput.Send(MicrosoftIndex, Data.Status, Data.Data1, Data.Data2);
       end else
       if (Data.Status = $80) or (UseTurboSound and ((Data.Status shr 4) = 8)) then
       begin
@@ -1442,10 +1427,6 @@ begin
             begin
               Event.Velocity := round(Event.Velocity);
               AmpelEvents.NewEvent(Event);
-      {$if not defined(__VIRTUAL__) and defined(dcc)}
-     //         if (GetKeyState(vk_scroll) = 1) then // numlock pause scroll
-     //           frmGriff.GenerateNewNote(Event);
-      {$endif}
             end;
           end;
         end else
@@ -1490,81 +1471,15 @@ var
 
 procedure TfrmAmpel.OnMidiInData(aDeviceIndex: integer; aStatus, aData1, aData2: byte; aTimestamp: Int64);
 var
-  t: int64;
-  channel, ch, cmd: byte;
   Data: TMidiInData;
 begin
-  t := trunc(Now*24000*3600);
-  if abs(t - lastTime) > 50 then
-    inCount := 0;
-  lastTime := t;
-
-  channel := aStatus and 15;
-  cmd := aStatus shr 4;
-  // $77 stossen $78 ziehen
-  if IsLimex and
-     (cmd in [8, 9]) and         // On and Off
-     (channel in [0..2]) then    // Kanäle 1, 2, 3 in die Kanäle 1 bis 6 umwandeln
-  begin
-    // Den Limex-Code für MC-Score in den internen Code umwandeln.
-    if (aData2 <= 100) and (cmd = 9) then
-      inc(aData2, 27);
-
-    // Push / Pull einfügen
-    if ((channel = 0) or ((channel = 2) and Instrument.BassDiatonic)) and  // is diatonic
-       (cmd = 9) then                                                      // and On
-    begin
-      with Data do
-      begin
-        DeviceIndex := aDeviceIndex;
-        Status := $B7;
-        Data1 := ControlPushPull;
-        if odd(aData2) then
-          Data2 := 0 // Zug
-        else
-          Data2 := 1;
-        Timestamp := t;
-        MidiInBuffer.Put(Data);
-        if @PRecordMidiIn <> nil then
-          PRecordMidiIn(aStatus, aData1, Data2, t);
-      end;
-    end;
-    // MIDI Kanal anpassen
-    ch := aData2 and $7e;
-    if channel = 0 then
-    begin
-      case ch of
-        126: channel := 1; // 127
-        124: channel := 2;
-        122: channel := 3;
-        else channel := 4;
-      end;
-    end else
-    if channel = 1 then
-    begin
-      if cmd = 8 then
-        inCount := 0;
-      if inCount = 0 then
-        channel := 6
-      else
-        channel := 7;
-      if  cmd = 9 then
-        inc(inCount);
-    end else
-    if ch = 120 then
-      channel := 5
-    else
-      channel := 6;  // 122
-    aStatus := (aStatus and $f0) + channel;
-  end; // IsLimex
-
+  Data.Clear;
+  Data.DeviceIndex := aDeviceIndex;
   Data.Status := aStatus;
   Data.Data1 := aData1;
   Data.Data2 := aData2;
-  Data.Timestamp := t; // ms
+  Data.Timestamp := trunc(now);
   MidiInBuffer.Put(Data);
-  if @PRecordMidiIn <> nil then
-    PRecordMidiIn(aStatus, aData1, aData2, t);
 end;
 
 // Keys vom Hauptfenster
@@ -1628,110 +1543,6 @@ begin
   end;
 end;
 
-constructor TMidiInBuffer.Create;
-begin
-  Critical := TCriticalSection.Create;
-  Head := 0;
-  Tail := 0;
-  FillChar(Buffer, sizeof(Buffer), 0);
-end;
-
-destructor TMidiInBuffer.Destroy;
-begin
-  Critical.Free;
-end;
-
-function TMidiInBuffer.Empty: boolean;
-begin
-  result := Tail = Head;
-end;
-
-function TMidiInBuffer.Get(var rec: TMidiInData): boolean;
-begin
-  result := false;
-  Critical.Acquire;
-  try
-    result := not Empty;
-    if result then
-    begin
-      rec := Buffer[Tail];
-      Tail := (Tail + 1) mod Length(Buffer);
-    end;
-  finally
-    Critical.Release;
-  end;
-end;
-
-function TMidiInBuffer.Put(const rec: TMidiInData): boolean;
-var
-  oldHead: word;
-begin
-  result := false;
-  Critical.Acquire;
-  try
-    oldHead := Head;
-    Head := (Head + 1) mod Length(Buffer);
-    if Empty then
-      Tail := (Tail + 1) mod Length(Buffer);
-
-    Buffer[oldHead] := rec;
-    result := true;
-  finally
-    Critical.Release;
-  end;
-end;
-
-function TMetronom.DoPip(const Header: TDetailHeader): boolean;
-var
-  BPM, mDiv: integer;
-begin
-  result := false;
-  if not On_ then
-    exit;
-
-  BPM := Header.beatsPerMin;
-  mDiv := Header.measureDiv; // ist 4 oder 8
-  if NurTakt then
-    sec := false
-  else
-  if mDiv = 8 then
-  begin
-    BPM := 2*BPM;
-    sec := (Header.measureFact = 6) and (pipCount = 3);
-  end else
-    sec := true;
-  pip := 0;
-  if pipCount = 0 then
-    pip := pipFirst
-  else
-  if sec then
-    pip := pipSecond;
-  if Now >= nextPip then
-  begin
-    vol := 100*VolumeMetronom;
-    if vol > 126 then
-      vol := 126;
-    if pip > 0 then
-    begin
-      StartPip := true;
-      result := true;
-    end;
-    nextPip := Now + 1/(24.0*60.0)/BPM;
-    pipDelay := Now + 0.1/(24*3600);
-  end else
-  if (Now >= pipDelay) and (pipDelay > 0) then
-  begin
-    pipDelay := 0;
-    if pip > 0 then
-    begin
-      StartPip := false;
-      result := true;
-    end;
-    inc(pipCount);
-    if pipCount >= Header.measureFact then
-      pipCount := 0;
-  end;
-end;
 
 end.
 

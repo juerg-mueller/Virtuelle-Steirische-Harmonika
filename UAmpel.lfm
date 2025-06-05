@@ -103,6 +103,7 @@ object frmAmpel: TfrmAmpel
   end
   object Timer1: TTimer
     Interval = 1
+    OnTimer = Timer1Timer
     Left = 162
     Top = 167
   end
