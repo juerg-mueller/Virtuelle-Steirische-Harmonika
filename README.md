@@ -63,8 +63,6 @@ Nachteile:
 
 - Auch andere Funktionen sind noch eingeschränkt.
 
-- teVirtualMIDI funktioniert nicht mehr.
-
 
 Vorteile
 
@@ -74,3 +72,7 @@ Vorteile
 eine Dynamische Library notwendig (https://github.com/thestk/rtmidi).
 
 Hinweis zur Istallation von Lazarus: https://wiki.freepascal.org/fpcupdeluxe/de
+
+Installation von rtmidi unter Linux: sudo apt install librtmidi-dev
+
+Installation von rtmidi unter MAC: sudo brew install rtmidi
