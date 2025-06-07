@@ -75,4 +75,4 @@ Hinweis zur Istallation von Lazarus: https://wiki.freepascal.org/fpcupdeluxe/de
 
 Installation von rtmidi unter Linux: sudo apt install librtmidi-dev
 
-Installation von rtmidi unter MAC: sudo brew install rtmidi
+Installation von rtmidi unter MAC: brew install rtmidi
