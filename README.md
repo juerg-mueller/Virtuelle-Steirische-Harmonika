@@ -77,4 +77,3 @@ Installation von rtmidi unter Linux: sudo apt install librtmidi-dev
 
 Installation von rtmidi unter MAC: brew install rtmidi
 
-rtmidi und Midi.pas verwenden unter Windows "winmm.dll", welche es nicht für Win64 gibt!
