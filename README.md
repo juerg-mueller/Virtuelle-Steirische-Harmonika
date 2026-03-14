@@ -59,7 +59,7 @@ Deshalb habe ich mich entschlossen, meine Projekte mit Lazarus weiter zu entwick
 
 Nachteile:
 
-- Die Belegung der PC-Tastatur kann ich nicht mehr beinflussen. "y" und "z" sind für US-Tastaturen vertaucht.
+- Die Belegung der PC-Tastatur kann ich nicht mehr beinflussen. "y" und "z" sind für US-Tastaturen vertauscht.
 
 - Auch andere Funktionen sind noch eingeschränkt.
 
