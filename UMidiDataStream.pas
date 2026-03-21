@@ -23,7 +23,7 @@ unit UMidiDataStream;
 interface
 
 uses
-  UInstrument,
+//  UInstrument,
 {$IFnDEF FPC}
   windows,
 {$ELSE}
@@ -36,8 +36,9 @@ const
   CopyPrep = AnsiString('juerg5524.ch');
 
 type
+
   TMidiSaveStream = class;
-   
+
   // Zur Analyse von Midi-Files (.mid).
   // Zur Generierung von Midi-Files aus einem einfachen Text-File (simple file).
   TMidiDataStream = class(TMyMidiStream)
@@ -51,14 +52,10 @@ type
     function ReadMidiHeader(RaiseExcept: boolean = false): boolean;
     function ReadMidiTrackHeader(var Header: TTrackHeader; RaiseExcept: boolean = false): boolean;
     function ReadMidiEvent(var event: TMidiEvent): boolean;
-    function TranslateEvent(var d1: byte;
-                            toDo: eTranslate;
-                            const Instrument: PInstrument): boolean;
-
     function MakeMidiEventsArr(var Events: TMidiEventArray): boolean;
     function MakeMidiTrackEvents(var Tracks: TTrackEventArray): boolean;
     function MakeEventArray(var EventArray: TEventArray; Lyrics: boolean = false): boolean;
-//    function MakePartitur(SimpleFile: TSimpleDataStream): boolean;
+
   end;
 
   // Zur Analyse von einfachen Text-Files (.txt).
@@ -243,26 +240,6 @@ begin
     event.var_len := ReadVariableLen;  // eigentlich auch für den Meta-Event ff
 
   result := true;
-end;
-
-function TMidiDataStream.TranslateEvent(var d1: byte;
-                                        toDo: eTranslate;
-                                        const Instrument: PInstrument): boolean;
-var
-  iCol, i, Index: integer;
-begin
-  iCol := 0;
-  i := -1;
-  if (toDo <> nothing) and (Instrument <> nil) then
-  begin
-    if toDo = toSound then
-      i := Instrument^.GriffToSound(d1, InPull, CrossTest)
-    else
-      i := Instrument^.SoundToGriff(d1, InPull, iCol, Index);
-    if i >= 0 then
-      d1 := i;
-  end;
-  result := i > 0;
 end;
 
 
@@ -540,7 +517,6 @@ end;
 
 function TSimpleDataStream.MakeMidiFromSimpleStream: TMidiSaveStream;
 var
-  d: TInt4;
   t: integer;
   TrackHeader_: TTrackHeader;
   NextString_: AnsiString;
@@ -672,9 +648,8 @@ procedure TSimpleDataStream.WriteHeader(const Header: TMidiHeader);
 begin
   with Header do
   begin
-    WritelnString(cSimpleHeader + ' ' + IntToStr(ord(FileFormat)) + ' ' + 
-                  IntToStr(TrackCount) + ' ' + IntToStr(Details.TicksPerQuarter) +
-                  ' ' + IntToStr(Details.QuarterPerMin));
+    WritelnString(Format(cSimpleHeader + ' %d %d %d %d  - Fileformat  TrackCount  TicksPerQuarter  QuarterPerMin',
+                  [ord(FileFormat), TrackCount, Details.TicksPerQuarter, Details.QuarterPerMin]));
   end;
 end;
 
@@ -683,6 +658,7 @@ begin
   WritelnString(cSimpleTrackHeader + ' ' + IntToStr(Delta));
 end;
 
+
 class function TSimpleDataStream.MakeSimpleDataStream(MidiDataStream: TMidiSaveStream): TSimpleDataStream;
 var
   TrackHeader: TTrackHeader;
@@ -690,7 +666,8 @@ var
   i: integer;
   b: byte;
   ba: array of byte;
-  Offset, takt: integer;
+  Offset: integer;
+  Takt: double;
   d: double;
 begin
   result := TSimpleDataStream.Create;
@@ -724,14 +701,13 @@ begin
 
         case event.Event of
           $F: begin
-              SetLength(ba, 0);
-              result.WriteString(cSimpleMetaEvent + ' ' + IntToStr(event.command) + ' ' + 
+              result.WriteString(cSimpleMetaEvent + ' ' + IntToStr(event.command) + ' ' +
                 IntToStr(event.d1) + ' ' + IntToStr(event.d2));
-              for i := 1 to event.d2 do begin
+              SetLength(ba, event.d2);
+              for i := 0 to event.d2-1 do begin
                 b := MidiDataStream.ReadByte;
                 result.WriteString(' ' + IntToStr(b));
-                SetLength(ba, Length(ba)+1);
-                ba[Length(ba)-1] := b;
+                ba[i] := b;
               end;
               if event.d2 > 0 then 
               begin
@@ -748,8 +724,14 @@ begin
                   else
                     result.WriteString('.');
               end;
-              result.MidiHeader.Details.SetTimeSignature(event, ba);
-              result.MidiHeader.Details.SetQuarterPerMin(event, ba);
+              if result.MidiHeader.Details.SetTimeSignature(event, ba) then
+              begin
+                result.WriteString(Format('  - %d/%d Takt', [result.MidiHeader.Details.measureFact,result.MidiHeader.Details.measureDiv]));
+              end;
+              if result.MidiHeader.Details.SetQuarterPerMin(event, ba) then
+              begin
+                result.WriteString(Format('  - %d Viertel pro Min.', [result.MidiHeader.Details.QuarterPerMin]));
+              end;
               result.MidiHeader.Details.SetDurMinor(event, ba);
             end;
           8..14: begin
@@ -761,11 +743,13 @@ begin
                                    [event.var_len, event.command, event.d1, event.d2]));
               if event.Event = 9 then
               begin
-                takt := Offset div result.MidiHeader.Details.TicksPerQuarter;
+                takt := Offset / result.MidiHeader.Details.TicksPerQuarter;
                 if result.MidiHeader.Details.measureDiv = 8 then
                   takt := 2*takt;
                 d := result.MidiHeader.Details.measureFact;
                 result.WriteString(Format('  Takt: %.2f', [takt / d + 1]));
+
+                result.WriteString(MidiNote(event.d1));
               end;
               inc(Offset, event.var_len);
             end;
@@ -779,10 +763,6 @@ begin
             if (b < $80) then
               result.WriteString(Format(' %d', [MidiDataStream.ReadByte]));
           until b >= $80;
-          if event.Event = 9 then
-          begin
-            result.WriteString(MidiNote(event.d1));
-          end;
           result.WritelnString('');
         end;
       end;

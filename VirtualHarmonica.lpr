@@ -16,7 +16,7 @@ uses
   Interfaces, // this includes the LCL widgetset
   Forms, UInstrument, UMyMidiStream, UMyMemoryStream, UMidiEvent,
   UVirtualHarmonica, UAmpel, UBanks, UMidiDataIn, UEventArray,
-  UMidiDataStream;
+  UMidiDataStream, CriticalSection;
 
 {$R *.res}
 

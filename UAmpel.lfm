@@ -101,6 +101,17 @@ object frmAmpel: TfrmAmpel
     OnKeyDown = FormKeyDown
     OnKeyUp = FormKeyUp
   end
+  object cbxGrifftafel: TCheckBox
+    Left = 8
+    Height = 21
+    Top = 60
+    Width = 71
+    Caption = 'Grifftafel'
+    TabOrder = 5
+    OnClick = cbxGrifftafelClick
+    OnKeyDown = FormKeyDown
+    OnKeyUp = FormKeyUp
+  end
   object Timer1: TTimer
     Interval = 1
     OnTimer = Timer1Timer

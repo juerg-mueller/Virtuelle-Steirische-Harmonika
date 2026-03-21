@@ -49,7 +49,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Width = 81
       Caption = 'MIDI IN System'
       ParentColor = False
-      Visible = False
     end
     object cbxMidiOut: TComboBox
       Left = 122
@@ -120,7 +119,6 @@ object frmVirtualHarmonica: TfrmVirtualHarmonica
       Style = csDropDownList
       TabOrder = 1
       Text = 'Standard'
-      Visible = False
       OnChange = cbxLimexChange
       OnClick = cbxLimexClick
       OnKeyDown = cbTransInstrumentKeyDown

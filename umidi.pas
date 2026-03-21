@@ -8,7 +8,7 @@ interface
 
 uses
   Classes, SysUtils, UMidiEvent,
-{$ifndef mswindows}
+{$if not defined(mswindows) or defined(USE_RTMIDI)}
   Urtmidi;
 {$else}
   Midi;
@@ -37,7 +37,7 @@ var
   MidiBankDiskant: byte = 0;
   MidiInstrBass: byte = $15;
   MidiBankBass: byte = 0;
-  pipFirst: byte =  37;   // 59
+  pipFirst: byte =  35;   // 35 37 38
   pipSecond: byte = 69;       // 76
   pipChannel: byte = 9;
 
@@ -83,6 +83,8 @@ begin
 end;
 
 procedure OpenMidiMicrosoft;
+var
+i: integer;
 begin
   if MicrosoftIndex >= 0 then
   begin
@@ -97,6 +99,8 @@ begin
       ChangeBank(MicrosoftIndex, 5, MidiBankBass, MidiInstrBass);
       ChangeBank(MicrosoftIndex, 6, MidiBankBass, MidiInstrBass);
       ChangeBank(MicrosoftIndex, 7, MidiBankBass, MidiInstrBass);
+      for i := 0 to 7 do
+        MidiOutput.Send(MicrosoftIndex, $b0 + i, 11, 127);
     finally
     end;
   end;

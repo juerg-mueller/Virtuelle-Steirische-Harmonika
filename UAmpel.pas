@@ -129,12 +129,14 @@ type
   TfrmAmpel = class(TForm)
     btnFlip: TButton;
     btnFlipHorz: TButton;
+    cbxGrifftafel: TCheckBox;
     lbUnten: TLabel;
     cbxLinkshaender: TCheckBox;
     cbxVerkehrt: TCheckBox;
     lbTastatur: TLabel;
     Timer1: TTimer;
     cbxNoteAnzeigen: TCheckBox;
+    procedure cbxGrifftafelClick(Sender: TObject);
     procedure FormPaint(Sender: TObject);
     procedure btnFlipClick(Sender: TObject);
     procedure btnFlipHorzClick(Sender: TObject);
@@ -204,9 +206,10 @@ var
   frmAmpel: TfrmAmpel;
   IsLimex: boolean = false;
 
+  MidiInRecorder: TMidiEventRecorder;
   MidiInBuffer: TMidiInRingBuffer;
-  InRecorder: TMidiEventRecorder;
-  InRecord: boolean;
+
+  InRecord: boolean = false;
 
 
 implementation
@@ -749,7 +752,7 @@ end;
 procedure TfrmAmpel.FormCreate(Sender: TObject);
 begin
   Header.Clear;
-  MidiInBuffer := TMidiInRingBuffer.Create(Header);
+  MidiInBuffer := TMidiInRingBuffer.Create;
   AmpelEvents := TAmpelEvents.Create(self);
   KnopfGroesse := 52;
   FlippedHorz_ := true;
@@ -1094,6 +1097,11 @@ begin
   PaintBalg(ShiftUsed);
 end;
 
+procedure TfrmAmpel.cbxGrifftafelClick(Sender: TObject);
+begin
+  self.Repaint;
+end;
+
 procedure TfrmAmpel.FormResize(Sender: TObject);
 
   function GetWidth: integer;
@@ -1201,6 +1209,7 @@ end;
 procedure TfrmAmpel.PaintAmpel(Row: byte {1..6}; index: integer {0..12}; Push, On_: boolean);
 var
   rect: TRect;
+  d: integer;
   Pitch: integer;
 begin
   Pitch := Instrument.GetPitch(Row, Index, Push);
@@ -1211,14 +1220,37 @@ begin
     Push := false;
 
   rect := KnopfRect(Row, index);
-  if not On_ then
-    canvas.Brush.Color := $7f0000
-  else
-  if Push then
-    canvas.Brush.Color := $ff00ff
-  else
-    canvas.Brush.Color := $ffff00;
-  canvas.Ellipse(rect);
+  if cbxGrifftafel.Checked then
+  begin
+    if not On_ then begin
+      canvas.Brush.Color := $cfcfcf;
+      canvas.Ellipse(rect);
+    end else begin
+      canvas.Brush.Color := $000000;
+      canvas.Ellipse(rect);
+      if Push then
+      begin
+        canvas.Brush.Color := $ffffff;
+        d := rect.Width div 6;
+        if odd(d) then
+          dec(d);
+        rect.Width := rect.Width - 2*d;
+        rect.Height := rect.Height - 2*d;
+        rect.Offset(d, d);
+        canvas.Ellipse(rect);
+      end;
+    end;
+
+  end else begin
+    if not On_ then
+      canvas.Brush.Color := $7f0000
+    else
+    if Push then
+      canvas.Brush.Color := $ff00ff
+    else
+      canvas.Brush.Color := $ffff00;
+    canvas.Ellipse(rect);
+  end;
   if On_ and cbxNoteAnzeigen.Checked then
   begin
     PaintNote(rect, Pitch)
@@ -1244,7 +1276,8 @@ procedure TfrmAmpel.PaintBalg(Push: boolean);
 var
   rect, rect1: TRect;
 begin
-  if Instrument = nil then
+  if (Instrument = nil) or
+     cbxGrifftafel.Checked then
     exit;
 
   // Balg-Strich
@@ -1287,9 +1320,7 @@ var
   Event: TMouseEvent;
   Key: word;
   GriffEvent: TGriffEvent;
-  Data: TMidiInData;
-  vol: double;
-  rec: TMidiInData;
+  rec: TMidiEvent;
 
   function GetInstr(var Event: TMouseEvent): boolean;
   var
@@ -1314,7 +1345,7 @@ var
     end;
     result := Event.Index_ >= 0;
   end;
-
+{
   procedure SendMidiOut(Status, Data1, Data2: byte);
   begin
     Status := Status + pipChannel;
@@ -1322,7 +1353,7 @@ var
     if @AmpelEvents.PRecordMidiOut <> nil then
       AmpelEvents.PRecordMidiOut(Status, Data1, Data2, trunc(24*3600*1000*now));
   end;
-
+ }
   procedure pipPaint(On_: boolean);
   var
     rect: TRect;
@@ -1346,77 +1377,62 @@ var
 begin
   if Metronom.DoPip(Header) then
   begin
-    if Metronom.OnPip then
-    begin
-      vol := 100*VolumeMetronom;
-      if vol > 126 then
-        vol := 126;
-      rec.Init($90 + pipChannel, Metronom.pip, trunc(vol));
-      if Metronom.IsFirst then
-      begin
-        MidiInBuffer.Put(rec);
-        pipPaint(true);
-      end else
-        SendMidiEvent(rec.GetMidiEvent);
-    end else begin
-      rec.Init($80 + pipChannel, Metronom.pip, 64);
-      if Metronom.IsFirst then
-      begin
-        MidiInBuffer.Put(rec);
-        pipPaint(false);
-      end else
-        SendMidiEvent(rec.GetMidiEvent);
-    end;
+    rec := Metronom.MidiEvent;
+    if InRecord and Metronom.IsFirst then // Taktbeginn
+      MidiInRecorder.Append(rec);
+    SendMidiEvent(rec);
   end;
 
-  while MidiInBuffer.Get(Data) do
+  while MidiInBuffer.Get(rec) do
   begin
     if InRecord then
-      InRecorder.Append(Data.GetMidiEvent);
-    if ((Data.Status shr 4) = 12) and (Data.Data2 = 0) then
-      SendMidiEvent(Data.GetMidiEvent)
+      MidiInRecorder.Append(rec);
+    if ((rec.command shr 4) = 12) and (rec.d2 = 0) then
+      SendMidiEvent(rec)
     else
-    if ((Data.Status and $f) = 9) and ((Data.Status shr 4) in [8, 9]) then
+    if ((rec.command and $f) = 9) and ((rec.command shr 4) in [8, 9]) then
     begin
       // Drum Kit / Metronom
-      SendMidiEvent(Data.GetMidiEvent);
+      SendMidiEvent(rec);
     end else
-    if (Data.Status shr 4) in [8, 9, 11] then
+    if (rec.command shr 4) in [8, 9, 11] then
     begin
-      if ((Data.Status shr 4) = 9) and (Data.Data2 = 0) then // running Status
+      if ((rec.command shr 4) = 9) and (rec.d2 = 0) then // running Status
       begin
-        dec(Data.Status, $10);
-        Data.Data2 := 64;
+        dec(rec.command, $10);
+        rec.d2 := 64;
       end;
       Event.Clear;
-      Event.Pitch := Data.Data1;
-      Event.Row_ := (Data.Status and $f);
+      Event.Pitch := rec.d1;
+      Event.Row_ := (rec.command and $f);
       Event.Index_ := -1;
       Event.Push_ := ShiftUsed;
-      Event.Velocity := Data.Data2;
+      Event.Velocity := rec.d2;
 
-      if (Data.Status shr 4) = 11 then
+      if (rec.command shr 4) = 11 then
       begin
-        if (Data.Data1 = ControlPushPull) then
+        if (rec.d1 = ControlPushPull) then
         begin
-          Sustain_ := Data.Data2 > 0;
+          Sustain_ := rec.d2 > 0;
           Key := 0;
           frmAmpel.FormKeyDown(self, Key, []);
-        end;
+        end else
+        if rec.d1 = 11 then  // expression
+          AmpelEvents.SendMidiOut(rec.command, rec.d1, rec.d2);
       end else
-      if (Data.Status = $80) or (UseTurboSound and ((Data.Status shr 4) = 8)) then
+      if (rec.command = $80) or (UseTurboSound and ((rec.command shr 4) = 8)) then
       begin
         AmpelEvents.EventOff(Event);
       end else
-      if (Data.Status = $90) or (UseTurboSound and ((Data.Status shr 4) = 9)) then
+      if (rec.command = $90) or (UseTurboSound and ((rec.command shr 4) = 9)) then
       begin
-        if (Data.Status and 15) = 1 then  // Akkord Noten
+        if (rec.command and 15) = 1 then  // Akkord Noten
           exit;
 
         GriffEvent.Clear;
         GriffEvent.InPush := Event.Push_;
-        GriffEvent.SoundPitch := Data.Data1;
-        if (Data.Status and 15) = 0 then
+        GriffEvent.SoundPitch := rec.d1;
+        if (rec.command and 15) = 0 then
         begin
           if GriffEvent.SoundToGriff(Instrument^) and
              (GriffEvent.InPush = Event.Push_) then
@@ -1430,7 +1446,7 @@ begin
             end;
           end;
         end else
-        if (Data.Status and 15) = 2 then
+        if (rec.command and 15) = 2 then
         begin
           GriffEvent.NoteType := ntBass;
           if GriffEvent.SoundToGriff(Instrument^) then
@@ -1447,12 +1463,12 @@ begin
           end;
         end;
       end else
-      if ((Data.Status and $f) in [1..6]) and
-         ((Data.Status shr 4) in [8, 9]) then
+      if ((rec.command and $f) in [1..6]) and
+         ((rec.command shr 4) in [8, 9]) then
       begin
         GetInstr(Event);
         begin
-          if (Data.Status shr 4) = 9 then
+          if (rec.command shr 4) = 9 then
           begin
             Event.Velocity := round(Event.Velocity);
             AmpelEvents.NewEvent(Event)
@@ -1471,15 +1487,10 @@ var
 
 procedure TfrmAmpel.OnMidiInData(aDeviceIndex: integer; aStatus, aData1, aData2: byte; aTimestamp: Int64);
 var
-  Data: TMidiInData;
+  Event: TMidiEvent;
 begin
-  Data.Clear;
-  Data.DeviceIndex := aDeviceIndex;
-  Data.Status := aStatus;
-  Data.Data1 := aData1;
-  Data.Data2 := aData2;
-  Data.Timestamp := trunc(now);
-  MidiInBuffer.Put(Data);
+  Event.SetEvent(aStatus, aData1, aData2);
+  MidiInBuffer.Put(Event);
 end;
 
 // Keys vom Hauptfenster

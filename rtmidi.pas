@@ -7,7 +7,7 @@ uses Windows,
 {$ELSE}
 uses dynlibs,
 {$ENDIF}
-  UFormHelper, SysUtils, Classes;
+  SysUtils, Classes;
 
 
 const

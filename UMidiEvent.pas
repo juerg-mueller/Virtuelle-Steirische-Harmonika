@@ -88,12 +88,13 @@ type
     procedure AppendByte(b: byte);
     procedure MakeMetaEvent(EventNr: byte; b: AnsiString);
     procedure FillBytes(const b: AnsiString);
-    function GetBytes: string;
+    function GetBytes: WideString;
     function GetAnsi: AnsiString;
     function GetInt: cardinal;
     function GetAnsiChar(Idx: integer): AnsiChar;
+    procedure CorrectRunningStatus;
 
-    property str: String read GetBytes;
+    property str: WideString read GetBytes;
     property ansi: AnsiString read GetAnsi;
     property int: cardinal read GetInt;
     property char_[Idx: integer]: Ansichar read GetAnsiChar; default;
@@ -173,7 +174,7 @@ begin
   Move(Bytes[0], result[1], Length(Bytes));
 end;
 
-function TMidiEvent.GetBytes: String;
+function TMidiEvent.GetBytes: WideString;
 var
   s: string;
   p, l: integer;
@@ -381,7 +382,7 @@ begin
   command := a;
   d1 := b; 
   d2 := c;
-  var_len := 0;
+  var_len := l;
 end;
 
 function TDetailHeader.GetMeasureDiv: double;
@@ -564,6 +565,15 @@ begin
   d1 := d1_;
   d2 := d2_;
   var_len := 0;
+end;
+
+procedure TMidiEvent.CorrectRunningStatus;
+begin
+  if (Event = 4) and (d2 = 0) then
+  begin
+    dec(command, $10);
+    d2 := 64;
+  end;
 end;
 
 procedure TMidiEvent.AppendByte(b: byte);

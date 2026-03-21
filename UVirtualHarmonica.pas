@@ -163,12 +163,12 @@ begin
   if btnRecordIn.Caption <> 'Stopp' then
   begin
     Deactivate(false);
-    InRecorder.Start;
+    MidiInRecorder.Start(cbTransInstrument.Text);
     InRecord := true;
     btnRecordIn.Caption := 'Stopp';
   end else begin
     InRecord := false;
-    InRecorder.Stop;
+    MidiInRecorder.Stop;
 
     for j := 0 to 9 do
       SendMidi($B0 + j, 120, 0);
@@ -186,7 +186,7 @@ var
   Simple: TSimpleDataStream;
   i: integer;
 begin
-  SaveStream := InRecorder.MakeRecordStream(frmAmpel.Header);
+  SaveStream := MidiInRecorder.MakeRecordStream;
   if SaveStream <> nil then
   begin
     name := 'midi_rekorder';
@@ -520,7 +520,7 @@ end;
 procedure TfrmVirtualHarmonica.cbxTaktChange(Sender: TObject);
 begin
   frmAmpel.Header.measureFact := cbxTakt.ItemIndex + 2;
-  MidiInBuffer.Header := frmAmpel.Header;
+  MidiInRecorder.Header := frmAmpel.Header;
 end;
 
 procedure TfrmVirtualHarmonica.cbxViertelChange(Sender: TObject);
@@ -533,7 +533,7 @@ begin
     else q := 4;
   end;
   frmAmpel.Header.MeasureDiv :=  q;
-  MidiInBuffer.Header := frmAmpel.Header;
+  MidiInRecorder.Header := frmAmpel.Header;
 end;
 
 procedure TfrmVirtualHarmonica.edtBPMExit(Sender: TObject);
@@ -564,7 +564,7 @@ var
   i: integer;
   Bank: TArrayOfString;
 begin
-  InRecorder := TMidiEventRecorder.Create;
+  MidiInRecorder := TMidiEventRecorder.Create;
   cbTransInstrument.Items.Clear;
   for i := 0 to High(InstrumentsList_) do
     cbTransInstrument.Items.Add(string(InstrumentsList_[i].Name));
@@ -626,7 +626,7 @@ end;
 procedure TfrmVirtualHarmonica.FormDestroy(Sender: TObject);
 begin
   MidiInput.CloseAll;
-  InRecorder.Free;
+  MidiInRecorder.Free;
 end;
 
 procedure TfrmVirtualHarmonica.FormResize(Sender: TObject);
