@@ -1228,7 +1228,7 @@ begin
     end else begin
       canvas.Brush.Color := $000000;
       canvas.Ellipse(rect);
-      if Push then
+      if not Push then
       begin
         canvas.Brush.Color := $ffffff;
         d := rect.Width div 6;
@@ -1240,7 +1240,6 @@ begin
         canvas.Ellipse(rect);
       end;
     end;
-
   end else begin
     if not On_ then
       canvas.Brush.Color := $7f0000

@@ -2,7 +2,7 @@
 <CONFIG>
   <ProjectSession>
     <Version Value="12"/>
-    <BuildModes Active="Win32"/>
+    <BuildModes Active="Default"/>
     <Units>
       <Unit>
         <Filename Value="VirtualHarmonica.lpr"/>
@@ -76,8 +76,8 @@
         <ResourceBaseClass Value="Form"/>
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="1263"/>
-        <CursorPos X="28" Y="1280"/>
+        <TopLine Value="1215"/>
+        <CursorPos X="92" Y="1233"/>
         <UsageCount Value="186"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -327,42 +327,6 @@
     <JumpHistory HistoryIndex="29">
       <Position>
         <Filename Value="UAmpel.pas"/>
-        <Caret Line="474" TopLine="459"/>
-      </Position>
-      <Position>
-        <Filename Value="UAmpel.pas"/>
-        <Caret Line="476" TopLine="459"/>
-      </Position>
-      <Position>
-        <Filename Value="UAmpel.pas"/>
-        <Caret Line="477" TopLine="459"/>
-      </Position>
-      <Position>
-        <Filename Value="UAmpel.pas"/>
-        <Caret Line="480" TopLine="459"/>
-      </Position>
-      <Position>
-        <Filename Value="UAmpel.pas"/>
-        <Caret Line="482" TopLine="475"/>
-      </Position>
-      <Position>
-        <Filename Value="UAmpel.pas"/>
-        <Caret Line="484" TopLine="475"/>
-      </Position>
-      <Position>
-        <Filename Value="UAmpel.pas"/>
-        <Caret Line="487" TopLine="475"/>
-      </Position>
-      <Position>
-        <Filename Value="UAmpel.pas"/>
-        <Caret Line="490" TopLine="475"/>
-      </Position>
-      <Position>
-        <Filename Value="UAmpel.pas"/>
-        <Caret Line="491" TopLine="475"/>
-      </Position>
-      <Position>
-        <Filename Value="UAmpel.pas"/>
         <Caret Line="493" TopLine="475"/>
       </Position>
       <Position>
@@ -444,6 +408,42 @@
       <Position>
         <Filename Value="UAmpel.pas"/>
         <Caret Line="1097" Column="10" TopLine="1074"/>
+      </Position>
+      <Position>
+        <Filename Value="UAmpel.pas"/>
+        <Caret Line="1280" Column="28" TopLine="1263"/>
+      </Position>
+      <Position>
+        <Filename Value="UAmpel.pas"/>
+        <Caret Line="132" Column="18" TopLine="117"/>
+      </Position>
+      <Position>
+        <Filename Value="UAmpel.pas"/>
+        <Caret Line="139" Column="28" TopLine="117"/>
+      </Position>
+      <Position>
+        <Filename Value="UAmpel.pas"/>
+        <Caret Line="1100" Column="34" TopLine="1075"/>
+      </Position>
+      <Position>
+        <Filename Value="UAmpel.pas"/>
+        <Caret Line="1223" Column="19" TopLine="1199"/>
+      </Position>
+      <Position>
+        <Filename Value="UAmpel.pas"/>
+        <Caret Line="1279" Column="19" TopLine="1255"/>
+      </Position>
+      <Position>
+        <Filename Value="UAmpel.pas"/>
+        <Caret Line="132" Column="18" TopLine="117"/>
+      </Position>
+      <Position>
+        <Filename Value="UAmpel.pas"/>
+        <Caret Line="139" Column="28" TopLine="117"/>
+      </Position>
+      <Position>
+        <Filename Value="UAmpel.pas"/>
+        <Caret Line="1100" Column="34" TopLine="1075"/>
       </Position>
     </JumpHistory>
     <RunParams>
