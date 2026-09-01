@@ -84,6 +84,7 @@ März 2026
 Die Windows-Programme sind auch mit wine auf Linux und Mac ausführbar.
 "Winlator" ist die Wine-Implementierung für Android.
 
+
 September 2026
 --------------
 
